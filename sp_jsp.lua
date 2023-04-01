@@ -73,6 +73,51 @@ Fk:loadTranslationTable{
   [":cihuai"] = "出牌阶段开始时，你可以展示你的手牌，若其中没有【杀】，则你使用或打出【杀】时不需要手牌，直到你的手牌数变化或有角色死亡。",
 }
 
+local guanyu = General(extension, "jsp__guanyu", "wei", 4)
+local danji = fk.CreateTriggerSkill{
+  name = "danji",
+  events = {fk.EventPhaseStart},
+  frequency = Skill.Compulsory,
+  can_trigger = function(self, event, target, player, data)
+    return target == player and
+      player:hasSkill(self.name) and
+      player:getMark(self.name) == 0 and
+      player.phase == Player.Start and
+      #player.player_cards[Player.Hand] > player.hp and
+      not string.find(player.room:getLord().general, "liubei")
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    room:addPlayerMark(player, self.name, 1)
+    room:changeMaxHp(player, -1)
+    room:handleAddLoseSkills(player, "mashu|nuzhan", nil)
+  end,
+}
+local nuzhan = fk.CreateTriggerSkill{
+  name = "nuzhan",
+  anim_type = "offensive",
+  frequency = Skill.Compulsory,
+  events = {fk.AfterCardUseDeclared, fk.DamageCaused},
+  can_trigger = function(self, event, target, player, data)
+    if target == player and player:hasSkill(self.name) and data.card and data.card.trueName == "slash" and data.card:isVirtual() and #data.card.subcards == 1 then
+      if event == fk.AfterCardUseDeclared then
+        return player.phase == Player.Play and Fk:getCardById(data.card.subcards[1]).type == Card.TypeTrick
+      else
+        return not data.chain and Fk:getCardById(data.card.subcards[1]).type == Card.TypeEquip
+      end
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    if event == fk.AfterCardUseDeclared then
+      player:addCardUseHistory(data.card.trueName, -1)
+    else
+      data.damage = data.damage + 1
+    end
+  end,
+}
+guanyu:addSkill(danji)
+guanyu:addSkill("wusheng")
+Fk:addSkill(nuzhan)
 Fk:loadTranslationTable{
   ["jsp__guanyu"] = "关羽",
   ["danji"] = "单骑",

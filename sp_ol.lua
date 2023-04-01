@@ -13,12 +13,138 @@ Fk:loadTranslationTable {
   [":duwu"] = "出牌阶段，你可以弃置X张牌对你攻击范围内的一名其他角色造成1点伤害（X为该角色的体力值）。若你以此法令该角色进入濒死状态，则濒死状态结算后你失去1点体力，且本回合不能再发动“黩武”。",
 }
 
+local chengyu = General(extension, "chengyu", "wei", 3)
+local shefu = fk.CreateTriggerSkill{
+  name = "shefu",
+  anim_type = "control",
+  events = {fk.EventPhaseStart, fk.CardUsing},
+  can_trigger = function(self, event, target, player, data)
+    if player:hasSkill(self.name) then
+      if event == fk.EventPhaseStart then
+        return target == player and player.phase == Player.Finish and not player:isKongcheng()
+      else
+        return target ~= player and player.phase == Player.NotActive and (data.card.type == Card.TypeBasic or data.card.type == Card.TypeTrick)
+      end
+    end
+  end,
+  on_cost = function(self, event, target, player, data)
+    local room = player.room
+    if event == fk.EventPhaseStart then
+      local card = room:askForCard(player, 1, 1, false, self.name, true, ".")
+      if #card > 0 then
+        self.cost_data = card
+        return true
+      end
+    else
+      self.cost_data = 0
+      local tag = room:getTag(self.name)
+      if type(tag) ~= "table" then return end
+      for i = 1, #tag, 1 do
+        if data.card.trueName == tag[i][2] then
+          self.cost_data = tag[i][1]
+          break
+        end
+      end
+      if self.cost_data > 0 then
+        return room:askForSkillInvoke(player, self.name)
+      end
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    if event == fk.EventPhaseStart then
+      player:addToPile(self.name, self.cost_data, false, self.name)
+      local names = {}
+      local tag = room:getTag(self.name)
+      if type(tag) ~= "table" then tag = {} end
+      for _, id in ipairs(Fk:getAllCardIds()) do
+        local card = Fk:getCardById(id)
+        if card.type == Card.TypeBasic or card.type == Card.TypeTrick then
+          table.insertIfNeed(names, card.trueName)
+        end
+      end
+      for i = #names, 1, -1 do
+        for j = 1, #tag, 1 do
+          if names[i] == tag[j][2] then
+            table.remove(names, i)
+          end
+        end
+      end
+      if #names > 0 then
+        local name = room:askForChoice(player, names, self.name)
+        table.insert(tag, {self.cost_data[1], name})
+        room:setTag(self.name, tag)
+      end
+    else
+      local tag = room:getTag(self.name)
+      for i = 1, #tag, 1 do
+        if data.card.trueName == tag[i][2] then
+          table.remove(tag, i)
+          break
+        end
+      end
+      room:setTag(self.name, tag)
+      room:moveCards({
+        from = player.id,
+        ids = {self.cost_data},
+        toArea = Card.DiscardPile,
+        moveReason = fk.ReasonPutIntoDiscardPile,
+        skillName = self.name,
+        specialName = self.name,
+      })
+      data.tos = {}
+    end
+  end,
+}
+local benyu = fk.CreateTriggerSkill{
+  name = "benyu",
+  anim_type = "masochism",
+  events = {fk.Damaged},
+  can_trigger = function(self, event, target, player, data)
+    return target == player and target:hasSkill(self.name) and data.from ~= nil and not target.dead and #player.player_cards[Player.Hand] ~= #data.from.player_cards[Player.Hand] and #player.player_cards[Player.Hand] < 5
+  end,
+  on_cost = function(self, event, target, player, data)
+    local room = player.room
+    if #player.player_cards[Player.Hand] > #data.from.player_cards[Player.Hand] then
+      local _, discard = room:askForUseActiveSkill(player, "discard_skill", "#benyu-discard", true, {
+        num = #player.player_cards[Player.Hand],
+        min_num = #data.from.player_cards[Player.Hand] + 1,
+        include_equip = false,
+        reason = self.name,
+        pattern = ".|.|.|hand|.|.",
+      })
+      if discard then
+        self.cost_data = discard.cards
+        return true
+      end
+    else
+      self.cost_data = room:askForSkillInvoke(player, self.name)
+      return self.cost_data
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    if type(self.cost_data) == "table" and #self.cost_data > 0 then
+      player.room:throwCard(self.cost_data, self.name, player, player)
+      player.room:damage{
+        from = player,
+        to = data.from,
+        damage = 1,
+        skillName = self.name,
+      }
+    else
+      player:drawCards(math.min(5, #data.from.player_cards[Player.Hand]) - #player.player_cards[Player.Hand])
+    end
+  end,
+}
+chengyu:addSkill(shefu)
+chengyu:addSkill(benyu)
 Fk:loadTranslationTable {
   ["chengyu"] = "程昱",
   ["shefu"] = "设伏",
-  [":shefu"] = "结束阶段开始时，你可将一张手牌扣置于武将牌上，称为“伏兵”。若如此做，你为“伏兵”记录一个基本牌或锦囊牌的名称（须与其他“伏兵”记录的名称均不同）。当其他角色于你的回合外使用手牌时，你可将记录的牌名与此牌相同的一张“伏兵”置人弃牌堆，然后此牌无效。",
+  [":shefu"] = "结束阶段开始时，你可将一张手牌扣置于武将牌上，称为“伏兵”。若如此做，你为“伏兵”记录一个基本牌或锦囊牌的名称（须与其他“伏兵”记录的名称均不同）。当其他角色于你的回合外使用手牌时，你可将记录的牌名与此牌相同的一张“伏兵”置入弃牌堆，然后此牌无效。",
   ["benyu"] = "贲育",
   [":benyu"] = "当你受到伤害后，若你的手牌数不大于伤害来源手牌数，你可以将手牌摸至与伤害来源手牌数相同（最多摸至5张）；否则你可以弃置大于伤害来源手牌数的手牌，然后对其造成1点伤害。",
+  ["#benyu-discard"] = "贲育：你可以弃置大于伤害来源手牌数的手牌，对其造成1点伤害",
 }
 
 local sunhao = General(extension, "sunhao", "wu", 5)
