@@ -168,7 +168,7 @@ local canshi = fk.CreateTriggerSkill{
 
   refresh_events = {fk.CardUsing},
   can_refresh = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self.name) and (data.card.type == Card.TypeBasic or data.card.type == Card.TypeTrick) and player:usedSkillTimes(self.name) > 0 and not player:isNude()
+    return target == player and player:hasSkill(self.name, true) and (data.card.type == Card.TypeBasic or data.card.type == Card.TypeTrick) and player:usedSkillTimes(self.name) > 0 and not player:isNude()
   end,
   on_refresh = function(self, event, target, player, data)
     player.room:askForDiscard(player, 1, 1, true, self.name)

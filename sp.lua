@@ -88,6 +88,18 @@ Fk:loadTranslationTable{
   [":mozhi"] = "结束阶段，你可以将一张手牌当你本回合使用过的第一张基本牌或非延时锦囊牌使用，然后你可以将一张手牌当你本回合使用过的第二张基本牌或非延时锦囊牌使用。",
 }
 
+local machao = General(extension, "sp__machao", "qun", 4)
+local shichou = fk.CreateTargetModSkill{
+  name = "shichou",
+  extra_target_func = function(self, player, skill)
+    if player:hasSkill(self.name) and skill.trueName == "slash_skill" then
+      return player:getLostHp()
+    end
+    return 0
+  end,
+}
+machao:addSkill("zhuiji")
+machao:addSkill(shichou)
 Fk:loadTranslationTable{
   ["sp__machao"] = "马超",
   ["shichou"] = "誓仇",
@@ -239,7 +251,7 @@ local bifa = fk.CreateTriggerSkill{
 
   refresh_events = {fk.EventPhaseStart},
   can_refresh = function(self, event, target, player, data)
-    return player:hasSkill(self.name) and target.phase == Player.Start and #target:getPile(self.name) > 0
+    return player:hasSkill(self.name, true, true) and target.phase == Player.Start and #target:getPile(self.name) > 0
   end,
   on_refresh = function(self, event, target, player, data)
     local room = player.room
@@ -436,6 +448,7 @@ Fk:loadTranslationTable{
   [":qiangwu"] = "出牌阶段限一次，你可以进行一次判定，若如此做，则直到回合结束，你使用点数小于判定牌的【杀】时不受距离限制，且你使用点数大于判定牌的【杀】时不计入出牌阶段的使用次数。",
 }
 
+--local panfeng = General(extension, "panfeng", "qun", 4)
 Fk:loadTranslationTable{
   ["panfeng"] = "潘凤",
   ["kuangfu"] = "狂斧",
@@ -493,11 +506,11 @@ local zhendu = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local room = player.room
     local analeptic = Fk:cloneCard("analeptic")
-      room:useCard({
-        card = analeptic,
-        from = target.id,
-        tos = {{target.id}},
-      })
+    room:useCard({
+      card = analeptic,
+      from = target.id,
+      tos = {{target.id}},
+    })
     room:damage{
       from = player,
       to = target,
@@ -695,15 +708,79 @@ Fk:loadTranslationTable{
 Fk:loadTranslationTable{
   ["wenpin"] = "文聘",
   ["zhenwei"] = "镇卫",
-  [":zhenwei"] = "。",
+  [":zhenwei"] = "每当一名其他角色成为【杀】或黑色锦囊牌的唯一目标时，若该角色的体力值小于你，你可以弃置一张牌并选择一项: 摸一张牌，然后你成为此牌的目标；或令此牌失效并将之移出游戏，该回合结束时令此牌的使用者收回此牌。",
 }
 
+local simalang = General(extension, "simalang", "wei", 3)
+local junbing = fk.CreateTriggerSkill{
+  name = "junbing",
+  anim_type = "support",
+  events = {fk.EventPhaseStart},
+  can_trigger = function(self, event, target, player, data)
+    return player:hasSkill(self.name) and target.phase == Player.Finish and #target.player_cards[Player.Hand] < 2
+  end,
+  on_cost = function(self, event, target, player, data)
+    return player.room:askForSkillInvoke(target, self.name)
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    target:drawCards(1)
+    if target == player then return end
+    local dummy1 = Fk:cloneCard("dilu")
+    dummy1:addSubcards(target.player_cards[Player.Hand])
+    room:obtainCard(player, dummy1, false, fk.ReasonGive)
+    local cards = room:askForCard(player, #dummy1.subcards, #dummy1.subcards, false, self.name, false)
+    local dummy2 = Fk:cloneCard("dilu")
+    dummy2:addSubcards(cards)
+    room:obtainCard(target, dummy2, false, fk.ReasonGive)
+  end,
+}
+local quji = fk.CreateActiveSkill{
+  name = "quji",
+  anim_type = "support",
+  min_card_num = function ()
+    return Self:getLostHp()
+  end,
+  can_use = function(self, player)
+    return player:isWounded() and player:usedSkillTimes(self.name) == 0
+  end,
+  card_filter = function(self, to_select, selected, targets)
+    return #selected < Self:getLostHp()
+  end,
+  target_filter = function(self, to_select, selected, cards)
+    return #selected < Self:getLostHp() and Fk:currentRoom():getPlayerById(to_select):isWounded()
+  end,
+  on_use = function(self, room, effect)
+    local player = room:getPlayerById(effect.from)
+    room:throwCard(effect.cards, self.name, player, player)
+    for i = 1, #effect.tos, 1 do
+      room:recover({
+        who = room:getPlayerById(effect.tos[i]),
+        num = 1,
+        recoverBy = player.id,
+        skillName = self.name
+      })
+    end
+    local loseHp = false
+    for _, id in ipairs(effect.cards) do
+      if Fk:getCardById(id).color == Card.Black then
+        loseHp = true
+        break
+      end
+    end
+    if loseHp then
+      room:loseHp(player, 1, self.name)
+    end
+  end,
+}
+simalang:addSkill(junbing)
+simalang:addSkill(quji)
 Fk:loadTranslationTable{
   ["simalang"] = "司马朗",
   ["junbing"] = "郡兵",
-  [":junbing"] = "。",
+  [":junbing"] = "每名角色的结束阶段，若其手牌数小于或等于1，该角色可以摸一张牌，若该角色不是你，则其将所有手牌交给你，然后你将等量的手牌交给其。",
   ["quji"] = "去疾",
-  [":quji"] = "。",
+  [":quji"] = "出牌阶段限一次，若你已受伤，你可以弃置X张牌并选择至多X名已受伤的角色，令这些角色各回复1点体力，然后若此此你以此法弃置过的牌中有黑色牌，你失去1点体力。（X为你已损失的体力值）",
 }
 
 return extension

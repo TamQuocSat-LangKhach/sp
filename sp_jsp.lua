@@ -65,12 +65,86 @@ Fk:loadTranslationTable{
   ["liangzhu_draw2"] = "其摸两张牌",
 }
 
+local machao = General(extension, "jsp__machao", "qun", 4)
+local zhuiji = fk.CreateDistanceSkill{
+  name = "zhuiji",
+  correct_func = function(self, from, to)
+    if from:hasSkill(self.name) then
+      if from.hp > to.hp then
+        from:setFixedDistance(to, 1)
+      else
+        from:removeFixedDistance(to)
+      end
+    end
+    return 0
+  end,
+}
+local cihuai = fk.CreateViewAsSkill{
+  name = "cihuai",
+  anim_type = "offensive",
+  pattern = "slash",
+  card_filter = function(self, to_select, selected)
+    return false
+  end,
+  view_as = function(self, cards)
+    if Self:getMark(self.name) == 0 then return end
+    local c = Fk:cloneCard("slash")
+    return c
+  end,
+}
+local cihuai_invoke = fk.CreateTriggerSkill{
+  name = "#cihuai_invoke",
+  anim_type = "offensive",
+  events = {fk.EventPhaseStart},
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player:hasSkill("cihuai") and player.phase == Player.Play and not player:isKongcheng()
+  end,
+  on_cost = function(self, event, target, player, data)
+    return player.room:askForSkillInvoke(player, "cihuai")
+  end,
+  on_use = function(self, event, target, player, data)
+    local cards = player.player_cards[Player.Hand]
+    player:showCards(cards)
+    for _, id in ipairs(cards) do
+      if Fk:getCardById(id).trueName == "slash" then
+        return
+      end
+    end
+    player.room:addPlayerMark(player, "cihuai", 1)
+  end,
+
+  refresh_events = {fk.AfterCardsMove, fk.Death},
+  can_refresh = function(self, event, target, player, data)
+    if player:hasSkill(self.name, true) then
+      if event == fk.AfterCardsMove then
+        for _, move in ipairs(data) do
+          if move.from == player.id or move.to == player.id then
+            for _, info in ipairs(move.moveInfo) do
+              if info.fromArea == Card.PlayerHand or info.toArea == Card.PlayerHand then
+                return true
+              end
+            end
+          end
+        end
+      else
+        return true
+      end
+    end
+  end,
+  on_refresh = function(self, event, target, player, data)
+    player.room:setPlayerMark(player, "cihuai", 0)
+  end,
+}
+cihuai:addRelatedSkill(cihuai_invoke)
+machao:addSkill(zhuiji)
+machao:addSkill(cihuai)
 Fk:loadTranslationTable{
   ["jsp__machao"] = "马超",
   ["zhuiji"] = "追击",
   [":zhuiji"] = "锁定技，你计算体力值比你少的角色的距离始终为1。",
   ["cihuai"] = "刺槐",
   [":cihuai"] = "出牌阶段开始时，你可以展示你的手牌，若其中没有【杀】，则你使用或打出【杀】时不需要手牌，直到你的手牌数变化或有角色死亡。",
+  ["#cihuai_invoke"] = "刺槐",
 }
 
 local guanyu = General(extension, "jsp__guanyu", "wei", 4)
@@ -99,7 +173,7 @@ local nuzhan = fk.CreateTriggerSkill{
   frequency = Skill.Compulsory,
   events = {fk.AfterCardUseDeclared, fk.DamageCaused},
   can_trigger = function(self, event, target, player, data)
-    if target == player and player:hasSkill(self.name) and data.card and data.card.trueName == "slash" and data.card:isVirtual() and #data.card.subcards == 1 then
+    if target == player and player:hasSkill(self.name, false, true) and data.card and data.card.trueName == "slash" and data.card:isVirtual() and #data.card.subcards == 1 then
       if event == fk.AfterCardUseDeclared then
         return player.phase == Player.Play and Fk:getCardById(data.card.subcards[1]).type == Card.TypeTrick
       else

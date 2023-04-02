@@ -6,7 +6,7 @@ Fk:loadTranslationTable{
   ["starsp"] = "☆SP",
 }
 
-local zhaoyun = General(extension, "starsp__zhaoyun", "qun", 3)
+--local zhaoyun = General(extension, "starsp__zhaoyun", "qun", 3)
 local chongzhen = fk.CreateTriggerSkill{
   name = "chongzhen",
   anim_type = "offensive",
@@ -22,8 +22,8 @@ local chongzhen = fk.CreateTriggerSkill{
     room:obtainCard(player.id, card, false)
   end,
 }
-zhaoyun:addSkill("longdan")
-zhaoyun:addSkill(chongzhen)
+--zhaoyun:addSkill("longdan")
+--zhaoyun:addSkill(chongzhen)
 Fk:loadTranslationTable{
   ["starsp__zhaoyun"] = "赵云",
   ["chongzhen"] = "冲阵",
@@ -62,7 +62,7 @@ local lihun_record = fk.CreateTriggerSkill{
 
   refresh_events = {fk.EventPhaseEnd},
   can_refresh = function(self, event, target, player, data)
-    if target == player and player:hasSkill(self.name) and player.phase == Player.Play and player:usedSkillTimes("lihun") > 0 then
+    if target == player and player:hasSkill(self.name, true) and player.phase == Player.Play and player:usedSkillTimes("lihun") > 0 then
       for _, p in ipairs(player.room:getAlivePlayers()) do
         if p:getMark("lihun") > 0 then
           self.lihun_to = {p.id}
