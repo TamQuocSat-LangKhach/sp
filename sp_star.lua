@@ -34,6 +34,8 @@ local diaochan = General(extension, "starsp__diaochan", "qun", 3, 3, General.Fem
 local lihun = fk.CreateActiveSkill{
   name = "lihun",
   anim_type = "control",
+  card_num = 1,
+  target_num = 1,
   can_use = function(self, player)
     return player:usedSkillTimes(self.name) == 0
   end,
@@ -44,8 +46,6 @@ local lihun = fk.CreateActiveSkill{
     local target = Fk:currentRoom():getPlayerById(to_select)
     return #selected == 0 and target.gender == General.Male and not target:isKongcheng()
   end,
-  target_num = 1,
-  card_num = 1,
   on_use = function(self, room, effect)
     local player = room:getPlayerById(effect.from)
     local target = room:getPlayerById(effect.tos[1])

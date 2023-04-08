@@ -10,6 +10,8 @@ local masu = General(extension, "re__masu", "shu", 3)
 local sanyao = fk.CreateActiveSkill{
   name = "sanyao",
   anim_type = "offensive",
+  card_num = 1,
+  target_num = 1,
   can_use = function(self, player)
     return player:usedSkillTimes(self.name) == 0 and not player:isNude()
   end,
@@ -27,8 +29,6 @@ local sanyao = fk.CreateActiveSkill{
       return Fk:currentRoom():getPlayerById(to_select).hp == n
     end
   end,
-  target_num = 1,
-  card_num = 1,
   on_use = function(self, room, effect)
     local player = room:getPlayerById(effect.from)
     local target = room:getPlayerById(effect.tos[1])
@@ -88,8 +88,8 @@ local bulianshi = General(extension, "re__bulianshi", "wu", 3, 3, General.Female
 local anxu = fk.CreateActiveSkill{
   name = "re__anxu",
   anim_type = "control",
-  target_num = 2,
   card_num = 0,
+  target_num = 2,
   can_use = function(self, player)
     return player:usedSkillTimes(self.name) == 0
   end,
@@ -122,9 +122,7 @@ local anxu = fk.CreateActiveSkill{
     end
     local card = room:askForCard(to, 1, 1, false, self.name, false)
     if #card > 0 then
-      local dummy = Fk:cloneCard("dilu")
-      dummy:addSubcards(card)
-      room:obtainCard(from.id, dummy, false, fk.ReasonGive)
+      room:obtainCard(from.id, Fk:getCardById(card[1]), false, fk.ReasonGive)
     end
     if #target1.player_cards[Player.Hand] == #target2.player_cards[Player.Hand] then
       local choices = {"draw1"}

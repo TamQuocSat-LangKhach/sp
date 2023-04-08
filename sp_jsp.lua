@@ -28,8 +28,8 @@ local liangzhu = fk.CreateTriggerSkill{
 }
 local fanxiang = fk.CreateTriggerSkill{
   name = "fanxiang",
+  frequency = Skill.Wake,
   events = {fk.EventPhaseStart},
-  frequency = Skill.Compulsory,  --TODO: Wake!
   can_trigger = function(self, event, target, player, data)
     if target == player and player:hasSkill(self.name) and
      player.phase == Player.Start and
@@ -41,17 +41,20 @@ local fanxiang = fk.CreateTriggerSkill{
       end
     end
   end,
-  on_use = function(self, event, target, player, data)
+  on_cost = function(self, event, target, player, data)
     local room = player.room
     room:addPlayerMark(player, self.name, 1)
     room:changeMaxHp(player, 1)
-    room:recover({
+    return true
+  end,
+  on_use = function(self, event, target, player, data)
+    player.room:recover({
       who = player,
       num = 1,
       recoverBy = player,
       skillName = self.name
     })
-    room:handleAddLoseSkills(player, "-liangzhu|xiaoji", nil)
+    player.room:handleAddLoseSkills(player, "-liangzhu|xiaoji", nil)
   end,
 }
 sunshangxiang:addSkill(liangzhu)
@@ -89,6 +92,7 @@ local cihuai = fk.CreateViewAsSkill{
   view_as = function(self, cards)
     if Self:getMark(self.name) == 0 then return end
     local c = Fk:cloneCard("slash")
+    c.skillName = self.name
     return c
   end,
 }
@@ -150,8 +154,8 @@ Fk:loadTranslationTable{
 local guanyu = General(extension, "jsp__guanyu", "wei", 4)
 local danji = fk.CreateTriggerSkill{
   name = "danji",
+  frequency = Skill.Wake,
   events = {fk.EventPhaseStart},
-  frequency = Skill.Compulsory,
   can_trigger = function(self, event, target, player, data)
     return target == player and
       player:hasSkill(self.name) and
@@ -160,11 +164,14 @@ local danji = fk.CreateTriggerSkill{
       #player.player_cards[Player.Hand] > player.hp and
       not string.find(player.room:getLord().general, "liubei")
   end,
-  on_use = function(self, event, target, player, data)
+  on_cost = function(self, event, target, player, data)
     local room = player.room
     room:addPlayerMark(player, self.name, 1)
     room:changeMaxHp(player, -1)
-    room:handleAddLoseSkills(player, "mashu|nuzhan", nil)
+    return true
+  end,
+  on_use = function(self, event, target, player, data)
+    player.room:handleAddLoseSkills(player, "mashu|nuzhan", nil)
   end,
 }
 local nuzhan = fk.CreateTriggerSkill{
@@ -226,18 +233,20 @@ local kunfen = fk.CreateTriggerSkill{
 local fengliang = fk.CreateTriggerSkill{
   name = "fengliang",
   anim_type = "defensive",
-  events = {fk.Dying},
-  frequency = Skill.Compulsory,
+  events = {fk.EnterDying},
+  frequency = Skill.Wake,
   can_trigger = function(self, event, target, player, data)
-    return target == player and
-      player:hasSkill(self.name) and
+    return target == player and player:hasSkill(self.name) and
       player:getMark(self.name) == 0
   end,
-  on_use = function(self, event, target, player, data)
+  on_cost = function(self, event, target, player, data)
     local room = player.room
     room:addPlayerMark(player, self.name, 1)
     room:changeMaxHp(player, -1)
-    room:recover({
+    return true
+  end,
+  on_use = function(self, event, target, player, data)
+    player.room:recover({
       who = player,
       num = 2 - player.hp,
       recoverBy = player,

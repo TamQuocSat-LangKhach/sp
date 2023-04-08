@@ -45,6 +45,8 @@ local pangde = General(extension, "sp__pangde", "wei", 4)
 local juesi = fk.CreateActiveSkill{
   name = "juesi",
   anim_type = "offensive",
+  card_num = 1,
+  target_num = 1,
   can_use = function(self, player)
     return not player:isKongcheng()
   end,
@@ -55,8 +57,6 @@ local juesi = fk.CreateActiveSkill{
     local target = Fk:currentRoom():getPlayerById(to_select)
     return #selected == 0 and not target:isNude() and Self:inMyAttackRange(target)
   end,
-  target_num = 1,
-  card_num = 1,
   on_use = function(self, room, effect)
     local player = room:getPlayerById(effect.from)
     local target = room:getPlayerById(effect.tos[1])
@@ -185,6 +185,7 @@ local jieyuan = fk.CreateTriggerSkill{
 local fenxin = fk.CreateTriggerSkill{
   name = "fenxin",
   anim_type = "offensive",
+  frequency = Skill.Limited,
   events = {fk.BeforeGameOverJudge},
   can_trigger = function(self, event, target, player, data)
     return player:hasSkill(self.name) and player:getMark(self.name) == 0 and
@@ -270,9 +271,7 @@ local bifa = fk.CreateTriggerSkill{
     local type = Fk:getCardById(target:getPile(self.name)[1]):getTypeString()
     local card = room:askForCard(target, 1, 1, false, self.name, true, ".|.|.|hand|.|"..type)
     if #card > 0 then
-      local dummy = Fk:cloneCard("dilu")
-      dummy:addSubcards(card)
-      room:obtainCard(player, dummy, false, fk.ReasonGive)
+      room:obtainCard(player, Fk:getCardById(card[1]), false, fk.ReasonGive)
       room:obtainCard(target, target:getPile(self.name)[1], true, fk.ReasonPrey)
     else
       room:loseHp(target, 1, self.name)
@@ -291,6 +290,8 @@ local songci = fk.CreateActiveSkill{
   name = "songci",
   anim_type = "control",
   mute = true,
+  card_num = 0,
+  target_num = 1,
   can_use = function(self, player)
     return true
   end,
@@ -301,8 +302,6 @@ local songci = fk.CreateActiveSkill{
     local target = Fk:currentRoom():getPlayerById(to_select)
     return #selected == 0 and target:getMark(self.name) == 0 and #target.player_cards[Player.Hand] ~= target.hp
   end,
-  target_num = 1,
-  card_num = 0,
   on_use = function(self, room, effect)
     local target = room:getPlayerById(effect.tos[1])
     room:addPlayerMark(target, self.name)
@@ -409,10 +408,8 @@ local kangkai = fk.CreateTriggerSkill{
     if player == to then return end
     local cards = room:askForCard(player, 1, 1, true, self.name, false)
     if #cards > 0 then
-      local dummy = Fk:cloneCard("dilu")
-      dummy:addSubcards(cards)
-      room:obtainCard(to.id, dummy, true, fk.ReasonGive)
       local card = Fk:getCardById(cards[1])
+      room:obtainCard(to.id, card, true, fk.ReasonGive)
       if card.type == Card.TypeEquip and room:askForSkillInvoke(to, self.name) then  --FIXME: need prompt
         room:useCard({
           from = to.id,
@@ -741,6 +738,7 @@ local quji = fk.CreateActiveSkill{
   min_card_num = function ()
     return Self:getLostHp()
   end,
+  min_target_num = 1,
   can_use = function(self, player)
     return player:isWounded() and player:usedSkillTimes(self.name) == 0
   end,
@@ -761,15 +759,11 @@ local quji = fk.CreateActiveSkill{
         skillName = self.name
       })
     end
-    local loseHp = false
     for _, id in ipairs(effect.cards) do
       if Fk:getCardById(id).color == Card.Black then
-        loseHp = true
+        room:loseHp(player, 1, self.name)
         break
       end
-    end
-    if loseHp then
-      room:loseHp(player, 1, self.name)
     end
   end,
 }
