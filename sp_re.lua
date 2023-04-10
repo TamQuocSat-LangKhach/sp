@@ -66,12 +66,118 @@ Fk:loadTranslationTable{
   [":zhiman"] = "当你对一名其他角色造成伤害时，你可以防止此伤害，然后获得其装备区或判定区的一张牌。",
 }
 
+local yujin = General(extension, "re__yujin", "wei", 4)
+local jieyue = fk.CreateViewAsSkill{
+  name = "jieyue",
+  pattern = "jink,nullification",
+  card_filter = function(self, to_select, selected)
+    if #Self:getPile(self.name) == 0 then return end
+    return #selected == 0 and Fk:currentRoom():getCardArea(to_select) ~= Player.Equip
+  end,
+  view_as = function(self, cards)
+    if #cards ~= 1 then return end
+    local card
+    if Fk:getCardById(cards[1]).color == Card.Red then
+      card = Fk:cloneCard("jink")
+    elseif Fk:getCardById(cards[1]).color == Card.Black then  --FIXME: can't view as nullification!
+      card = Fk:cloneCard("nullification")
+    end
+    card.skillName = self.name
+    card:addSubcard(cards[1])
+    return card
+  end,
+  enabled_at_response = function(self, player)
+    return #player:getPile(self.name) > 0
+  end,
+}
+local jieyue_trigger = fk.CreateTriggerSkill{
+  name = "#jieyue_trigger",
+  anim_type = "offensive",
+  events = {fk.EventPhaseStart},
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player:hasSkill(self.name) and player.phase == Player.Finish and not player:isKongcheng()
+  end,
+  on_cost = function(self, event, target, player, data)
+    local room = player.room
+    local targets = {}
+    for _, p in ipairs(room:getOtherPlayers(player)) do
+      if not p:isNude() then
+        table.insert(targets, p.id)
+      end
+    end
+    if #targets == 0 then return end
+    local tos, id = player.room:askForChooseCardAndPlayers(player, targets, 1, 1, ".|.|.|hand|.|.", "#jieyue-cost", self.name)
+    if #tos > 0 then
+      self.cost_data = {tos[1], id}
+      return true
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    room:throwCard(self.cost_data[2], self.name, player, player)
+    local to = room:getPlayerById(self.cost_data[1])
+    local card = room:askForCard(to, 1, 1, true, self.name, true, ".", "#jieyue-give")
+    if #card > 0 then
+      player:addToPile("jieyue", card, false, self.name)
+    else
+      local id = room:askForCardChosen(player, to, "he", self.name)
+      room:throwCard({id}, self.name, to, player)
+    end
+  end,
+
+  refresh_events = {fk.EventPhaseStart},
+  can_refresh = function(self, event, target, player, data)
+    return target == player and player:hasSkill(self.name) and player.phase == Player.Start and #player:getPile("jieyue") > 0
+  end,
+  on_refresh = function(self, event, target, player, data)
+    player.room:moveCards({
+      from = player.id,
+      ids = player:getPile("jieyue"),
+      to = player.id,
+      toArea = Card.PlayerHand,
+      moveReason = fk.ReasonJustMove,
+      skillName = self.name,
+    })
+  end,
+}
+jieyue:addRelatedSkill(jieyue_trigger)
+yujin:addSkill(jieyue)
 Fk:loadTranslationTable{
   ["re__yujin"] = "于禁",
   ["jieyue"] = "节钺",
   [":jieyue"] = "结束阶段开始时，你可以弃置一张手牌并选择一名其他角色，若如此做，除非该角色将一张牌置于你的武将牌上，否则你弃置其一张牌。若你的武将牌上有牌，则你可以将红色手牌当【闪】、黑色手牌当【无懈可击】使用或打出，准备阶段开始时，你获得你武将牌上的牌。",
+  ["#jieyue_trigger"] = "节钺",
+  ["#jieyue-cost"] = "节钺：你可以弃置一张手牌，令一名其他角色执行后续效果",
+  ["#jieyue-give"] = "节钺：将一张牌置为“节钺”牌，或其弃置你一张牌",
 }
 
+local liubiao = General(extension, "re__liubiao", "qun", 3)
+local re__zishou = fk.CreateTriggerSkill{
+  name = "re__zishou",
+  anim_type = "drawcard",
+  events = {fk.DrawNCards},
+  can_trigger = function(self, event, target, player, data)
+    return player:hasSkill(self.name) and player.phase == Player.Draw
+  end,
+  on_use = function(self, event, target, player, data)
+    local kingdoms = {}
+    for _, p in ipairs(player.room.alive_players) do
+      table.insertIfNeed(kingdoms, p.kingdom)
+    end
+    data.n = data.n + #kingdoms
+  end,
+}
+local zishou_prohibit = fk.CreateProhibitSkill{
+  name = "#zishou_prohibit",
+  is_prohibited = function(self, from, to, card)
+    if from:hasSkill(self.name) then
+      return from:usedSkillTimes("re__zishou") > 0 and from ~= to
+    end
+  end,
+}
+re__zishou:addRelatedSkill(zishou_prohibit)
+liubiao:addSkill(re__zishou)
+liubiao:addSkill("zongshi")
 Fk:loadTranslationTable{
   ["re__liubiao"] = "刘表",
   ["re__zishou"] = "自守",

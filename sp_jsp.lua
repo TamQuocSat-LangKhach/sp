@@ -31,9 +31,8 @@ local fanxiang = fk.CreateTriggerSkill{
   frequency = Skill.Wake,
   events = {fk.EventPhaseStart},
   can_trigger = function(self, event, target, player, data)
-    if target == player and player:hasSkill(self.name) and
-     player.phase == Player.Start and
-     player:getMark(self.name) == 0 then
+    if target == player and player:hasSkill(self.name) and player:usedSkillTimes(self.name, Player.HistoryGame) == 0 and
+     player.phase == Player.Start then
       for _, p in ipairs(player.room:getAlivePlayers()) do
         if p:isWounded() and p:getMark("liangzhu") > 0 then
           return true
@@ -42,19 +41,18 @@ local fanxiang = fk.CreateTriggerSkill{
     end
   end,
   on_cost = function(self, event, target, player, data)
-    local room = player.room
-    room:addPlayerMark(player, self.name, 1)
-    room:changeMaxHp(player, 1)
     return true
   end,
   on_use = function(self, event, target, player, data)
-    player.room:recover({
+    local room = player.room
+    room:changeMaxHp(player, 1)
+    room:recover({
       who = player,
       num = 1,
       recoverBy = player,
       skillName = self.name
     })
-    player.room:handleAddLoseSkills(player, "-liangzhu|xiaoji", nil)
+    room:handleAddLoseSkills(player, "-liangzhu|xiaoji", nil)
   end,
 }
 sunshangxiang:addSkill(liangzhu)
@@ -71,6 +69,7 @@ Fk:loadTranslationTable{
 local machao = General(extension, "jsp__machao", "qun", 4)
 local zhuiji = fk.CreateDistanceSkill{
   name = "zhuiji",
+  frequency = Skill.Compulsory,
   correct_func = function(self, from, to)
     if from:hasSkill(self.name) then
       if from.hp > to.hp then
@@ -157,21 +156,18 @@ local danji = fk.CreateTriggerSkill{
   frequency = Skill.Wake,
   events = {fk.EventPhaseStart},
   can_trigger = function(self, event, target, player, data)
-    return target == player and
-      player:hasSkill(self.name) and
-      player:getMark(self.name) == 0 and
+    return target == player and player:hasSkill(self.name) and player:usedSkillTimes(self.name, Player.HistoryGame) == 0 and
       player.phase == Player.Start and
       #player.player_cards[Player.Hand] > player.hp and
       not string.find(player.room:getLord().general, "liubei")
   end,
   on_cost = function(self, event, target, player, data)
-    local room = player.room
-    room:addPlayerMark(player, self.name, 1)
-    room:changeMaxHp(player, -1)
     return true
   end,
   on_use = function(self, event, target, player, data)
-    player.room:handleAddLoseSkills(player, "mashu|nuzhan", nil)
+    local room = player.room
+    room:changeMaxHp(player, -1)
+    room:handleAddLoseSkills(player, "mashu|nuzhan", nil)
   end,
 }
 local nuzhan = fk.CreateTriggerSkill{
@@ -217,7 +213,7 @@ local kunfen = fk.CreateTriggerSkill{
     return target == player and player:hasSkill(self.name) and player.phase == Player.Finish
   end,
   on_cost = function(self, event, target, player, data)
-    if player:getMark("fengliang") == 0 then
+    if player:usedSkillTimes("fengliang", Player.HistoryGame) == 0 then
       return true
     else
       return player.room:askForSkillInvoke(player, self.name)
@@ -236,17 +232,15 @@ local fengliang = fk.CreateTriggerSkill{
   events = {fk.EnterDying},
   frequency = Skill.Wake,
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self.name) and
-      player:getMark(self.name) == 0
+    return target == player and player:hasSkill(self.name) and player:usedSkillTimes(self.name, Player.HistoryGame) == 0
   end,
   on_cost = function(self, event, target, player, data)
-    local room = player.room
-    room:addPlayerMark(player, self.name, 1)
-    room:changeMaxHp(player, -1)
     return true
   end,
   on_use = function(self, event, target, player, data)
-    player.room:recover({
+    local room = player.room
+    room:changeMaxHp(player, -1)
+    room:recover({
       who = player,
       num = 2 - player.hp,
       recoverBy = player,
