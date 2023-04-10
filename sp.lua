@@ -28,7 +28,10 @@ local jilei = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local room = player.room
     local choice = room:askForChoice(player, {"basic", "trick", "equip"}, self.name)
-    room:setPlayerMark(data.from, "@jilei-turn", choice)
+    local types = player:getMark("@jilei-turn")
+    if types == 0 then types = {} end
+    table.insertIfNeed(types, choice)
+    room:setPlayerMark(data.from, "@jilei-turn", types)
   end,
 }
 local jilei_prohibit = fk.CreateProhibitSkill{
@@ -37,17 +40,17 @@ local jilei_prohibit = fk.CreateProhibitSkill{
   end,
   prohibit_use = function(self, player, card)
     if player:getMark("@jilei-turn") ~= 0 then
-      return card:getTypeString() == player:getMark("@jilei")
+      return table.contains(player:getMark("@jilei-turn"), card:getTypeString())
     end
   end,
   prohibit_response = function(self, player, card)
     if player:getMark("@jilei-turn") ~= 0 then
-      return card:getTypeString() == player:getMark("@jilei")
+      return table.contains(player:getMark("@jilei-turn"), card:getTypeString())
     end
   end,
   prohibit_discard = function(self, player, card)
     if player:getMark("@jilei-turn") ~= 0 then
-      return card:getTypeString() == player:getMark("@jilei")
+      return table.contains(player:getMark("@jilei-turn"), card:getTypeString())
     end
   end,
 }
