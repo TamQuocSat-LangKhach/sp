@@ -10,17 +10,23 @@ local zhaoyun = General(extension, "starsp__zhaoyun", "qun", 3)
 local chongzhen = fk.CreateTriggerSkill{
   name = "chongzhen",
   anim_type = "offensive",
-  events = {fk.TargetSpecified, fk.CardUsing, fk.CardRespondFinished},
+  events = {fk.CardUsing, fk.CardResponding},
   can_trigger = function(self, event, target, player, data)
     if player:hasSkill(self.name) and data.card.skillName == "longdan" then
       local id
-      if event == fk.TargetSpecified then
-        id = data.to  --slash
-      elseif event == fk.CardUsing then
-        if data.card.name == "jink" then
+      if event == fk.CardUsing then
+        if data.card.name == "slash" then
+          for i = 1, #data.tos, 1 do  --for multi-targets slash
+            id = data.tos[i][1]
+            if not player.room:getPlayerById(id):isKongcheng() then
+              self.chongzhen_to = id
+              return true
+            end
+          end
+        elseif data.card.name == "jink" then
           id = data.responseToEvent.from  --jink
         end
-      elseif event == fk.CardRespondFinished then
+      elseif event == fk.CardResponding then
         if data.responseToEvent.from == player.id then
           id = data.responseToEvent.to  --duel used by zhaoyun
         else

@@ -40,9 +40,6 @@ local fanxiang = fk.CreateTriggerSkill{
       end
     end
   end,
-  on_cost = function(self, event, target, player, data)
-    return true
-  end,
   on_use = function(self, event, target, player, data)
     local room = player.room
     room:changeMaxHp(player, 1)
@@ -161,9 +158,6 @@ local danji = fk.CreateTriggerSkill{
       #player.player_cards[Player.Hand] > player.hp and
       not string.find(player.room:getLord().general, "liubei")
   end,
-  on_cost = function(self, event, target, player, data)
-    return true
-  end,
   on_use = function(self, event, target, player, data)
     local room = player.room
     room:changeMaxHp(player, -1)
@@ -234,9 +228,6 @@ local fengliang = fk.CreateTriggerSkill{
   can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(self.name) and player:usedSkillTimes(self.name, Player.HistoryGame) == 0
   end,
-  on_cost = function(self, event, target, player, data)
-    return true
-  end,
   on_use = function(self, event, target, player, data)
     local room = player.room
     room:changeMaxHp(player, -1)
@@ -246,7 +237,7 @@ local fengliang = fk.CreateTriggerSkill{
       recoverBy = player,
       skillName = self.name
     })
-    --room:handleAddLoseSkills(player, "tiaoxin", nil)
+    room:handleAddLoseSkills(player, "tiaoxin", nil)
   end,
 }
 jiangwei:addSkill(kunfen)

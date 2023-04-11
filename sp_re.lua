@@ -184,10 +184,54 @@ Fk:loadTranslationTable{
   [":re__zishou"] = "摸牌阶段，你可以额外摸X张牌（X为全场势力数）。若如此做，直到回合结束，其他角色不能被选择为你使用牌的目标。",
 }
 
+local madai = General(extension, "re__madai", "shu", 4)
+local re__qianxi = fk.CreateTriggerSkill{
+  name = "re__qianxi",
+  anim_type = "control",
+  events = {fk.EventPhaseStart},
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player:hasSkill(self.name) and player.phase == Player.Start
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    player:drawCards(1, self.name)
+    local card = room:askForDiscard(player, 1, 1, true, self.name, false, ".", "#qianxi-discard")
+    local targets = {}
+    for _, p in ipairs(room:getOtherPlayers(player)) do
+      if player:distanceTo(p) == 1 then
+        table.insert(targets, p.id)
+      end
+    end
+    if #targets == 0 then return end
+    local tos = room:askForChoosePlayers(player, targets, 1, 1, "#qianxi-choose", self.name)
+    local to
+    if #tos > 0 then
+      to = tos[1]
+    else
+      to = targets[math.random(1, #targets)]
+    end
+    room:setPlayerMark(room:getPlayerById(to), "@qianxi-turn", Fk:getCardById(card[1]):getColorString())
+  end,
+}
+local re__qianxi_prohibit = fk.CreateProhibitSkill{  --actually the same as YJ2012 new MaDai
+  name = "#re__qianxi_prohibit",
+  is_prohibited = function()
+  end,
+  prohibit_use = function(self, player, card)
+    return player:getMark("@qianxi-turn") ~= 0 and card:getColorString() == player:getMark("@qianxi-turn")
+  end,
+  prohibit_response = function(self, player, card)
+    return player:getMark("@qianxi-turn") ~= 0 and card:getColorString() == player:getMark("@qianxi-turn")
+  end,
+}
+re__qianxi:addRelatedSkill(re__qianxi_prohibit)
+madai:addSkill("mashu")
+madai:addSkill(re__qianxi)
 Fk:loadTranslationTable{
   ["re__madai"] = "马岱",
   ["re__qianxi"] = "潜袭",
   [":re__qianxi"] = "准备阶段开始时，你可以摸一张牌然后弃置一张牌。若如此做，你选择距离为1的一名角色，然后直到回合结束，该角色不能使用或打出与你以此法弃置的牌颜色相同的手牌。",
+  ["#qianxi-discard"] = "潜袭：弃置一张牌，令一名角色本回合不能使用或打出此颜色的手牌",
 }
 
 local bulianshi = General(extension, "re__bulianshi", "wu", 3, 3, General.Female)
