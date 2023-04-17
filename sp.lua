@@ -1900,6 +1900,12 @@ Fk:loadTranslationTable{
   [":naman"] = "每当其他角色打出的【杀】进入弃牌堆时，你可以获得之。",
   ["@xiemu"] = "协穆",
   ["#xiemu_record"] = "协穆",
+
+  ["$zishu1"] = "慢着，让我来！",
+  ["$zishu2"] = "身外之物，不要也罢！",
+  ["$yingyuan1"] = "接好嘞！",
+  ["$yingyuan2"] = "好牌只用一次怎么够？",
+  ["~maliang"] = "我的使命完成了吗……",
 }
 
 local maliang = General(extension, "maliang", "shu", 3)
