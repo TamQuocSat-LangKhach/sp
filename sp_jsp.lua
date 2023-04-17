@@ -54,6 +54,7 @@ local fanxiang = fk.CreateTriggerSkill{
 }
 sunshangxiang:addSkill(liangzhu)
 sunshangxiang:addSkill(fanxiang)
+sunshangxiang:addRelatedSkill("xiaoji")
 Fk:loadTranslationTable{
   ["jsp__sunshangxiang"] = "孙尚香",
   ["liangzhu"] = "良助",
@@ -188,7 +189,7 @@ local nuzhan = fk.CreateTriggerSkill{
 }
 guanyu:addSkill(danji)
 guanyu:addSkill("wusheng")
-Fk:addSkill(nuzhan)
+guanyu:addRelatedSkill(nuzhan)
 Fk:loadTranslationTable{
   ["jsp__guanyu"] = "关羽",
   ["danji"] = "单骑",
@@ -242,6 +243,7 @@ local fengliang = fk.CreateTriggerSkill{
 }
 jiangwei:addSkill(kunfen)
 jiangwei:addSkill(fengliang)
+jiangwei:addRelatedSkill("tiaoxin")
 Fk:loadTranslationTable{
   ["jsp__jiangwei"] = "姜维",
   ["kunfen"] = "困奋",

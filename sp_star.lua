@@ -24,15 +24,19 @@ local chongzhen = fk.CreateTriggerSkill{
             end
           end
         elseif data.card.name == "jink" then
-          id = data.responseToEvent.from  --jink
+          if data.responseToEvent then
+            id = data.responseToEvent.from  --jink
+          end
         end
       elseif event == fk.CardResponding then
-        if data.responseToEvent.from == player.id then
-          id = data.responseToEvent.to  --duel used by zhaoyun
-        else
-          id = data.responseToEvent.from  --savsavage_assault, archery_attack, passive duel
+        if data.responseToEvent then
+          if data.responseToEvent.from == player.id then
+            id = data.responseToEvent.to  --duel used by zhaoyun
+          else
+            id = data.responseToEvent.from  --savsavage_assault, archery_attack, passive duel
 
-          --TODO: Lenovo shu zhaoyun may chongzhen liubei when responding to jijiang
+            --TODO: Lenovo shu zhaoyun may chongzhen liubei when responding to jijiang
+          end
         end
       end
       if id ~= nil then
