@@ -12,7 +12,7 @@ local chongzhen = fk.CreateTriggerSkill{
   anim_type = "offensive",
   events = {fk.CardUsing, fk.CardResponding},
   can_trigger = function(self, event, target, player, data)
-    if player:hasSkill(self.name) and data.card.skillName == "longdan" then
+    if player:hasSkill(self.name) and table.contains(data.card.skillNames, "longdan") then
       local id
       if event == fk.CardUsing then
         if data.card.name == "slash" then
@@ -40,14 +40,14 @@ local chongzhen = fk.CreateTriggerSkill{
         end
       end
       if id ~= nil then
-        self.chongzhen_to = id
+        self.cost_data = id
         return not player.room:getPlayerById(id):isKongcheng()
       end
     end
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    local to = room:getPlayerById(self.chongzhen_to)
+    local to = room:getPlayerById(self.cost_data)
     local card = room:askForCardChosen(player, to, "h", self.name)
     room:obtainCard(player.id, card, false)
   end,
@@ -112,7 +112,7 @@ local lihun_record = fk.CreateTriggerSkill{
       dummy:addSubcards(player:getCardIds(Player.Hand))
       dummy:addSubcards(player:getCardIds(Player.Equip))
     else
-      local cards = room:askForCard(player, n, n, true, "lihun", false, "#lihun-give")
+      local cards = room:askForCard(player, n, n, true, "lihun", false, ".", "#lihun-give:::"..tostring(n))
       dummy:addSubcards(cards)
     end
     room:obtainCard(to.id, dummy, false)
@@ -125,7 +125,7 @@ Fk:loadTranslationTable{
   ["starsp__diaochan"] = "貂蝉",
   ["lihun"] = "离魂",
   [":lihun"] = "出牌阶段，你可以弃置一张牌并将你的武将牌翻面，若如此做，指定一名男性角色，获得其所有手牌。出牌阶段结束时，你须为该角色的每一点体力分配给其一张牌，每回合限一次。",
-  ["#lihun-give"] = "离魂：你需交还该角色体力值张数的牌",
+  ["#lihun-give"] = "离魂：你需交还该角色%arg张牌",
 }
 
 return extension

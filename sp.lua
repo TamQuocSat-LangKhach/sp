@@ -28,7 +28,7 @@ local jilei = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local room = player.room
     local choice = room:askForChoice(player, {"basic", "trick", "equip"}, self.name)
-    local types = player:getMark("@jilei-turn")
+    local types = data.from:getMark("@jilei-turn")
     if types == 0 then types = {} end
     table.insertIfNeed(types, choice)
     room:setPlayerMark(data.from, "@jilei-turn", types)
@@ -36,8 +36,6 @@ local jilei = fk.CreateTriggerSkill{
 }
 local jilei_prohibit = fk.CreateProhibitSkill{
   name = "#jilei_prohibit",
-  is_prohibited = function()
-  end,
   prohibit_use = function(self, player, card)
     if player:getMark("@jilei-turn") ~= 0 then
       return table.contains(player:getMark("@jilei-turn"), card:getTypeString())
@@ -166,7 +164,7 @@ Fk:loadTranslationTable{
   ["#juesi-discard"] = "决死：你需弃置一张牌，若不为【杀】且你体力值不小于其，视为其对你使用【决斗】",
 }
 
---local sp__caiwenji = General(extension, "sp__caiwenji", "wei", 3, 3, General.Female)
+--local caiwenji = General(extension, "sp__caiwenji", "wei", 3, 3, General.Female)
 local chenqing = fk.CreateTriggerSkill{
   name = "chenqing",
   anim_type = "support",
@@ -210,23 +208,46 @@ local chenqing = fk.CreateTriggerSkill{
     end
   end,
 }
-local mozhi = fk.CreateTriggerSkill{
+local mozhi = fk.CreateViewAsSkill{
   name = "mozhi",
+  card_filter = function(self, to_select, selected)
+    return #selected == 0 and Fk:currentRoom():getCardArea(to_select) ~= Player.Equip
+  end,
+  view_as = function(self, cards)
+    if #cards ~= 1 then return end
+    local card = Fk:cloneCard(Self.tag["mozhi"][1])
+    card:addSubcard(cards[1])
+    card.skillName = self.name
+    return card
+  end,
+  enabled_at_play = function(self, player)
+    return false
+  end,
+  --[[
+  enabled_at_response = function(self, player)
+    return player.phase == Player.Finish and player.tag["mozhi"] and #player.tag["mozhi"] > 0 and not player:isKongcheng()
+  end,]]--
+}
+local mozhi_record = fk.CreateTriggerSkill{
+  name = "#mozhi_record",
   events = {fk.EventPhaseStart},
   can_trigger = function(self, event, target, player, data)
     if target == player and player:hasSkill(self.name) and player.phase == Player.Finish and not player:isKongcheng() then
-      return player.tag[self.name] and #player.tag[self.name] > 0
+      if type(player:getMark("mozhi-turn")) == "table" and #player:getMark("mozhi-turn") > 0 then
+        return true
+      end
     end
   end,
   on_cost = function(self, event, target, player, data)
-    self.cost_data = player.room:askForUseCard(player, player.tag[self.name][1], ".", "#mozhi_use", true)
+    local name = player:getMark("mozhi-turn")[1]
+    self.cost_data = player.room:askForUseCard(player, name, name, "#mozhi-use:::"..name, true)
     return self.cost_data
   end,
   on_use = function(self, event, target, player, data)
     player.room:useCard(self.cost_data)
   end,
 
-  refresh_events = {fk.CardUseFinished, fk.EventPhaseEnd},
+  refresh_events = {fk.CardUseFinished},
   can_refresh = function(self, event, target, player, data)
     if target == player and player:hasSkill(self.name, true) and player.phase ~= Player.NotActive then
       if event == fk.CardUseFinished then
@@ -237,20 +258,17 @@ local mozhi = fk.CreateTriggerSkill{
     end
   end,
   on_refresh = function(self, event, target, player, data)
-    if event == fk.CardUseFinished then
-      local names = player.tag[self.name]
-      if type(names) ~= "table" then names = {} end
-      if #names < 2 then
-        table.insertIfNeed(names, data.card.name)
-        player.tag[self.name] = names
-      end
-    else
-      player.tag[self.name] = {}
+    local names = player:getMark("mozhi-turn")
+    if type(names) ~= "table" then names = {} end
+    if #names < 2 then
+      table.insert(names, data.card.name)
+      player.room:setPlayerMark(player, "mozhi-turn", names)
     end
   end,
 }
---sp__caiwenji:addSkill(chenqing)
---sp__caiwenji:addSkill(mozhi)
+mozhi:addRelatedSkill(mozhi_record)
+--caiwenji:addSkill(chenqing)
+--caiwenji:addSkill(mozhi)
 Fk:loadTranslationTable{
   ["sp__caiwenji"] = "蔡文姬",
   ["chenqing"] = "陈情",
@@ -259,7 +277,8 @@ Fk:loadTranslationTable{
   [":mozhi"] = "结束阶段，你可以将一张手牌当你本回合使用过的第一张基本牌或非延时锦囊牌使用，然后你可以将一张手牌当你本回合使用过的第二张基本牌或非延时锦囊牌使用。",
   ["#chenqing-choose"] = "陈情：令一名其他角色摸四张牌然后弃四张牌，若花色各不相同视为对濒死角色使用【桃】",
   ["#chenqing-discard"] = "陈情：需弃置四张牌，若花色各不相同则视为对濒死角色使用【桃】",
-  ["#mozhi-use"] = "默识：你可以将一张手牌当【珠泪哀歌族·水仙女人鱼】使用",
+  ["#mozhi_record"] = "默识",
+  ["#mozhi-use"] = "默识：你可以将一张手牌当【%arg】使用",
 }
 
 local machao = General(extension, "sp__machao", "qun", 4)
@@ -280,32 +299,109 @@ Fk:loadTranslationTable{
   [":shichou"] = "你使用【杀】可以额外选择至多X名角色为目标（X为你已损失的体力值）。",
 }
 
---local jiaxu = General(extension, "sp__jiaxu", "wei", 3)
+local jiaxu = General(extension, "sp__jiaxu", "wei", 3)
 local zhenlve = fk.CreateTriggerSkill{
   name = "zhenlve",
   anim_type = "control",
-  events = {fk.CardUsing},
+  events = {fk.PreCardEffect},
   frequency = Skill.Compulsory,
   can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(self.name) and data.card.type == Card.TypeTrick and data.card.sub_type ~= Card.SubtypeDelayedTrick
   end,
   on_use = function(self, event, target, player, data)
-    data.disresponsiveList = data.disresponsiveList or {}
-    for _, p in ipairs(player.room:getAlivePlayers()) do
-      table.insertIfNeed(data.disresponsiveList, p.id)
-    end
+    data.disresponsive = true
   end,
 }
 local zhenlve_prohibit = fk.CreateProhibitSkill{
   name = "#zhenlve_prohibit",
   is_prohibited = function(self, from, to, card)
-    if to:hasSkill(self.name) then
-      return card.sub_type == Card.SubtypeDelayedTrick
+    return to:hasSkill(self.name) and card.sub_type == Card.SubtypeDelayedTrick
+  end,
+}
+local jianshu = fk.CreateActiveSkill{
+  name = "jianshu",
+  anim_type = "control",
+  card_num = 1,
+  target_num = 1,
+  frequency = Skill.Limited,
+  can_use = function(self, player)
+    return player:usedSkillTimes(self.name, Player.HistoryGame) == 0 and not player:isKongcheng()
+  end,
+  card_filter = function(self, to_select, selected)
+    return #selected == 0 and Fk:getCardById(to_select).color == Card.Black
+  end,
+  target_filter = function(self, to_select, selected)
+    return #selected == 0 and to_select ~= Self.id
+  end,
+  on_use = function(self, room, effect)
+    local player = room:getPlayerById(effect.from)
+    local target = room:getPlayerById(effect.tos[1])
+    room:obtainCard(target, Fk:getCardById(effect.cards[1]), false, fk.ReasonGive)
+    local targets = {}
+    for _, p in ipairs(room:getOtherPlayers(target)) do
+      if not p:isKongcheng() and p:inMyAttackRange(target) then
+        table.insert(targets, p.id)
+      end
+    end
+    if #targets == 0 then return end
+    local to = room:askForChoosePlayers(player, targets, 1, 1, "#jianshu-choose", self.name)
+    if #to == 0 then
+      to = room:getPlayerById(table.random(targets))
+    else
+      to = room:getPlayerById(to[1])
+    end
+    local pindian = target:pindian({to}, self.name)
+    if pindian.results[to.id].winner then
+      local winner, loser
+      if pindian.results[to.id].winner == target then
+        winner = target
+        loser = to
+      else
+        winner = to
+        loser = target
+      end
+      room:askForDiscard(winner, 2, 2, true, self.name, false, ".")
+      room:loseHp(loser, 1, self.name)
+    else
+      room:loseHp(target, 1, self.name)
+      room:loseHp(to, 1, self.name)
+    end
+  end
+}
+local yongdi = fk.CreateTriggerSkill{
+  name = "yongdi",
+  anim_type = "masochism",
+  frequency = Skill.Limited,
+  events = {fk.Damaged},
+  can_trigger = function(self, event, target, player, data)
+    return target == player and target:hasSkill(self.name) and player:usedSkillTimes(self.name, Player.HistoryGame) == 0 and
+      not table.every(player.room:getOtherPlayers(player), function (p) return not p.gender == General.Male end)
+  end,
+  on_cost = function(self, event, target, player, data)
+    local to = player.room:askForChoosePlayers(player, table.map(table.filter(player.room:getOtherPlayers(player), function(p)
+      return p.gender == General.Male end), function(p) return p.id end), 1, 1, "#yongdi-choose", self.name)
+    if #to > 0 then
+      self.cost_data = to[1]
+      return true
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local to = room:getPlayerById(self.cost_data)
+    room:changeMaxHp(to, 1)
+    if to.role ~= "lord" then
+      for _, skill in ipairs(Fk.generals[to.general].skills) do
+        if skill.lordSkill then
+          room:handleAddLoseSkills(to, skill.name, nil)
+        end
+      end
     end
   end,
 }
 zhenlve:addRelatedSkill(zhenlve_prohibit)
---jiaxu:addSkill(zhenlve)
+jiaxu:addSkill(zhenlve)
+jiaxu:addSkill(jianshu)
+jiaxu:addSkill(yongdi)
 Fk:loadTranslationTable{
   ["sp__jiaxu"] = "贾诩",
   ["zhenlve"] = "缜略",
@@ -314,6 +410,8 @@ Fk:loadTranslationTable{
   [":jianshu"] = "限定技，出牌阶段，你可以将一张黑色手牌交给一名其他角色，并选择一名攻击范围内含有其的另一名角色。然后令这两名角色拼点：赢的角色弃置两张牌，没赢的角色失去1点体力。",
   ["yongdi"] = "拥嫡",
   [":yongdi"] = "限定技，当你受到伤害后，你可令一名其他男性角色增加1点体力上限，然后若该角色的武将牌上有主公技且其身份不为主公，其获得此主公技。",
+  ["#jianshu-choose"] = "间书：选择一名攻击范围内含有其的角色，两名角色拼点",
+  ["#yongdi-choose"] = "拥嫡：你可令一名其他男性角色增加1点体力上限并获得其武将牌上的主公技",
 }
 
 local caohong = General(extension, "caohong", "wei", 4)
@@ -1900,12 +1998,6 @@ Fk:loadTranslationTable{
   [":naman"] = "每当其他角色打出的【杀】进入弃牌堆时，你可以获得之。",
   ["@xiemu"] = "协穆",
   ["#xiemu_record"] = "协穆",
-
-  ["$zishu1"] = "慢着，让我来！",
-  ["$zishu2"] = "身外之物，不要也罢！",
-  ["$yingyuan1"] = "接好嘞！",
-  ["$yingyuan2"] = "好牌只用一次怎么够？",
-  ["~maliang"] = "我的使命完成了吗……",
 }
 
 local maliang = General(extension, "maliang", "shu", 3)
@@ -2015,6 +2107,12 @@ Fk:loadTranslationTable{
   [":yingyuan"] = "当你于回合内使用的牌置入弃牌堆后，你可以将之交给一名其他角色（相同牌名的牌每回合限一次）。",
   ["#zishu-discard"] = "自书",
   ["#yingyuan-give"] = "应援：你可以将 %arg 交给一名其他角色",
+
+  ["$zishu1"] = "慢着，让我来！",
+  ["$zishu2"] = "身外之物，不要也罢！",
+  ["$yingyuan1"] = "接好嘞！",
+  ["$yingyuan2"] = "好牌只用一次怎么够？",
+  ["~maliang"] = "我的使命完成了吗……",
 }
 
 local ganfuren = General(extension, "ganfuren", "shu", 3, 3, General.Female)
@@ -2158,7 +2256,7 @@ local zhenwei = fk.CreateTriggerSkill{
   anim_type = "defensive",
   events = {fk.TargetConfirming},
   can_trigger = function(self, event, target, player, data)
-    return player:hasSkill(self.name) and data.firstTarget and data.from ~= player.id and
+    return player:hasSkill(self.name) and data.from ~= player.id and data.firstTarget and
       (data.card.trueName == "slash" or (data.card.type == Card.TypeTrick and data.card.color == Card.Black)) and
       #AimGroup:getAllTargets(data.tos) == 1 and
       player.room:getPlayerById(data.to).hp < player.hp and
@@ -2173,8 +2271,10 @@ local zhenwei = fk.CreateTriggerSkill{
     local choice = room:askForChoice(player, {"zhenwei_transfer", "zhenwei_recycle"}, self.name)
     if choice == "zhenwei_transfer" then
       player:drawCards(1, self.name)
-      --FIXME: target filter, collateral
-      TargetGroup:pushTargets(data.targetGroup, player.id)
+      --FIXME:collateral
+      if not target:isProhibited(player, data.card) then
+        TargetGroup:pushTargets(data.targetGroup, player.id)
+      end
     else
       room:getPlayerById(data.from):addToPile(self.name, data.card, true, self.name)
     end
@@ -2218,7 +2318,8 @@ local junbing = fk.CreateTriggerSkill{
     local dummy1 = Fk:cloneCard("dilu")
     dummy1:addSubcards(target.player_cards[Player.Hand])
     room:obtainCard(player, dummy1, false, fk.ReasonGive)
-    local cards = room:askForCard(player, #dummy1.subcards, #dummy1.subcards, false, self.name, false, ".", "#junbing-give")
+    local n = #dummy1.subcards
+    local cards = room:askForCard(player, n, n, false, self.name, false, ".", "#junbing-give:::"..tostring(n))
     local dummy2 = Fk:cloneCard("dilu")
     dummy2:addSubcards(cards)
     room:obtainCard(target, dummy2, false, fk.ReasonGive)
@@ -2267,7 +2368,7 @@ Fk:loadTranslationTable{
   [":junbing"] = "每名角色的结束阶段，若其手牌数小于或等于1，该角色可以摸一张牌，若该角色不是你，则其将所有手牌交给你，然后你将等量的手牌交给其。",
   ["quji"] = "去疾",
   [":quji"] = "出牌阶段限一次，若你已受伤，你可以弃置X张牌并选择至多X名已受伤的角色，令这些角色各回复1点体力，然后若此此你以此法弃置过的牌中有黑色牌，你失去1点体力。（X为你已损失的体力值）",
-  ["#junbing-give"] = "郡兵：将等量的手牌交给其",
+  ["#junbing-give"] = "郡兵：将%arg张手牌交给其",
 }
 
 return extension
