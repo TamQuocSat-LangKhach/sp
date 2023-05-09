@@ -47,9 +47,12 @@ local zhiman = fk.CreateTriggerSkill{
   can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(self.name) and data.to ~= player
   end,
+  on_cost = function(self, event, target, player, data)
+    return player.room:askForSkillInvoke(player, self.name, nil, "#zhiman-invoke::"..data.to.id)
+  end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    if #data.to.player_cards[Player.Equip] + #data.to.player_cards[Player.Judge] > 0 then
+    if #data.to:getCardIds{Player.Equip, Player.Judge} > 0 then
       local card = room:askForCardChosen(player, data.to, "ej", self.name)
       room:obtainCard(player, card, true, fk.ReasonPrey)
     end
@@ -64,6 +67,7 @@ Fk:loadTranslationTable{
   [":sanyao"] = "出牌阶段限一次，你可以弃置一张牌并指定一名体力值最大（或之一）的角色，你对其造成1点伤害。",
   ["zhiman"] = "制蛮",
   [":zhiman"] = "当你对一名其他角色造成伤害时，你可以防止此伤害，然后获得其装备区或判定区的一张牌。",
+  ["#zhiman-invoke"] = "制蛮：你可以防止对 %dest 造成的伤害，然后获得其场上的一张牌",
 }
 
 local yujin = General(extension, "re__yujin", "wei", 4)
@@ -116,7 +120,7 @@ local jieyue_trigger = fk.CreateTriggerSkill{
     local room = player.room
     room:throwCard(self.cost_data[2], self.name, player, player)
     local to = room:getPlayerById(self.cost_data[1])
-    local card = room:askForCard(to, 1, 1, true, self.name, true, ".", "#jieyue-give")
+    local card = room:askForCard(to, 1, 1, true, self.name, true, ".", "#jieyue-give:"..player.id)
     if #card > 0 then
       player:addToPile("jieyue", card, false, self.name)
     else
@@ -148,7 +152,7 @@ Fk:loadTranslationTable{
   [":jieyue"] = "结束阶段开始时，你可以弃置一张手牌并选择一名其他角色，若如此做，除非该角色将一张牌置于你的武将牌上，否则你弃置其一张牌。若你的武将牌上有牌，则你可以将红色手牌当【闪】、黑色手牌当【无懈可击】使用或打出，准备阶段开始时，你获得你武将牌上的牌。",
   ["#jieyue_trigger"] = "节钺",
   ["#jieyue-cost"] = "节钺：你可以弃置一张手牌，令一名其他角色执行后续效果",
-  ["#jieyue-give"] = "节钺：将一张牌置为“节钺”牌，或其弃置你一张牌",
+  ["#jieyue-give"] = "节钺：将一张牌置为 %dest 的“节钺”牌，或其弃置你一张牌",
 }
 
 local liubiao = General(extension, "re__liubiao", "qun", 3)
@@ -270,7 +274,10 @@ local anxu = fk.CreateActiveSkill{
       from = target2
       to = target1
     end
-    local card = room:askForCard(to, 1, 1, false, self.name, false)
+    local card = room:askForCard(to, 1, 1, false, self.name, false, ".", "#anxu-give::"..from.id)
+    if #card == 0 then
+      card = {table.random(to.player_cards[Player.Hand])}
+    end
     if #card > 0 then
       room:obtainCard(from.id, Fk:getCardById(card[1]), false, fk.ReasonGive)
     end
@@ -299,6 +306,7 @@ Fk:loadTranslationTable{
   ["re__bulianshi"] = "步练师",
   ["re__anxu"] = "安恤",
   [":re__anxu"] = "出牌阶段限一次，你可以选择两名手牌数不同的其他角色，令其中手牌多的角色将一张手牌交给手牌少的角色，然后若这两名角色手牌数相等，你摸一张牌或回复1点体力。",
+  ["#anxu-give"] = "安恤：你需将一张手牌交给 %dest",
 }
 
 local xusheng = General(extension, "re__xusheng", "wu", 4)
