@@ -16,13 +16,7 @@ local chongzhen = fk.CreateTriggerSkill{
       local id
       if event == fk.CardUsing then
         if data.card.name == "slash" then
-          for i = 1, #data.tos, 1 do  --for multi-targets slash
-            id = data.tos[i][1]
-            if not player.room:getPlayerById(id):isKongcheng() then
-              self.chongzhen_to = id
-              return true
-            end
-          end
+          id = data.tos[1][1]
         elseif data.card.name == "jink" then
           if data.responseToEvent then
             id = data.responseToEvent.from  --jink

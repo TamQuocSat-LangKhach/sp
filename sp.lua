@@ -544,8 +544,10 @@ local wuji = fk.CreateTriggerSkill{
   can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(self.name) and
       player.phase == Player.Finish and
-      player:usedSkillTimes(self.name, Player.HistoryGame) == 0 and
-      player:getMark("wuji-turn") > 2
+      player:usedSkillTimes(self.name, Player.HistoryGame) == 0
+  end,
+  can_wake = function(self, event, target, player, data)
+    return player:getMark("wuji-turn") > 2
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
@@ -1494,9 +1496,9 @@ Fk:loadTranslationTable{
   ["@qiangwu-turn"] = "枪舞",
 }
 
-local panfeng = General(extension, "panfeng", "qun", 4)
-local kuangfu = fk.CreateTriggerSkill{
-  name = "kuangfu",
+local nos__panfeng = General(extension, "nos__panfeng", "qun", 4)
+local nos__kuangfu = fk.CreateTriggerSkill{
+  name = "nos__kuangfu",
   anim_type = "offensive",
   events = {fk.Damage},
   can_trigger = function(self, event, target, player, data)
@@ -1504,7 +1506,7 @@ local kuangfu = fk.CreateTriggerSkill{
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    local choices = {"kuangfu_discard"}
+    local choices = {"nos__kuangfu_discard"}
     local ids = {}
     for _, e in ipairs(data.to.player_cards[Player.Equip]) do
       if player:getEquipment(Fk:getCardById(e).sub_type) == nil then
@@ -1512,10 +1514,10 @@ local kuangfu = fk.CreateTriggerSkill{
       end
     end
     if #ids > 0 then
-      table.insert(choices, 1, "kuangfu_move")
+      table.insert(choices, 1, "nos__kuangfu_move")
     end
     local choice = room:askForChoice(player, choices, self.name)
-    if choice == "kuangfu_move" then
+    if choice == "nos__kuangfu_move" then
       room:fillAG(player, ids)
       local id = room:askForAG(player, ids, true, self.name)
       room:closeAG(player)
@@ -1534,13 +1536,81 @@ local kuangfu = fk.CreateTriggerSkill{
     end
   end
 }
+nos__panfeng:addSkill(nos__kuangfu)
+Fk:loadTranslationTable{
+  ["nos__panfeng"] = "潘凤",
+  ["nos__kuangfu"] = "狂斧",
+  [":nos__kuangfu"] = "每当你使用【杀】对目标角色造成一次伤害后，你可以选择一项: 将其装备区里的一张牌置入你的装备区；或弃置其装备区里的一张牌。",
+  ["nos__kuangfu_move"] = "将其一张装备置入你的装备区",
+  ["nos__kuangfu_discard"] = "弃置其一张装备",
+}
+
+local panfeng = General(extension, "panfeng", "qun", 4)
+local kuangfu = fk.CreateActiveSkill{
+  name = "kuangfu",
+  anim_type = "offensive",
+  card_num = 0,
+  target_num = 1,
+  can_use = function(self, player)
+    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
+  end,
+  card_filter = function(self, to_select, selected)
+    return false
+  end,
+  target_filter = function(self, to_select, selected)
+    return #selected == 0 and #Fk:currentRoom():getPlayerById(to_select).player_cards[Player.Equip] > 0
+  end,
+  on_use = function(self, room, effect)
+    local player = room:getPlayerById(effect.from)
+    local target = room:getPlayerById(effect.tos[1])
+    local id = room:askForCardChosen(player, target, "e", self.name)
+    room:throwCard({id}, self.name, target, player)
+    local targets = {}
+    for _, p in ipairs(room:getOtherPlayers(player)) do
+      if not player:isProhibited(p, Fk:cloneCard("slash")) then
+        table.insert(targets, p.id)
+      end
+    end
+    if #targets == 0 then return end
+    local to = room:askForChoosePlayers(player, targets, 1, 1, "#kuangfu-slash", self.name, false)
+    if #to > 0 then
+      to = to[1]
+    else
+      to = table.random(targets)
+    end
+    room:useVirtualCard("slash", nil, player, room:getPlayerById(to), self.name, true)
+    if not player.dead then
+      if effect.from == effect.tos[1] and player:getMark("kuangfu-phase") > 0 then
+        player:drawCards(2, self.name)
+      end
+      if effect.from ~= effect.tos[1] and player:getMark("kuangfu-phase") == 0 then
+        if #player:getCardIds{Player.Hand, Player.Equip} < 3 then
+          player:throwAllCards("he")
+        else
+          player.room:askForDiscard(player, 2, 2, true, "kuangfu", false)
+        end
+      end
+    end
+  end,
+}
+local kuangfu_record = fk.CreateTriggerSkill{
+  name = "#kuangfu_record",
+
+  refresh_events = {fk.Damage},
+  can_refresh = function(self, event, target, player, data)
+    return target == player and player:hasSkill(self.name) and data.card and table.contains(data.card.skillNames, "kuangfu")
+  end,
+  on_refresh = function(self, event, target, player, data)
+    player.room:setPlayerMark(player, "kuangfu-phase", 1)
+  end,
+}
+kuangfu:addRelatedSkill(kuangfu_record)
 panfeng:addSkill(kuangfu)
 Fk:loadTranslationTable{
   ["panfeng"] = "潘凤",
   ["kuangfu"] = "狂斧",
-  [":kuangfu"] = "每当你使用【杀】对目标角色造成一次伤害后，你可以选择一项: 将其装备区里的一张牌置入你的装备区；或弃置其装备区里的一张牌。",
-  ["kuangfu_move"] = "将其一张装备置入你的装备区",
-  ["kuangfu_discard"] = "弃置其一张装备",
+  [":kuangfu"] = "出牌阶段限一次，你可以弃置场上的一张装备牌，视为使用一张【杀】（此【杀】无距离限制且不计次数）。若你弃置的不是你的牌且此【杀】未造成伤害，你弃置两张手牌；若弃置的是你的牌且此【杀】造成伤害，你摸两张牌。",
+  ["#kuangfu-slash"] = "狂斧：选择视为使用【杀】的目标",
 }
 
 local zumao = General(extension, "zumao", "wu", 4)
@@ -1740,9 +1810,10 @@ local juyi = fk.CreateTriggerSkill{
   can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(self.name) and
      player.phase == Player.Start and
-     player:usedSkillTimes(self.name, Player.HistoryGame) == 0 and
-     player:isWounded() and
-     player.maxHp > #player.room.alive_players
+     player:usedSkillTimes(self.name, Player.HistoryGame) == 0
+  end,
+  can_wake = function(self, event, target, player, data)
+    return player:isWounded() and player.maxHp > #player.room.alive_players
   end,
   on_use = function(self, event, target, player, data)
     local n = player.maxHp - #player.player_cards[Player.Hand]

@@ -34,14 +34,12 @@ local fanxiang = fk.CreateTriggerSkill{
   frequency = Skill.Wake,
   events = {fk.EventPhaseStart},
   can_trigger = function(self, event, target, player, data)
-    if target == player and player:hasSkill(self.name) and player.phase == Player.Start and
-      player:usedSkillTimes(self.name, Player.HistoryGame) == 0 then
-      for _, p in ipairs(player.room:getAlivePlayers()) do
-        if p:isWounded() and p:getMark("liangzhu") > 0 then
-          return true
-        end
-      end
-    end
+    return target == player and player:hasSkill(self.name) and
+      player.phase == Player.Start and
+      player:usedSkillTimes(self.name, Player.HistoryGame) == 0
+  end,
+  can_wake = function(self, event, target, player, data)
+    return #table.filter(player.room.alive_players, function (p) return p:isWounded() and p:getMark("liangzhu") > 0 end) > 0
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
@@ -158,10 +156,12 @@ local danji = fk.CreateTriggerSkill{
   frequency = Skill.Wake,
   events = {fk.EventPhaseStart},
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self.name) and player:usedSkillTimes(self.name, Player.HistoryGame) == 0 and
+    return target == player and player:hasSkill(self.name) and
       player.phase == Player.Start and
-      #player.player_cards[Player.Hand] > player.hp and
-      not string.find(player.room:getLord().general, "liubei")
+      player:usedSkillTimes(self.name, Player.HistoryGame) == 0
+  end,
+  can_wake = function(self, event, target, player, data)
+    return #player.player_cards[Player.Hand] > player.hp and not string.find(player.room:getLord().general, "liubei")
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
@@ -231,7 +231,11 @@ local fengliang = fk.CreateTriggerSkill{
   events = {fk.EnterDying},
   frequency = Skill.Wake,
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self.name) and player:usedSkillTimes(self.name, Player.HistoryGame) == 0
+    return target == player and player:hasSkill(self.name) and
+      player:usedSkillTimes(self.name, Player.HistoryGame) == 0
+  end,
+  can_wake = function(self, event, target, player, data)
+    return player.dying
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
