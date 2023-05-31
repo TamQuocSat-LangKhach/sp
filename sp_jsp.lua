@@ -444,6 +444,7 @@ local linglong_record = fk.CreateTriggerSkill{
 linglong:addRelatedSkill(linglong_record)
 huangyueying:addSkill(jiqiao)
 huangyueying:addSkill(linglong)
+huangyueying:addRelatedSkill("qicai")
 Fk:loadTranslationTable{
   ["jsp__huangyueying"] = "黄月英",
   ["jiqiao"] = "机巧",
