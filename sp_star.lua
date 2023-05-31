@@ -43,7 +43,7 @@ local chongzhen = fk.CreateTriggerSkill{
     local room = player.room
     local to = room:getPlayerById(self.cost_data)
     local card = room:askForCardChosen(player, to, "h", self.name)
-    room:obtainCard(player.id, card, false)
+    room:obtainCard(player.id, card, false, fk.ReasonPrey)
   end,
 }
 zhaoyun:addSkill("longdan")
@@ -76,7 +76,7 @@ local lihun = fk.CreateActiveSkill{
     room:throwCard(effect.cards, self.name, player)
     local dummy = Fk:cloneCard("dilu")
     dummy:addSubcards(target:getCardIds(Player.Hand))
-    room:obtainCard(player.id, dummy, false)
+    room:obtainCard(player.id, dummy, false, fk.ReasonPrey)
     player:turnOver()
     player.tag[self.name] = {target.id}
   end,

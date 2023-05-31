@@ -192,7 +192,11 @@ local chenqing = fk.CreateTriggerSkill{
     local room = player.room
     local to = room:getPlayerById(self.cost_data)
     to:drawCards(4, self.name)
-    if #to.player_cards[Player.Hand] + #to.player_cards[Player.Equip] <= 4 then return end  --in case of qingjian
+    local n = to:getCardIds{Player.Hand, Player.Equip}
+    if n < 4 then
+      to:throwAllCards("he")  --清俭
+      return
+    end
     local cards = room:askForDiscard(to, 4, 4, true, self.name, false, ".", "#chenqing-discard")
     local suits = {}
     for _, id in ipairs(cards) do
@@ -324,15 +328,14 @@ local jiaxu = General(extension, "sp__jiaxu", "wei", 3)
 local zhenlve = fk.CreateTriggerSkill{
   name = "zhenlve",
   anim_type = "control",
-  events = {fk.PreCardEffect},
+  events = {fk.AfterCardUseDeclared},
   frequency = Skill.Compulsory,
   can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(self.name) and
       data.card.type == Card.TypeTrick and data.card.sub_type ~= Card.SubtypeDelayedTrick
   end,
   on_use = function(self, event, target, player, data)
-    --data.unoffsetable = true
-    data.disresponsive = true
+    data.prohibitedCardNames = {"nullification"}
   end,
 }
 local zhenlve_prohibit = fk.CreateProhibitSkill{
@@ -359,7 +362,7 @@ local jianshu = fk.CreateActiveSkill{
   on_use = function(self, room, effect)
     local player = room:getPlayerById(effect.from)
     local target = room:getPlayerById(effect.tos[1])
-    room:obtainCard(target, Fk:getCardById(effect.cards[1]), false, fk.ReasonGive)
+    room:obtainCard(target.id, Fk:getCardById(effect.cards[1]), false, fk.ReasonGive)
     local targets = {}
     for _, p in ipairs(room:getOtherPlayers(target)) do
       if not p:isKongcheng() and p:inMyAttackRange(target) then
@@ -425,6 +428,7 @@ zhenlve:addRelatedSkill(zhenlve_prohibit)
 jiaxu:addSkill(zhenlve)
 jiaxu:addSkill(jianshu)
 jiaxu:addSkill(yongdi)
+jiaxu:addSkill("cheat")
 Fk:loadTranslationTable{
   ["sp__jiaxu"] = "贾诩",
   ["zhenlve"] = "缜略",
@@ -678,7 +682,7 @@ local mizhao = fk.CreateActiveSkill{
     local target = room:getPlayerById(effect.tos[1])
     local dummy = Fk:cloneCard("dilu")
     dummy:addSubcards(player.player_cards[Player.Hand])
-    room:obtainCard(target, dummy, false, fk.ReasonGive)
+    room:obtainCard(target.id, dummy, false, fk.ReasonGive)
     local targets = {}
     for _, p in ipairs(room:getOtherPlayers(target)) do
       if not p:isKongcheng() and p ~= player then
@@ -926,8 +930,8 @@ local bifa = fk.CreateTriggerSkill{
     local type = Fk:getCardById(target:getPile(self.name)[1]):getTypeString()
     local card = room:askForCard(target, 1, 1, false, self.name, true, ".|.|.|hand|.|"..type, "#bifa-invoke:::"..type)
     if #card > 0 then
-      room:obtainCard(player, Fk:getCardById(card[1]), false, fk.ReasonGive)
-      room:obtainCard(target, target:getPile(self.name)[1], true, fk.ReasonPrey)
+      room:obtainCard(player.id, Fk:getCardById(card[1]), false, fk.ReasonGive)
+      room:obtainCard(target.id, target:getPile(self.name)[1], true, fk.ReasonPrey)
     else
       room:loseHp(target, 1, self.name)
       room:moveCards({
@@ -1161,7 +1165,7 @@ local yanyu_give = fk.CreateTriggerSkill{
     end
   end,
   on_use = function(self, event, target, player, data)
-    player.room:obtainCard(player.room:getPlayerById(self.cost_data), self.yanyu_id, true)
+    player.room:obtainCard(self.cost_data, self.yanyu_id, true, fk.ReasonGive)
   end,
 }
 local xiaode = fk.CreateTriggerSkill{
@@ -1349,7 +1353,7 @@ local kangkai = fk.CreateTriggerSkill{
     if #cards > 0 then
       local card = Fk:getCardById(cards[1])
       room:obtainCard(to.id, card, true, fk.ReasonGive)
-      if card.type == Card.TypeEquip and room:askForSkillInvoke(to, self.name, data, "#kangkai-use") then
+      if card.type == Card.TypeEquip and room:askForSkillInvoke(to, self.name, data, "#kangkai-use:::"..card:toLogString()) then
         room:useCard({
           from = to.id,
           tos = {{to.id}},
@@ -1366,7 +1370,7 @@ Fk:loadTranslationTable{
   [":kangkai"] = "每当一名角色成为【杀】的目标后，若你与其的距离不大于1，你可以摸一张牌，若如此做，你先将一张牌交给该角色再令其展示之，"..
   "若此牌为装备牌，其可以使用之。",
   ["#kangkai-give"] = "慷忾：选择一张牌交给 %dest",
-  ["#kangkai-use"] = "慷忾：你可以使用此装备牌",
+  ["#kangkai-use"] = "慷忾：你可以使用%arg",
 }
 
 local zhugejin = General(extension, "zhugejin", "wu", 3)
@@ -1732,13 +1736,12 @@ local juedi = fk.CreateTriggerSkill{
         moveReason = fk.ReasonPutIntoDiscardPile,
         skillName = self.name,
       })
-      player:removeCards(Player.Special, player:getPile("yinbing"), "yinbing")
       player:drawCards(n, self.name)
     else
       local to = room:getPlayerById(self.cost_data)
       local dummy = Fk:cloneCard("dilu")
       dummy:addSubcards(player:getPile("yinbing"))
-      room:obtainCard(to, dummy, false, fk.ReasonGive)
+      room:obtainCard(to.id, dummy, false, fk.ReasonGive)
       if to:isWounded() then
         room:recover({
           who = to,
@@ -2136,7 +2139,7 @@ local naman = fk.CreateTriggerSkill{
     end
   end,
   on_use = function(self, event, target, player, data)
-    player.room:obtainCard(player.id, data.card, true)
+    player.room:obtainCard(player.id, data.card, true, fk.ReasonJustMove)
   end,
 }
 xiemu:addRelatedSkill(xiemu_record)
@@ -2391,7 +2394,7 @@ local zhuji = fk.CreateTriggerSkill{
   end,
   on_refresh = function(self, event, target, player, data)
     if data.card.color == Card.Red and player.room:getCardArea(data.card) == Card.Processing then
-      player.room:obtainCard(target.id, data.card)
+      player.room:obtainCard(target.id, data.card, true, fk.ReasonJustMove)
     end
   end,
 }
@@ -2473,12 +2476,12 @@ local junbing = fk.CreateTriggerSkill{
     if target == player then return end
     local dummy1 = Fk:cloneCard("dilu")
     dummy1:addSubcards(target.player_cards[Player.Hand])
-    room:obtainCard(player, dummy1, false, fk.ReasonGive)
+    room:obtainCard(player.id, dummy1, false, fk.ReasonGive)
     local n = #dummy1.subcards
     local cards = room:askForCard(player, n, n, false, self.name, false, ".", "#junbing-give::"..target.id..":"..n)
     local dummy2 = Fk:cloneCard("dilu")
     dummy2:addSubcards(cards)
-    room:obtainCard(target, dummy2, false, fk.ReasonGive)
+    room:obtainCard(target.id, dummy2, false, fk.ReasonGive)
   end,
 }
 local quji = fk.CreateActiveSkill{

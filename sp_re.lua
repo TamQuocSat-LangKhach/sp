@@ -54,7 +54,7 @@ local zhiman = fk.CreateTriggerSkill{
     local room = player.room
     if #data.to:getCardIds{Player.Equip, Player.Judge} > 0 then
       local card = room:askForCardChosen(player, data.to, "ej", self.name)
-      room:obtainCard(player, card, true, fk.ReasonPrey)
+      room:obtainCard(player.id, card, true, fk.ReasonPrey)
     end
     return true
   end
@@ -336,7 +336,7 @@ local pojun = fk.CreateTriggerSkill{
       if #p:getPile(self.name) > 0 then
         local dummy = Fk:cloneCard("dilu")
         dummy:addSubcards(p:getPile(self.name))
-        room:obtainCard(p.id, dummy, false)
+        room:obtainCard(p.id, dummy, false, fk.ReasonJustMove)
       end
     end
   end,
