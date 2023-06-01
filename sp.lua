@@ -192,7 +192,7 @@ local chenqing = fk.CreateTriggerSkill{
     local room = player.room
     local to = room:getPlayerById(self.cost_data)
     to:drawCards(4, self.name)
-    local n = to:getCardIds{Player.Hand, Player.Equip}
+    local n = #to:getCardIds{Player.Hand, Player.Equip}
     if n < 4 then
       to:throwAllCards("he")  --清俭
       return
@@ -428,7 +428,6 @@ zhenlve:addRelatedSkill(zhenlve_prohibit)
 jiaxu:addSkill(zhenlve)
 jiaxu:addSkill(jianshu)
 jiaxu:addSkill(yongdi)
-jiaxu:addSkill("cheat")
 Fk:loadTranslationTable{
   ["sp__jiaxu"] = "贾诩",
   ["zhenlve"] = "缜略",
