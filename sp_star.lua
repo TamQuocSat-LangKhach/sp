@@ -86,7 +86,7 @@ local lihun_record = fk.CreateTriggerSkill{
 
   refresh_events = {fk.EventPhaseEnd},
   can_refresh = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self.name, true) and player.phase == Player.Play and player:usedSkillTimes("lihun") > 0
+    return target == player and player.phase == Player.Play and player:usedSkillTimes("lihun", Player.HistoryPhase) > 0
   end,
   on_refresh = function(self, event, target, player, data)
     local room = player.room
