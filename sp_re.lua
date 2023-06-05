@@ -207,7 +207,7 @@ local re__qianxi = fk.CreateTriggerSkill{
       end
     end
     if #targets == 0 then return end
-    local tos = room:askForChoosePlayers(player, targets, 1, 1, "#qianxi-choose", self.name)
+    local tos = room:askForChoosePlayers(player, targets, 1, 1, "#qianxi-choose", self.name, false)
     local to
     if #tos > 0 then
       to = tos[1]

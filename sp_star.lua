@@ -234,7 +234,7 @@ local dahe = fk.CreateActiveSkill{
       local card = pindian.results[target.id].toCard
       if room:getCardArea(card.id) == Card.DiscardPile then
         local to = room:askForChoosePlayers(player, table.map(table.filter(room:getAlivePlayers(), function(p)
-          return player.hp >= p.hp end), function(p) return p.id end), 1, 1, "#dahe-choose:::"..card:toLogString(), self.name)
+          return player.hp >= p.hp end), function(p) return p.id end), 1, 1, "#dahe-choose:::"..card:toLogString(), self.name, true)
         if #to > 0 then
           room:obtainCard(to[1], card, true, fk.ReasonJustMove)
         end

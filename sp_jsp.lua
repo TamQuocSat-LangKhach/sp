@@ -315,7 +315,7 @@ local suiren = fk.CreateTriggerSkill{
   end,
   on_cost = function(self, event, target, player, data)
     local to = player.room:askForChoosePlayers(player, table.map(player.room:getAlivePlayers(), function (p)
-      return p.id end), 1, 1, "#suiren-choose", self.name)
+      return p.id end), 1, 1, "#suiren-choose", self.name, true)
     if #to > 0 then
       self.cost_data = to[1]
       return true
