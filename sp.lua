@@ -1632,38 +1632,34 @@ local kuangfu = fk.CreateActiveSkill{
     else
       to = table.random(targets)
     end
-    room:useVirtualCard("slash", nil, player, room:getPlayerById(to), self.name, true)
+    local use = {
+      from = player.id,
+      tos = {{to}},
+      card = Fk:cloneCard("slash"),
+      skillName = self.name,
+      extraUse = true,
+    }
+    room:useCard(use)
     if not player.dead then
-      if effect.from == effect.tos[1] and player:getMark("kuangfu-phase") > 0 then
+      if effect.from == effect.tos[1] and use.damageDealt then
         player:drawCards(2, self.name)
       end
-      if effect.from ~= effect.tos[1] and player:getMark("kuangfu-phase") == 0 then
-        if #player:getCardIds{Player.Hand, Player.Equip} < 3 then
+      if effect.from ~= effect.tos[1] and not use.damageDealt then
+        if #player.player_cards[Player.Hand] < 3 then
           player:throwAllCards("he")
         else
-          player.room:askForDiscard(player, 2, 2, true, "kuangfu", false)
+          player.room:askForDiscard(player, 2, 2, false, self.name, false)
         end
       end
     end
   end,
 }
-local kuangfu_record = fk.CreateTriggerSkill{
-  name = "#kuangfu_record",
-
-  refresh_events = {fk.Damage},
-  can_refresh = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self.name) and data.card and table.contains(data.card.skillNames, "kuangfu")
-  end,
-  on_refresh = function(self, event, target, player, data)
-    player.room:setPlayerMark(player, "kuangfu-phase", 1)
-  end,
-}
-kuangfu:addRelatedSkill(kuangfu_record)
 panfeng:addSkill(kuangfu)
 Fk:loadTranslationTable{
   ["panfeng"] = "潘凤",
   ["kuangfu"] = "狂斧",
-  [":kuangfu"] = "出牌阶段限一次，你可以弃置场上的一张装备牌，视为使用一张【杀】（此【杀】无距离限制且不计次数）。若你弃置的不是你的牌且此【杀】未造成伤害，你弃置两张手牌；若弃置的是你的牌且此【杀】造成伤害，你摸两张牌。",
+  [":kuangfu"] = "出牌阶段限一次，你可以弃置场上的一张装备牌，视为使用一张【杀】（此【杀】无距离限制且不计次数）。"..
+  "若你弃置的不是你的牌且此【杀】未造成伤害，你弃置两张手牌；若弃置的是你的牌且此【杀】造成伤害，你摸两张牌。",
   ["#kuangfu-slash"] = "狂斧：选择视为使用【杀】的目标",
 }
 
@@ -2000,8 +1996,8 @@ local meibu_filter = fk.CreateFilterSkill{
 }
 local meibu_attackrange = fk.CreateAttackRangeSkill{
   name = "#meibu_attackrange",
-  correct_func = function (self, from, to)
-    if from.phase ~= Player.NotActive and to:hasSkill("meibu") and to:usedSkillTimes("meibu") > 0 then
+  within_func = function (self, from, to)
+    if from.phase ~= Player.NotActive and to:usedSkillTimes("meibu", Player.HistoryTurn) > 0 then
       return 999
     end
     return 0
@@ -2093,7 +2089,7 @@ local mumu = fk.CreateTriggerSkill{
   end,
 }
 meibu:addRelatedSkill(meibu_attackrange)
---Fk:addSkill(meibu_filter)
+Fk:addSkill(meibu_filter)
 --sunluyu:addSkill(meibu)
 --sunluyu:addSkill(mumu)
 Fk:loadTranslationTable{
@@ -2101,7 +2097,8 @@ Fk:loadTranslationTable{
   ["meibu"] = "魅步",
   [":meibu"] = "一名其他角色的出牌阶段开始时，若你不在其攻击范围内，你可以令该角色的锦囊牌均视为【杀】直到回合结束。若如此做，视为你在其攻击范围内直到回合结束。",
   ["mumu"] = "穆穆",
-  [":mumu"] = "若你于出牌阶段内未造成伤害，则此回合的结束阶段开始时，你可以选择一项：弃置场上一张武器牌，然后摸一张牌；或将场上一张防具牌移动到你的装备区里（可替换原防具）。",
+  [":mumu"] = "若你于出牌阶段内未造成伤害，则此回合的结束阶段开始时，你可以选择一项：弃置场上一张武器牌，然后摸一张牌；"..
+  "或将场上一张防具牌移动到你的装备区里（可替换原防具）。",
   ["#meibu_filter"] = "魅步",
   ["#mumu-choose"] = "穆穆：弃置场上一张武器牌并摸一张牌；或将场上一张防具牌移动到你的装备区（可替换原防具）",
 }
