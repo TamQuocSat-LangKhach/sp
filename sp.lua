@@ -144,14 +144,12 @@ local juesi = fk.CreateActiveSkill{
     local player = room:getPlayerById(effect.from)
     local target = room:getPlayerById(effect.tos[1])
     room:throwCard(effect.cards, self.name, player, player)
-    local card = Fk:getCardById(room:askForDiscard(target, 1, 1, true, self.name, false, ".", "#juesi-discard:"..player.id)[1])
-    if card.trueName ~= "slash" and target.hp >= player.hp and not player.dead and not target.dead then
-      local duel = Fk:cloneCard("duel")
-      room:useCard({
-        card = duel,
-        from = player.id,
-        tos = {{target.id}},
-      })
+    local card = room:askForDiscard(target, 1, 1, true, self.name, false, ".", "#juesi-discard:"..player.id)
+    if #card > 0 then
+      card = Fk:getCardById(card[1])
+      if card.trueName ~= "slash" and target.hp >= player.hp and not player.dead and not target.dead then
+        room:useVirtualCard("duel", nil, player, target, self.name)
+      end
     end
   end,
 }
@@ -242,7 +240,7 @@ local mozhi_record = fk.CreateTriggerSkill{
   on_cost = function(self, event, target, player, data)
     local name = player:getMark("mozhi-turn")[1]
     if name == "jink" or name == "nullification" or (name == "peach" and not player:isWounded()) then return end
-    local success, dat = player.room:askForUseViewAsSkill(player, "mozhi", "#mozhi-invoke:::"..name, true)
+    local success, dat = player.room:askForUseActiveSkill(player, "mozhi", "#mozhi-invoke:::"..name, true)
     if success then
       self.cost_data = dat
       return true
@@ -266,7 +264,7 @@ local mozhi_record = fk.CreateTriggerSkill{
     if player.dead or player:getMark("mozhi-turn") == 0 then return end
     local name = player:getMark("mozhi-turn")[1]
     if name == "jink" or name == "nullification" or (name == "peach" and not player:isWounded()) then return end
-    local success, dat = player.room:askForUseViewAsSkill(player, "mozhi", "#mozhi-invoke:::"..name, true)
+    local success, dat = player.room:askForUseActiveSkill(player, "mozhi", "#mozhi-invoke:::"..name, true)
     if success then
       local card = Fk.skills["mozhi"]:viewAs(dat.cards)
       room:useCard{
@@ -372,7 +370,7 @@ local jianshu = fk.CreateActiveSkill{
       end
     end
     if #targets == 0 then return end
-    local to = room:askForChoosePlayers(player, targets, 1, 1, "#jianshu-choose", self.name, false)
+    local to = room:askForChoosePlayers(player, targets, 1, 1, "#jianshu-choose::"..target.id, self.name, false)
     if #to == 0 then
       to = room:getPlayerById(table.random(targets))
     else
@@ -439,7 +437,7 @@ Fk:loadTranslationTable{
   "然后令这两名角色拼点：赢的角色弃置两张牌，没赢的角色失去1点体力。",
   ["yongdi"] = "拥嫡",
   [":yongdi"] = "限定技，当你受到伤害后，你可令一名其他男性角色增加1点体力上限，然后若该角色的武将牌上有主公技且其身份不为主公，其获得此主公技。",
-  ["#jianshu-choose"] = "间书：选择一名攻击范围内含有其的角色，两名角色拼点",
+  ["#jianshu-choose"] = "间书：选择一名攻击范围内含有 %dest 的角色，两名角色拼点",
   ["#yongdi-choose"] = "拥嫡：你可令一名其他男性角色增加1点体力上限并获得其武将牌上的主公技",
 }
 
@@ -753,9 +751,14 @@ local jieyuan = fk.CreateTriggerSkill{
       pattern = ".|.|heart,diamond|.|.|."
       prompt = "#jieyuan2-invoke"
     end
-    return #player.room:askForDiscard(player, 1, 1, false, self.name, true, pattern, prompt) > 0
+    local card = player.room:askForDiscard(player, 1, 1, false, self.name, true, pattern, prompt, true)
+    if #card > 0 then
+      self.cost_data = card
+      return true
+    end
   end,
   on_use = function(self, event, target, player, data)
+    player.room:throwCard(self.cost_data, self.name, player, player)
     if event == fk.DamageCaused then
       data.damage = data.damage + 1
     else
@@ -930,7 +933,6 @@ local bifa = fk.CreateTriggerSkill{
         skillName = self.name,
         specialName = self.name,
       })
-      target:removeCards(Player.Special, player:getPile(self.name), self.name)
       return
     end
     local type = Fk:getCardById(target:getPile(self.name)[1]):getTypeString()
@@ -948,7 +950,6 @@ local bifa = fk.CreateTriggerSkill{
         skillName = self.name,
         specialName = self.name,
       })
-      target:removeCards(Player.Special, player:getPile(self.name), self.name)
     end
   end,
 }
@@ -990,7 +991,7 @@ Fk:loadTranslationTable{
   ["songci"] = "颂词",
   [":songci"] = "出牌阶段，你可以选择一项：令一名手牌数小于其体力值的角色摸两张牌；或令一名手牌数大于其体力值的角色弃置两张牌。此技能对每名角色只能用一次。",
   ["#bifa-cost"] = "笔伐：将一张手牌移出游戏并指定一名其他角色",
-  ["#bifa-invoke"] = "笔伐：交出一张%arg手牌并获得此牌；或点“取消”将此牌置入弃牌堆并失去1点体力",
+  ["#bifa-invoke"] = "笔伐：交出一张%arg并获得此牌；或点“取消”将此牌置入弃牌堆并失去1点体力",
 }
 
 local daqiaoxiaoqiao = General(extension, "daqiaoxiaoqiao", "wu", 3, 3, General.Female)
@@ -1033,7 +1034,6 @@ local xingwu = fk.CreateTriggerSkill{
         moveReason = fk.ReasonPutIntoDiscardPile,
         skillName = self.name,
       })
-      player:removeCards(Player.Special, player:getPile(self.name), self.name)
       local targets = {}
       for _, p in ipairs(room:getOtherPlayers(player)) do
         if p.gender == General.Male then
@@ -1302,7 +1302,6 @@ local zhoufu_trigger = fk.CreateTriggerSkill{
     return true
   end,
   on_use = function(self, event, target, player, data)
-    target:removeCards(Player.Special, target:getPile("zhangbao_zhou"), "zhoufu")
     player.room:moveCards({
       from = target.id,
       ids = target:getPile("zhangbao_zhou"),
@@ -1705,7 +1704,6 @@ local yinbing = fk.CreateTriggerSkill{
         skillName = self.name,
         specialName = self.name,
       })
-      player:removeCards(Player.Special, {self.cost_data}, self.name)
     end
   end,
 }
