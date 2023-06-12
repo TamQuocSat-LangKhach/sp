@@ -1123,19 +1123,22 @@ local sp__yanyu = fk.CreateTriggerSkill{
     return player:hasSkill(self.name) and target.phase == Player.Play and not player:isNude()
   end,
   on_cost = function(self, event, target, player, data)
-    local card = player.room:askForDiscard(player, 1, 1, false, self.name, true, ".", "#yanyu-cost")
+    local card = player.room:askForDiscard(player, 1, 1, false, self.name, true, ".", "#yanyu-cost", true)
     if #card > 0 then
-      self.yanyu_type = Fk:getCardById(card[1]):getTypeString()
+      self.cost_data = card[1]
       return true
     end
   end,
   on_use = function(self, event, target, player, data)
-    player.room:setPlayerMark(player, "@yanyu", self.yanyu_type)
+    local room = player.room
+    local type = Fk:getCardById(self.cost_data):getTypeString()
+    room:throwCard({self.cost_data}, self.name, 1, 1)
+    room:setPlayerMark(player, "@yanyu", type)
   end,
 
   refresh_events = {fk.EventPhaseEnd},
   can_refresh = function(self, event, target, player, data)
-    return player:hasSkill(self.name) and player:getMark("@yanyu") ~= 0 and target.phase >= Player.Play
+    return player:getMark("@yanyu") ~= 0 and target.phase >= Player.Play
   end,
   on_refresh = function(self, event, target, player, data)
     player.room:setPlayerMark(player, "@yanyu", 0)
@@ -1249,7 +1252,7 @@ local xiaoguo = fk.CreateTriggerSkill{
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    room:throwCard(card, self.name, player, player)
+    room:throwCard(self.cost_data, self.name, player, player)
     if #room:askForDiscard(target, 1, 1, true, self.name, true, ".|.|.|.|.|equip", "#xiaoguo-discard:"..player.id) > 0 then
       player:drawCards(1, self.name)
     else
