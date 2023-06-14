@@ -737,19 +737,19 @@ local shichoul = fk.CreateTriggerSkill{
 
   refresh_events = {fk.EnterDying, fk.Death},
   can_refresh = function(self, event, target, player, data)
-    if player:getMark(self.name) ~= 0 then
+    if player:getMark("shichoul") ~= 0 then
       return target:getMark("@@shichoul") ~= 0 or (target == player and event == fk.Death)
     end
   end,
   on_refresh = function(self, event, target, player, data)
     local room = player.room
     room:setPlayerMark(target, "@@shichoul", 0)
-    local to = player:getMark(self.name)
+    local to = player:getMark("shichoul")
     local mark = to:getMark("@@shichoul")
     table.removeOne(mark, player.id)
     if #mark == 0 then mark = 0 end
     room:setPlayerMark(to, "@@shichoul", mark)
-    room:setPlayerMark(player, self.name, 0)
+    room:setPlayerMark(player, "shichoul", 0)
   end,
 }
 local shichoul_active = fk.CreateActiveSkill{

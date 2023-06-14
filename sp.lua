@@ -3,6 +3,7 @@ extension.extensionName = "sp"
 
 Fk:loadTranslationTable{
   ["sp"] = "SP",
+  ["hulao"] = "虎牢关",
 }
 
 local yangxiu = General(extension, "yangxiu", "wei", 3)
@@ -161,6 +162,88 @@ Fk:loadTranslationTable{
   [":juesi"] = "出牌阶段，你可以弃置一张【杀】并选择攻击范围内的一名其他角色，然后令该角色弃置一张牌。"..
   "若该角色弃置的牌不为【杀】且其体力值不小于你，你视为对其使用一张【决斗】。",
   ["#juesi-discard"] = "决死：你需弃置一张牌，若不为【杀】且你体力值不小于 %src，视为其对你使用【决斗】",
+}
+
+local lvbu = General(extension, "hulao__godlvbu1", "god", 8)
+lvbu.hidden = true
+lvbu:addSkill("mashu")
+lvbu:addSkill("wushuang")
+Fk:loadTranslationTable{
+  ["hulao__godlvbu1"] = "神吕布",
+}
+
+local lvbu2 = General(extension, "hulao__godlvbu2", "god", 4)
+lvbu2.hidden = true
+local xiuluo = fk.CreateTriggerSkill{
+  name = "xiuluo",
+  anim_type = "control",
+  events = {fk.EventPhaseStart},
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player:hasSkill(self.name) and player.phase == Player.Start and
+      #player:getCardIds(Player.Judge) > 0 and not player:isKongcheng()
+  end,
+  on_cost = function(self, event, target, player, data)
+    local pattern = ".|.|"..table.concat(table.map(player:getCardIds(Player.Judge), function(id)
+      return Fk:getCardById(id, true):getSuitString() end), ",")
+    local card = player.room:askForDiscard(player, 1, 1, false, self.name, true, pattern, "#xiuluo-invoke", true)
+    if #card > 0 then
+      self.cost_data = card
+      return true
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    room:throwCard(self.cost_data, self.name, player, player)
+    local suit = Fk:getCardById(self.cost_data[1], true).suit
+    local cards = table.filter(player:getCardIds(Player.Judge), function(id)
+      return Fk:getCardById(id, true).suit == suit end)
+    room:fillAG(player, cards)
+    local id = room:askForAG(player, cards, false, self.name)
+    room:closeAG(player)
+    room:throwCard(id, self.name, player, player)
+  end
+}
+local shenwei = fk.CreateTriggerSkill{
+  name = "shenwei",
+  anim_type = "drawcard",
+  frequency = Skill.Compulsory,
+  events = {fk.DrawNCards},
+  on_use = function(self, event, target, player, data)
+    data.n = data.n + 2
+  end,
+}
+local shenwei_maxcards = fk.CreateMaxCardsSkill{
+  name = "#shenwei_maxcards",
+  correct_func = function(self, player)
+    if player:hasSkill(self.name) then
+      return 2
+    end
+  end,
+}
+local shenji = fk.CreateTargetModSkill{
+  name = "shenji",
+  anim_type = "offensive",
+  extra_target_func = function(self, player, skill)
+    if player:hasSkill(self.name) and player:getEquipment(Card.SubtypeWeapon) == nil and skill.trueName == "slash_skill" then
+      return 2
+    end
+  end,
+}
+shenwei:addRelatedSkill(shenwei_maxcards)
+lvbu2:addSkill("mashu")
+lvbu2:addSkill("wushuang")
+lvbu2:addSkill(xiuluo)
+lvbu2:addSkill(shenwei)
+lvbu2:addSkill(shenji)
+Fk:loadTranslationTable{
+  ["hulao__godlvbu2"] = "神吕布",
+  ["xiuluo"] = "修罗",
+  [":xiuluo"] = "回合开始阶段，你可以弃一张手牌来弃置你判定区里的一张延时类锦囊（必须花色相同）。",
+  ["shenwei"] = "神威",
+  [":shenwei"] = "锁定技，摸牌阶段，你额外摸两张牌；你的手牌上限+2。",
+  ["shenji"] = "神戟",
+  [":shenji"] = "没装备武器牌时，你使用的【杀】可指定至多三名角色为目标。",
+  ["#xiuluo-invoke"] = "修罗：你可以弃一张花色相同的手牌，以弃置你判定区里的一张延时锦囊",
 }
 
 local caiwenji = General(extension, "sp__caiwenji", "wei", 3, 3, General.Female)
@@ -1125,14 +1208,14 @@ local sp__yanyu = fk.CreateTriggerSkill{
   on_cost = function(self, event, target, player, data)
     local card = player.room:askForDiscard(player, 1, 1, false, self.name, true, ".", "#yanyu-cost", true)
     if #card > 0 then
-      self.cost_data = card[1]
+      self.cost_data = card
       return true
     end
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    local type = Fk:getCardById(self.cost_data):getTypeString()
-    room:throwCard({self.cost_data}, self.name, 1, 1)
+    room:throwCard(self.cost_data, self.name, player, player)
+    local type = Fk:getCardById(self.cost_data[1]):getTypeString()
     room:setPlayerMark(player, "@yanyu", type)
   end,
 
