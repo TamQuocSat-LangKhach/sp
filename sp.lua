@@ -1257,6 +1257,7 @@ local yanyu_give = fk.CreateTriggerSkill{
     end
   end,
   on_use = function(self, event, target, player, data)
+    player.room:broadcastSkillInvoke("sp__yanyu")
     player.room:obtainCard(self.cost_data, self.yanyu_id, true, fk.ReasonGive)
   end,
 }
@@ -1316,6 +1317,12 @@ Fk:loadTranslationTable{
   ["#yanyu-cost"] = "燕语：你可以弃置一张牌，然后此出牌阶段限三次，可令任意角色获得相同类别进入弃牌堆的牌",
   ["#yanyu-choose"] = "燕语：你可令任意一名角色获得%arg",
   ["#xiaode-invoke"] = "孝德：你可以获得 %dest 武将牌上的一个技能直到你的回合结束",
+
+  -- CV: @橘枍shii吖
+  ["$sp__yanyu1"] = "燕燕于飞，颉之颃之。",
+  ["$sp__yanyu2"] = "终温且惠，淑慎其身。",
+  ["$xiaode"] = "有孝有德，以引为翼。",
+  ["~sp__xiahoushi"] = "燕语叮嘱，愿君安康。",
 }
 
 local yuejin = General(extension, "yuejin", "wei", 4)
