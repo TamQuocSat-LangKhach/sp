@@ -2175,8 +2175,8 @@ Fk:loadTranslationTable{
   ["$meibu1"] = "萧墙之乱，宫闱之衅，实为吴国之祸啊！",
   ["$meibu2"] = "若要动手，就请先杀我吧！",
   ["$mumu1"] = "立储乃国家大事，我们姐妹不便参与。",
-  ["$mumu2"] = "姐姐，你且好自为之……",
-  ["~sunluyu"] = "孙鲁育",
+  ["$mumu2"] = "只求相夫教子，不求参政议事。",
+  ["~sunluyu"] = "姐姐，你且好自为之……",
 }
 
 local nos__maliang = General(extension, "nos__maliang", "shu", 3)
