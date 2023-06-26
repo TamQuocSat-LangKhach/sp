@@ -1994,7 +1994,7 @@ local zhendu = fk.CreateTriggerSkill{
   anim_type = "offensive",
   events = {fk.EventPhaseStart},
   can_trigger = function(self, event, target, player, data)
-    return target ~= player and player:hasSkill(self.name) and target.phase == Player.Play and not player:isKongcheng()
+    return target ~= player and player:hasSkill(self.name) and target.phase == Player.Play and not player:isKongcheng() and not target.dead
   end,
   on_cost = function(self, event, target, player, data)
     local card = player.room:askForDiscard(player, 1, 1, false, self.name, true, ".|.|.|hand|.|.", "#zhendu-invoke::"..target.id, true)
@@ -2047,37 +2047,22 @@ Fk:loadTranslationTable{
   ["#zhendu-invoke"] = "鸩毒：你可以弃置一张手牌视为 %dest 使用一张【酒】，然后你对其造成1点伤害",
 }
 
---local sunluyu = General(extension, "sunluyu", "wu", 3, 3, General.Female)
+local sunluyu = General(extension, "sunluyu", "wu", 3, 3, General.Female)
 local meibu = fk.CreateTriggerSkill{
   name = "meibu",
   anim_type = "control",
   events = {fk.EventPhaseStart},
   can_trigger = function(self, event, target, player, data)
-    return player:hasSkill(self.name) and target.phase == Player.Play and not target:inMyAttackRange(player)
+    return player:hasSkill(self.name) and target.phase == Player.Play and not target:inMyAttackRange(player) and not target.dead
   end,
   on_use = function(self, event, target, player, data)
-    player.room:handleAddLoseSkills(target, "#meibu_filter", nil, false, true)
-    for _, id in ipairs(target.player_cards[Player.Hand]) do
-      --FIXME: the effect of card was filtered instantly, but the target didn't!
-      Fk:filterCard(id, target)
-    end
-  end,
-
-  refresh_events = {fk.EventPhaseStart},
-  can_refresh = function(self, event, target, player, data)
-    return player:hasSkill("#meibu_filter", true, true) and player.phase >= Player.NotActive
-  end,
-  on_refresh = function(self, event, target, player, data)
-    player.room:handleAddLoseSkills(player, "-#meibu_filter", nil, false, true)
-    for _, id in ipairs(player.player_cards[Player.Hand]) do
-      Fk:filterCard(id, player)
-    end
+    player.room:setPlayerMark(target, "meibu-turn", 1)
   end,
 }
 local meibu_filter = fk.CreateFilterSkill{
   name = "#meibu_filter",
   card_filter = function(self, to_select, player)
-    return player:hasSkill(self.name) and to_select.type == Card.TypeTrick
+    return player:getMark("meibu-turn") > 0 and to_select.type == Card.TypeTrick
   end,
   view_as = function(self, to_select)
     local card = Fk:cloneCard("slash", to_select.suit, to_select.number)
@@ -2088,10 +2073,7 @@ local meibu_filter = fk.CreateFilterSkill{
 local meibu_attackrange = fk.CreateAttackRangeSkill{
   name = "#meibu_attackrange",
   within_func = function (self, from, to)
-    if from.phase ~= Player.NotActive and to:usedSkillTimes("meibu", Player.HistoryTurn) > 0 then
-      return 999
-    end
-    return 0
+    return from.phase ~= Player.NotActive and to:usedSkillTimes("meibu", Player.HistoryTurn) > 0
   end,
 }
 local mumu = fk.CreateTriggerSkill{
@@ -2099,20 +2081,17 @@ local mumu = fk.CreateTriggerSkill{
   anim_type = "control",
   events = {fk.EventPhaseStart},
   can_trigger = function(self, event, target, player, data)
-    if target == player and player:hasSkill(self.name) and player.phase == Player.Finish then
-      if player:getMark("mumu-turn") == 0 then
-        self.mumu_tos = {}
-        for _, p in ipairs(player.room:getAlivePlayers()) do
-          if p:getEquipment(Card.SubtypeWeapon) ~= nil or (p:getEquipment(Card.SubtypeArmor) ~= nil and p ~= player) then
-            table.insert(self.mumu_tos, p.id)
-          end
-        end
-        return #self.mumu_tos > 0
-      end
-    end
+    return target == player and player:hasSkill(self.name) and player.phase == Player.Finish and player:getMark("mumu-turn") == 0
   end,
   on_cost = function(self, event, target, player, data)
-    local to = player.room:askForChoosePlayers(player, self.mumu_tos, 1, 1, "#mumu-choose", self.name, true)
+    local targets = {}
+    for _, p in ipairs(player.room:getAlivePlayers()) do
+      if p:getEquipment(Card.SubtypeWeapon) ~= nil or (p:getEquipment(Card.SubtypeArmor) ~= nil and p ~= player) then
+        table.insert(targets, p.id)
+      end
+    end
+    if #targets == 0 then return end
+    local to = player.room:askForChoosePlayers(player, targets, 1, 1, "#mumu-choose", self.name, true)
     if #to > 0 then
       self.cost_data = to[1]
       return true
@@ -2122,7 +2101,7 @@ local mumu = fk.CreateTriggerSkill{
     local room = player.room
     if self.cost_data == player.id then
       room:throwCard({player:getEquipment(Card.SubtypeWeapon)}, self.name, player, player)
-      player:drawCards(1)
+      player:drawCards(1, self.name)
       return
     end
     local to = room:getPlayerById(self.cost_data)
@@ -2173,16 +2152,16 @@ local mumu = fk.CreateTriggerSkill{
 
   refresh_events = {fk.Damage},
   can_refresh = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self.name) and player.phase == Player.Play
+    return target == player and player.phase == Player.Play
   end,
   on_refresh = function(self, event, target, player, data)
     player.room:addPlayerMark(player, "mumu-turn", 1)
   end,
 }
 meibu:addRelatedSkill(meibu_attackrange)
-Fk:addSkill(meibu_filter)
---sunluyu:addSkill(meibu)
---sunluyu:addSkill(mumu)
+meibu:addRelatedSkill(meibu_filter)
+sunluyu:addSkill(meibu)
+sunluyu:addSkill(mumu)
 Fk:loadTranslationTable{
   ["sunluyu"] = "孙鲁育",
   ["meibu"] = "魅步",
@@ -2190,8 +2169,14 @@ Fk:loadTranslationTable{
   ["mumu"] = "穆穆",
   [":mumu"] = "若你于出牌阶段内未造成伤害，则此回合的结束阶段开始时，你可以选择一项：弃置场上一张武器牌，然后摸一张牌；"..
   "或将场上一张防具牌移动到你的装备区里（可替换原防具）。",
-  ["#meibu_filter"] = "魅步",
+  ["#meibu_filter"] = "止息",
   ["#mumu-choose"] = "穆穆：弃置场上一张武器牌并摸一张牌；或将场上一张防具牌移动到你的装备区（可替换原防具）",
+
+  ["$meibu1"] = "萧墙之乱，宫闱之衅，实为吴国之祸啊！",
+  ["$meibu2"] = "若要动手，就请先杀我吧！",
+  ["$mumu1"] = "立储乃国家大事，我们姐妹不便参与。",
+  ["$mumu2"] = "姐姐，你且好自为之……",
+  ["~sunluyu"] = "孙鲁育",
 }
 
 local nos__maliang = General(extension, "nos__maliang", "shu", 3)
