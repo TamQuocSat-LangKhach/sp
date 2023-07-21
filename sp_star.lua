@@ -330,6 +330,7 @@ local zuixiang_trigger = fk.CreateTriggerSkill{
     return true
   end,
   on_use = function(self, event, target, player, data)
+    player.room:broadcastSkillInvoke("zuixiang")
     if data.card.sub_type == Card.SubtypeDelayedTrick then  --取消延时锦囊
       AimGroup:cancelTarget(data, player.id)
     else
@@ -401,6 +402,13 @@ Fk:loadTranslationTable{
   ["#manjuan-invoke"] = "漫卷：你可以从弃牌堆中依次选择相同点数的牌置入手牌",
   ["#zuixiang-invoke"] = "醉乡：你可以发动“醉乡”",
   ["#zuixiang_trigger"] = "醉乡",
+
+  -- CV: 樰默
+  ["$manjuan1"] = "漫卷纵酒，白首狂歌。",
+  ["$manjuan2"] = "吾有雄才，漫天卷地。",
+  ["$zuixiang1"] = "懵懵醉乡中，天下心中藏。",
+  ["$zuixiang2"] = "今朝有酒，管甚案牍俗事。",
+  ["~starsp__pangtong"] = "纵有治世才，难遇治世主。",
 }
 
 local zhangfei = General(extension, "starsp__zhangfei", "shu", 4)
