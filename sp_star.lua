@@ -12,7 +12,8 @@ local chongzhen = fk.CreateTriggerSkill{
   anim_type = "offensive",
   events = {fk.CardUsing, fk.CardResponding},
   can_trigger = function(self, event, target, player, data)
-    if player:hasSkill(self.name) and table.find(data.card.skillNames, function(name) return string.find(name, "longdan") end) then
+    if target == player and player:hasSkill(self.name) and
+      table.find(data.card.skillNames, function(name) return string.find(name, "longdan") end) then
       local id
       if event == fk.CardUsing then
         if data.card.trueName == "slash" then

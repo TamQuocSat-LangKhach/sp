@@ -1356,7 +1356,7 @@ local yanyu_give = fk.CreateTriggerSkill{
       local room = player.room
       if not room.current or room.current.dead or room.current.phase ~= Player.Play then return end
       for _, move in ipairs(data) do
-        if move.toArea == Card.DiscardPile and move.skillName ~= "sp__yanyu" then
+        if move.toArea == Card.DiscardPile then
           for _, info in ipairs(move.moveInfo) do
             if Fk:getCardById(info.cardId):getTypeString() == player:getMark("@yanyu-phase") then
               return true
@@ -1369,7 +1369,7 @@ local yanyu_give = fk.CreateTriggerSkill{
   on_trigger = function(self, event, target, player, data)
     local ids = {}
     for _, move in ipairs(data) do
-      if move.toArea == Card.DiscardPile and move.skillName ~= "sp__yanyu" then
+      if move.toArea == Card.DiscardPile then
         for _, info in ipairs(move.moveInfo) do
           if Fk:getCardById(info.cardId):getTypeString() == player:getMark("@yanyu-phase") then
             table.insertIfNeed(ids, info.cardId)
