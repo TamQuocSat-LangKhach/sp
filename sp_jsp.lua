@@ -21,11 +21,12 @@ local liangzhu = fk.CreateTriggerSkill{
     local room = player.room
     local choice = room:askForChoice(player, {"draw1", "liangzhu_draw2"}, self.name)
     if choice == "draw1" then
-      player:drawCards(1)
-      room:addPlayerMark(player, self.name, 1)
+      player:drawCards(1, self.name)
+      room:setPlayerMark(player, self.name, 1)
     else
-      target:drawCards(2)
-      room:addPlayerMark(target, self.name, 1)
+      room:doIndicate(player.id, {target.id})
+      target:drawCards(2, self.name)
+      room:setPlayerMark(target, self.name, 1)
     end
   end,
 }
@@ -39,17 +40,19 @@ local fanxiang = fk.CreateTriggerSkill{
       player:usedSkillTimes(self.name, Player.HistoryGame) == 0
   end,
   can_wake = function(self, event, target, player, data)
-    return #table.filter(player.room.alive_players, function (p) return p:isWounded() and p:getMark("liangzhu") > 0 end) > 0
+    return table.find(player.room.alive_players, function(p) return p:isWounded() and p:getMark("liangzhu") > 0 end)
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
     room:changeMaxHp(player, 1)
-    room:recover({
-      who = player,
-      num = 1,
-      recoverBy = player,
-      skillName = self.name
-    })
+    if player:isWounded() then
+      room:recover({
+        who = player,
+        num = 1,
+        recoverBy = player,
+        skillName = self.name
+      })
+    end
     room:handleAddLoseSkills(player, "-liangzhu|xiaoji", nil)
   end,
 }
@@ -61,7 +64,8 @@ Fk:loadTranslationTable{
   ["liangzhu"] = "良助",
   [":liangzhu"] = "当一名角色于其出牌阶段内回复体力时，你可以选择一项：摸一张牌，或令该角色摸两张牌。",
   ["fanxiang"] = "返乡",
-  [":fanxiang"] = "觉醒技，准备阶段开始时，若全场有至少一名已受伤的角色，且你曾发动〖良助〗令其摸牌，则你回复1点体力和体力上限，失去技能〖良助〗并获得技能〖枭姬〗。",
+  [":fanxiang"] = "觉醒技，准备阶段开始时，若全场有至少一名已受伤的角色，且你曾发动〖良助〗令其摸牌，则你回复1点体力和体力上限，"..
+  "失去技能〖良助〗并获得技能〖枭姬〗。",
   ["#liangzhu-invoke"] = "良助：你可以摸一张牌或令 %dest 摸两张牌",
   ["liangzhu_draw2"] = "其摸两张牌",
 }
@@ -175,7 +179,8 @@ local nuzhan = fk.CreateTriggerSkill{
   frequency = Skill.Compulsory,
   events = {fk.AfterCardUseDeclared, fk.PreCardUse},
   can_trigger = function(self, event, target, player, data)
-    if target == player and player:hasSkill(self.name, false, true) and data.card and data.card.trueName == "slash" and data.card:isVirtual() and #data.card.subcards == 1 then
+    if target == player and player:hasSkill(self.name, false, true) and data.card and data.card.trueName == "slash" and
+      data.card:isVirtual() and #data.card.subcards == 1 then
       if event == fk.AfterCardUseDeclared then
         return player.phase == Player.Play and Fk:getCardById(data.card.subcards[1]).type == Card.TypeTrick
       else
@@ -325,12 +330,14 @@ local suiren = fk.CreateTriggerSkill{
     local room = player.room
     room:handleAddLoseSkills(player, "-yicong", nil, true, false)
     room:changeMaxHp(player, 1)
-    room:recover({
-      who = player,
-      num = 1,
-      recoverBy = player,
-      skillName = self.name
-    })
+    if player:isWounded() then
+      room:recover({
+        who = player,
+        num = 1,
+        recoverBy = player,
+        skillName = self.name
+      })
+    end
     room:getPlayerById(self.cost_data):drawCards(3, self.name)
   end,
 }
@@ -398,7 +405,8 @@ local jiqiao = fk.CreateTriggerSkill{
 local linglong = fk.CreateMaxCardsSkill{
   name = "linglong",
   correct_func = function(self, player)
-    if player:hasSkill(self.name) and player:getEquipment(Card.SubtypeOffensiveRide) == nil and player:getEquipment(Card.SubtypeDefensiveRide) == nil then
+    if player:hasSkill(self.name) and player:getEquipment(Card.SubtypeOffensiveRide) == nil and
+      player:getEquipment(Card.SubtypeDefensiveRide) == nil then
       return 1
     end
     return 0
@@ -429,7 +437,7 @@ local linglong_record = fk.CreateTriggerSkill{
     end
   end,
   on_refresh = function(self, event, target, player, data)  --FIXME: 虚拟装备技能应该用statusSkill而非triggerSkill
-    if player:getEquipment(Card.SubtypeArmor) == nil and not player:hasSkill("#eight_diagram_skill", true) then  --FIXME: 青釭剑的装备无效mark对技能无效
+    if player:getEquipment(Card.SubtypeArmor) == nil and not player:hasSkill("#eight_diagram_skill", true) then
       player.room:handleAddLoseSkills(player, "#eight_diagram_skill", "linglong", false, true)
     elseif player:getEquipment(Card.SubtypeArmor) ~= nil and player:hasSkill("#eight_diagram_skill", true) then
       player.room:handleAddLoseSkills(player, "-#eight_diagram_skill", nil, false, true)
@@ -450,7 +458,8 @@ Fk:loadTranslationTable{
   ["jiqiao"] = "机巧",
   [":jiqiao"] = "出牌阶段开始时，你可以弃置任意张装备牌，然后亮出牌堆顶两倍数量的牌，你获得其中的锦囊牌，将其余的牌置入弃牌堆。",
   ["linglong"] = "玲珑",
-  [":linglong"] = "锁定技，若你的装备区没有防具牌，视为你装备着【八卦阵】；若你的装备区没有坐骑牌，你的手牌上限+1；若你的装备区没有宝物牌，视为你拥有技能〖奇才〗。",
+  [":linglong"] = "锁定技，若你的装备区没有防具牌，视为你装备着【八卦阵】；若你的装备区没有坐骑牌，你的手牌上限+1；"..
+  "若你的装备区没有宝物牌，视为你拥有技能〖奇才〗。",
   ["#jiqiao-invoke"] = "机巧：你可以弃置任意张装备牌，亮出牌堆顶两倍数量的牌并获得其中的锦囊牌",
 }
 
