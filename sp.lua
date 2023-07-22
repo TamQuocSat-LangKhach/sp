@@ -1332,7 +1332,7 @@ local sp__yanyu = fk.CreateTriggerSkill{
     return player:hasSkill(self.name) and target.phase == Player.Play and not player:isNude()
   end,
   on_cost = function(self, event, target, player, data)
-    local card = player.room:askForDiscard(player, 1, 1, false, self.name, true, ".", "#yanyu-cost", true)
+    local card = player.room:askForDiscard(player, 1, 1, true, self.name, true, ".", "#yanyu-cost", true)
     if #card > 0 then
       self.cost_data = card
       return true
@@ -1340,10 +1340,11 @@ local sp__yanyu = fk.CreateTriggerSkill{
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
+    local card_type = Fk:getCardById(self.cost_data[1]):getTypeString()
     room:throwCard(self.cost_data, self.name, player, player)
-    if not player.dead then
-      local type = Fk:getCardById(self.cost_data[1]):getTypeString()
-      room:setPlayerMark(player, "@yanyu-phase", type)
+    local x = 3 - player:usedSkillTimes("#yanyu_give", Player.HistoryTurn)
+    if not player.dead and x > 0 then
+      room:setPlayerMark(player, "@yanyu-phase", {card_type, x})
     end
   end,
 }
@@ -1352,13 +1353,15 @@ local yanyu_give = fk.CreateTriggerSkill{
   anim_type = "support",
   events = {fk.AfterCardsMove},
   can_trigger = function(self, event, target, player, data)
-    if player:hasSkill("sp__yanyu") and player:getMark("@yanyu-phase") ~= 0 and player:usedSkillTimes(self.name, Player.HistoryTurn) < 3 then
-      local room = player.room
-      if not room.current or room.current.dead or room.current.phase ~= Player.Play then return end
+    if player.dead or player:usedSkillTimes(self.name, Player.HistoryTurn) > 2 then return false end
+    local mark = player:getMark("@yanyu-phase")
+    if type(mark) == "table" and #mark == 2 then
+      local type_name = mark[1]
       for _, move in ipairs(data) do
         if move.toArea == Card.DiscardPile then
           for _, info in ipairs(move.moveInfo) do
-            if Fk:getCardById(info.cardId):getTypeString() == player:getMark("@yanyu-phase") then
+            if Fk:getCardById(info.cardId):getTypeString() == type_name and
+            player.room:getCardArea(info.cardId) == Card.DiscardPile then
               return true
             end
           end
@@ -1367,34 +1370,78 @@ local yanyu_give = fk.CreateTriggerSkill{
     end
   end,
   on_trigger = function(self, event, target, player, data)
+    local mark = player:getMark("@yanyu-phase")
+    if type(mark) ~= "table" or #mark ~= 2 then return false end
+    local type_name = mark[1]
     local ids = {}
     for _, move in ipairs(data) do
       if move.toArea == Card.DiscardPile then
         for _, info in ipairs(move.moveInfo) do
-          if Fk:getCardById(info.cardId):getTypeString() == player:getMark("@yanyu-phase") then
+          if Fk:getCardById(info.cardId):getTypeString() == type_name then
             table.insertIfNeed(ids, info.cardId)
           end
         end
       end
     end
-    if #ids > 0 then
-      for _, id in ipairs(ids) do
-        if player:usedSkillTimes(self.name, Player.HistoryTurn) < 3 and not player.dead and player.room:getCardArea(id) == Card.DiscardPile then
-          self:doCost(event, nil, player, id)
-        end
+    for _ = 1, #ids, 1 do
+      if player:usedSkillTimes(self.name, Player.HistoryTurn) > 2 then break end
+      local to_select = table.filter(ids, function (id)
+        return player.room:getCardArea(id) == Card.DiscardPile
+      end)
+      if #to_select == 0 then break end
+      self.cancel_cost = false
+      self:doCost(event, nil, player, to_select)
+      if self.cancel_cost then
+        self.cancel_cost = false
+        break
       end
     end
   end,
   on_cost = function(self, event, target, player, data)
-    local to = player.room:askForChoosePlayers(player, table.map(player.room:getAlivePlayers(), function(p)
-      return p.id end), 1, 1, "#yanyu-choose:::"..Fk:getCardById(data):toLogString(), "sp__yanyu", true)
-    if #to > 0 then
-      self.cost_data = {to[1], data}
+    local room = player.room
+    local move_to_notify = {}   ---@type CardsMoveStruct
+    move_to_notify.toArea = Card.PlayerHand
+    move_to_notify.to = player.id
+    move_to_notify.moveInfo = {}
+    move_to_notify.moveReason = fk.ReasonJustMove
+    for _, id in ipairs(data) do
+      table.insert(move_to_notify.moveInfo,
+      { cardId = id, fromArea = Card.Void })
+    end
+    room:notifyMoveCards({player}, {move_to_notify})
+    local choose_data = {
+      targets = table.map(room.alive_players, function (p)
+        return p.id
+      end),
+      num = 1,
+      min_num = 1,
+      pattern = tostring(Exppattern{ id = data }),
+      skillName = sp__yanyu.name
+    }
+    local _, ret = room:askForUseActiveSkill(player, "choose_players_skill", "#yanyu-choose", true, choose_data)
+    move_to_notify = {}   ---@type CardsMoveStruct
+    move_to_notify.from = player.id
+    move_to_notify.toArea = Card.Void
+    move_to_notify.moveInfo = {}
+    move_to_notify.moveReason = fk.ReasonJustMove
+    for _, id in ipairs(data) do
+      table.insert(move_to_notify.moveInfo,
+      { cardId = id, fromArea = Card.PlayerHand})
+    end
+    room:notifyMoveCards({player}, {move_to_notify})
+    if ret then
+      self.cost_data = {ret.targets[1], ret.cards[1]}
       return true
     end
+    self.cancel_cost = true
   end,
   on_use = function(self, event, target, player, data)
     player.room:broadcastSkillInvoke("sp__yanyu")
+    local mark = player:getMark("@yanyu-phase")
+    if type(mark) == "table" or #mark == 2 then
+      local x = 3 - player:usedSkillTimes(self.name, Player.HistoryTurn)
+      player.room:setPlayerMark(player, "@yanyu-phase", x > 0 and {mark[1], x} or 0)
+    end
     player.room:obtainCard(self.cost_data[1], self.cost_data[2], true, fk.ReasonGive)
   end,
 }
@@ -1454,7 +1501,7 @@ Fk:loadTranslationTable{
   ["@yanyu-phase"] = "燕语",
   ["#yanyu_give"] = "燕语",
   ["#yanyu-cost"] = "燕语：你可以弃置一张牌，然后此出牌阶段限三次，可令任意角色获得相同类别进入弃牌堆的牌",
-  ["#yanyu-choose"] = "燕语：你可令任意一名角色获得%arg",
+  ["#yanyu-choose"] = "燕语：令一名角色获得弃置的牌",
   ["#xiaode-invoke"] = "孝德：你可以获得 %dest 武将牌上的一个技能直到你的回合结束",
   ["#xiaode-choice"] = "孝德：选择要获得 %dest 的技能",
 
