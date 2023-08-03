@@ -299,13 +299,16 @@ local chenqing = fk.CreateTriggerSkill{
   anim_type = "support",
   events = {fk.EnterDying},
   can_trigger = function(self, event, target, player, data)
-    return player:hasSkill(self.name) and player:usedSkillTimes(self.name, Player.HistoryRound) == 0
+    return player:hasSkill(self.name) and player:usedSkillTimes(self.name, Player.HistoryRound) == 0 and
+    not table.every(player.room.alive_players, function (p)
+      return p == player or p == target
+    end)
   end,
   on_cost = function(self, event, target, player, data)
     local room = player.room
     local targets = {}
-    for _, p in ipairs(room:getOtherPlayers(player)) do
-      if p ~= target then
+    for _, p in ipairs(room.alive_players) do
+      if p ~= target and p ~= player then
         table.insert(targets, p.id)
       end
     end
@@ -320,27 +323,23 @@ local chenqing = fk.CreateTriggerSkill{
     local room = player.room
     local to = room:getPlayerById(self.cost_data)
     to:drawCards(4, self.name)
-    local n = #to:getCardIds{Player.Hand, Player.Equip}
-    if n < 4 then
-      to:throwAllCards("he")  --清俭
-      return
-    end
-    local cards = room:askForDiscard(to, 4, 4, true, self.name, false, ".", "#chenqing-discard")
+    local cards = room:askForDiscard(to, 4, 4, true, self.name, false, ".", "#chenqing-discard", true)
     local suits = {}
     for _, id in ipairs(cards) do
       if Fk:getCardById(id).suit ~= Card.NoSuit then
         table.insertIfNeed(suits, Fk:getCardById(id).suit)
       end
     end
-    if #suits == 4 then
+    room:throwCard(cards, self.name, to, to)
+    if #suits == 4 and not to.dead and not target.dead then
       room:useVirtualCard("peach", nil, to, target, self.name)
     end
   end,
 }
-local mozhi = fk.CreateViewAsSkill{
-  name = "mozhi",
+local mozhi_view_as = fk.CreateViewAsSkill{
+  name = "mozhi_view_as",
   interaction = function()
-    return UI.ComboBox {choices = {Self:getMark("mozhi-turn")[1]}}
+    return UI.ComboBox {choices = {Self:getMark("mozhi_to_use")}}
   end,
   card_filter = function(self, to_select, selected)
     return #selected == 0 and Fk:currentRoom():getCardArea(to_select) ~= Player.Equip
@@ -349,28 +348,67 @@ local mozhi = fk.CreateViewAsSkill{
     if #cards ~= 1 or not self.interaction.data then return end
     local card = Fk:cloneCard(self.interaction.data)
     card:addSubcard(cards[1])
-    card.skillName = self.name
+    card.skillName = "mozhi"
     return card
   end,
   enabled_at_play = function(self, player)
     return false
   end,
   enabled_at_response = function(self, player)
-    return player:getMark("mozhi-turn") ~= 0 and not player:isKongcheng()
+    return false
   end,
 }
-local mozhi_record = fk.CreateTriggerSkill{
-  name = "#mozhi_record",
+local mozhi = fk.CreateTriggerSkill{
+  name = "mozhi",
   anim_type = "control",
   events = {fk.EventPhaseStart},
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self.name) and player.phase == Player.Finish and
-      player:getMark("mozhi-turn") ~= 0 and not player:isKongcheng()
+    if target == player and player:hasSkill(self.name) and player.phase == Player.Finish and not player:isKongcheng() then
+      local room = player.room
+      local names = player:getMark("mozhi_record-phase")
+      if type(names) ~= "table" then
+        names = {}
+        local play_ids = {}
+        room.logic:getEventsOfScope(GameEvent.Phase, 1, function (e)
+          if e.data[2] == Player.Play then
+            table.insert(play_ids, {e.id, e.end_id})
+          end
+          return false
+        end, Player.HistoryTurn)
+        room.logic:getEventsOfScope(GameEvent.UseCard, 1, function (e)
+          local in_play = false
+          for _, ids in ipairs(play_ids) do
+            if #ids == 2 and e.id > ids[1] and e.id < ids[2] then
+              in_play = true
+              break
+            end
+          end
+          if in_play then
+            local use = e.data[1]
+            if use.from == player.id and (use.card.type == Card.TypeBasic or use.card:isCommonTrick()) then
+              table.insert(names, use.card.name)
+            end
+          end
+          return #names > 1
+        end, Player.HistoryTurn)
+        room:setPlayerMark(player, "mozhi_record-phase", names)
+      end
+      if #names > 0 then
+        local name = names[1]
+        local to_use = Fk:cloneCard(name)
+        return player:canUse(to_use) and not player:prohibitUse(to_use)
+      end
+    end
   end,
   on_cost = function(self, event, target, player, data)
-    local name = player:getMark("mozhi-turn")[1]
-    if name == "jink" or name == "nullification" or (name == "peach" and not player:isWounded()) then return end
-    local success, dat = player.room:askForUseActiveSkill(player, "mozhi", "#mozhi-invoke:::"..name, true)
+    local names = player:getMark("mozhi_record-phase")
+    if type(names) ~= "table" then return false end
+    local name = names[1]
+    local to_use = Fk:cloneCard(name)
+    if not player:canUse(to_use) or player:prohibitUse(to_use) then return false end
+    local room = player.room
+    room:setPlayerMark(player, "mozhi_to_use", name)
+    local success, dat = room:askForUseActiveSkill(player, "mozhi_view_as", "#mozhi-invoke:::"..name, true)
     if success then
       self.cost_data = dat
       return true
@@ -378,61 +416,44 @@ local mozhi_record = fk.CreateTriggerSkill{
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    local card = Fk.skills["mozhi"]:viewAs(self.cost_data.cards)
-    local mark = player:getMark("mozhi-turn")
-    table.remove(mark, 1)
-    if #mark == 0 then
-      room:setPlayerMark(player, "mozhi-turn", 0)
-    else
-      room:setPlayerMark(player, "mozhi-turn", mark)
-    end
+    local card = Fk.skills["mozhi_view_as"]:viewAs(self.cost_data.cards)
     room:useCard{
       from = player.id,
       tos = table.map(self.cost_data.targets, function(id) return {id} end),
       card = card,
     }
-    if player.dead or player:getMark("mozhi-turn") == 0 then return end
-    local name = player:getMark("mozhi-turn")[1]
-    if name == "jink" or name == "nullification" or (name == "peach" and not player:isWounded()) then return end
-    local success, dat = player.room:askForUseActiveSkill(player, "mozhi", "#mozhi-invoke:::"..name, true)
-    if success then
-      local card = Fk.skills["mozhi"]:viewAs(dat.cards)
-      room:useCard{
-        from = player.id,
-        tos = table.map(dat.targets, function(id) return {id} end),
-        card = card,
-      }
+    local names = player:getMark("mozhi_record-phase")
+    if type(names) == "table" and #names > 1 then
+      local name = names[2]
+      local to_use = Fk:cloneCard(name)
+      if not player:canUse(to_use) or player:prohibitUse(to_use) then return false end
+      room:setPlayerMark(player, "mozhi_to_use", name)
+      local success, dat = player.room:askForUseActiveSkill(player, "mozhi_view_as", "#mozhi-invoke:::"..name, true)
+      if success then
+        local card = Fk.skills["mozhi_view_as"]:viewAs(dat.cards)
+        room:useCard{
+          from = player.id,
+          tos = table.map(dat.targets, function(id) return {id} end),
+          card = card,
+        }
+      end
     end
-  end,
-
-  refresh_events = {fk.AfterCardUseDeclared},
-  can_refresh = function(self, event, target, player, data)
-    return target == player and player.phase == Player.Play and
-      data.card.type == Card.TypeBasic or (data.card.type == Card.TypeTrick and data.card.sub_type ~= Card.SubtypeDelayedTrick)
-  end,
-  on_refresh = function(self, event, target, player, data)
-    local mark = player:getMark("mozhi-turn")
-    if mark == 0 then mark = {} end
-    if #mark < 2 then
-      table.insert(mark, data.card.name)
-    end
-    player.room:setPlayerMark(player, "mozhi-turn", mark)
   end,
 }
-mozhi:addRelatedSkill(mozhi_record)
+Fk:addSkill(mozhi_view_as)
 caiwenji:addSkill(chenqing)
 caiwenji:addSkill(mozhi)
 Fk:loadTranslationTable{
   ["sp__caiwenji"] = "蔡文姬",
   ["chenqing"] = "陈情",
   [":chenqing"] = "每轮限一次，当一名角色进入濒死状态时，你可以令另一名其他角色摸四张牌，然后弃置四张牌，"..
-  "若其以此法弃置的牌花色各不相同，则其视为对濒死状态的角色使用一张【桃】。",
+  "若其以此法弃置的四张牌的花色各不相同，则其视为对濒死状态的角色使用一张【桃】。",
   ["mozhi"] = "默识",
+  ["mozhi_view_as"] = "默识",
   [":mozhi"] = "结束阶段，你可以将一张手牌当你本回合出牌阶段使用过的第一张基本牌或非延时锦囊牌使用，"..
   "然后你可以将一张手牌当你本回合出牌阶段使用过的第二张基本牌或非延时锦囊牌使用。",
   ["#chenqing-choose"] = "陈情：令一名其他角色摸四张牌然后弃四张牌，若花色各不相同视为对濒死角色使用【桃】",
   ["#chenqing-discard"] = "陈情：需弃置四张牌，若花色各不相同则视为对濒死角色使用【桃】",
-  ["#mozhi_record"] = "默识",
   ["#mozhi-invoke"] = "默识：你可以将一张手牌当【%arg】使用",
 
   ["$chenqing1"] = "陈生死离别之苦，悲乱世之跌宕。",
