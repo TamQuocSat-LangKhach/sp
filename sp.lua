@@ -1255,7 +1255,7 @@ local xingwu = fk.CreateTriggerSkill{
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    player:addToPile(self.name, self.cost_data, false, self.name)
+    player:addToPile(self.name, self.cost_data, true, self.name)
     if #player:getPile(self.name) >= 3 then
       room:moveCards({
         from = player.id,
