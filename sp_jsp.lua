@@ -271,7 +271,7 @@ local chixin = fk.CreateViewAsSkill{
   pattern = "slash,jink",
   interaction = function()
     local names = {}
-    if Fk.currentResponsePattern == nil and Fk:cloneCard("slash").skill:canUse(Self) then
+    if Fk.currentResponsePattern == nil and Self:canUse(Fk:cloneCard("slash")) then
       table.insertIfNeed(names, "slash")
     else
       for _, name in ipairs({"slash", "jink"}) do
