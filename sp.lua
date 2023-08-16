@@ -2159,11 +2159,12 @@ local zhendu = fk.CreateTriggerSkill{
   anim_type = "offensive",
   events = {fk.EventPhaseStart},
   can_trigger = function(self, event, target, player, data)
-    return target ~= player and player:hasSkill(self.name) and target.phase == Player.Play and not player:isKongcheng() and not target.dead
+    return target ~= player and target.phase == Player.Play and player:hasSkill(self.name) and not player:isKongcheng() and not target.dead
   end,
   on_cost = function(self, event, target, player, data)
     local card = player.room:askForDiscard(player, 1, 1, false, self.name, true, ".|.|.|hand|.|.", "#zhendu-invoke::"..target.id, true)
     if #card > 0 then
+      player.room:doIndicate(player.id, {target.id})
       self.cost_data = card
       return true
     end
@@ -2171,34 +2172,32 @@ local zhendu = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local room = player.room
     room:throwCard(self.cost_data, self.name, player, player)
-    room:useVirtualCard("analeptic", nil, target, target, self.name, false)
-    room:damage{
-      from = player,
-      to = target,
-      damage = 1,
-      skillName = self.name,
-    }
+    if not target.dead and room:useVirtualCard("analeptic", nil, target, target, self.name, false) and not target.dead then
+      room:damage{
+        from = player,
+        to = target,
+        damage = 1,
+        skillName = self.name,
+      }
+    end
   end,
 }
 local qiluan = fk.CreateTriggerSkill{
   name = "qiluan",
   anim_type = "offensive",
-  events = {fk.BuryVictim},
+  events = {fk.EventPhaseChanging},
   can_trigger = function(self, event, target, player, data)
-    return player:hasSkill(self.name) and data.damage and data.damage.from and data.damage.from == player
+    if data.to == Player.NotActive and player:hasSkill(self.name) then
+      return #player.room.logic:getEventsOfScope(GameEvent.Death, 1, function (e)
+        local deathData = e.data[1]
+        if deathData.damage and deathData.damage.from == player then
+          return true
+        end
+      end, Player.HistoryTurn) > 0
+    end
   end,
   on_use = function(self, event, target, player, data)
-    player.room:addPlayerMark(player, self.name, 1)
-  end,
-
-  refresh_events = {fk.EventPhaseStart},
-  can_refresh = function(self, event, target, player, data)
-    return target.phase == Player.NotActive and player:getMark(self.name) > 0
-  end,
-  on_refresh = function(self, event, target, player, data)
-    local room = player.room
-    player:drawCards(3 * player:getMark(self.name))
-    room:setPlayerMark(player, self.name, 0)
+    player:drawCards(3, self.name)
   end,
 }
 hetaihou:addSkill(zhendu)
@@ -2206,9 +2205,9 @@ hetaihou:addSkill(qiluan)
 Fk:loadTranslationTable{
   ["hetaihou"] = "何太后",
   ["zhendu"] = "鸩毒",
-  [":zhendu"] = "其他角色的出牌阶段开始时，你可以弃置一张手牌，视为该角色使用一张【酒】，然后你对其造成1点伤害。",
+  [":zhendu"] = "其他角色的出牌阶段开始时，你可弃置一张手牌，其视为使用一张【酒】，然后你对其造成1点伤害。",
   ["qiluan"] = "戚乱",
-  [":qiluan"] = "每当你杀死一名角色后，可于此回合结束后摸三张牌。",
+  [":qiluan"] = "一名角色的回合结束时，若你杀死过角色，你可摸3张牌。",
   ["#zhendu-invoke"] = "鸩毒：你可以弃置一张手牌视为 %dest 使用一张【酒】，然后你对其造成1点伤害",
 
   ["$zhendu1"] = "怪只怪你，不该生有皇子！",
@@ -2600,6 +2599,9 @@ Fk:loadTranslationTable{
   ["shenzhi"] = "神智",
   [":shenzhi"] = "准备阶段开始时，你可以弃置所有手牌，若你以此法弃置的手牌数不小于X，你回复1点体力(X为你当前的体力值)。",
   ["#shushen-choose"] = "淑慎：你可以令一名其他角色回复1点体力或摸两张牌",
+
+  ["$shenzhi1"] = "子龙将军，一切都托付给你了。",
+  ["$shenzhi2"] = "阿斗，相信妈妈，没事的。",
 }
 
 local huangjinleishi = General(extension, "huangjinleishi", "qun", 3, 3, General.Female)
