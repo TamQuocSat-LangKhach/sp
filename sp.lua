@@ -95,10 +95,10 @@ local yicong_audio = fk.CreateTriggerSkill{
     local room = player.room
     if player.hp > 2 and data.num > 0 and player.hp - data.num < 3 then
       room:notifySkillInvoked(player, "yicong", "offensive")
-      room:broadcastSkillInvoke("yicong", 1)
+      player:broadcastSkillInvoke("yicong", 1)
     elseif player.hp < 3 and data.num < 0 and player.hp - data.num > 2 then
       room:notifySkillInvoked(player, "yicong", "defensive")
-      room:broadcastSkillInvoke("yicong", 2)
+      player:broadcastSkillInvoke("yicong", 2)
     end
   end,
 }
@@ -636,7 +636,7 @@ local yuanhu_active = fk.CreateActiveSkill{
     })
     local card = Fk:getCardById(effect.cards[1])
     if card.sub_type == Card.SubtypeWeapon then
-      room:broadcastSkillInvoke("yuanhu", 1)
+      player:broadcastSkillInvoke("yuanhu", 1)
       local targets = {}
       for _, p in ipairs(room:getOtherPlayers(target)) do
         if target:distanceTo(p) == 1 and not p:isAllNude() then
@@ -649,10 +649,10 @@ local yuanhu_active = fk.CreateActiveSkill{
         room:throwCard({card}, self.name, room:getPlayerById(to[1]), player)
       end
     elseif card.sub_type == Card.SubtypeArmor then
-      room:broadcastSkillInvoke("yuanhu", 2)
+      player:broadcastSkillInvoke("yuanhu", 2)
       target:drawCards(1, self.name)
     elseif card.sub_type == Card.SubtypeOffensiveRide or card.sub_type == Card.SubtypeDefensiveRide then
-      room:broadcastSkillInvoke("yuanhu", 3)
+      player:broadcastSkillInvoke("yuanhu", 3)
       if target:isWounded() then
         room:recover({
           who = target,
@@ -951,11 +951,11 @@ local jieyuan = fk.CreateTriggerSkill{
     local room = player.room
     room:throwCard(self.cost_data, self.name, player, player)
     if event == fk.DamageCaused then
-      room:broadcastSkillInvoke(self.name, 1)
+      player:broadcastSkillInvoke(self.name, 1)
       room:notifySkillInvoked(player, self.name, "offensive")
       data.damage = data.damage + 1
     else
-      room:broadcastSkillInvoke(self.name, 2)
+      player:broadcastSkillInvoke(self.name, 2)
       room:notifySkillInvoked(player, self.name, "defensive")
       data.damage = data.damage - 1
     end
@@ -1067,7 +1067,7 @@ local function BaobianChange(player, hp, skill_name)
   if type(skills) ~= "table" then skills = {} end
 	if player.hp <= hp then
 		if not table.contains(skills, skill_name) then
-			room:broadcastSkillInvoke("baobian")
+			player:broadcastSkillInvoke("baobian")
       room:handleAddLoseSkills(player, skill_name, "baobian")
 			table.insert(skills, skill_name)
 		end
@@ -1196,12 +1196,13 @@ local songci = fk.CreateActiveSkill{
   on_use = function(self, room, effect)
     local target = room:getPlayerById(effect.tos[1])
     room:addPlayerMark(target, self.name)
+    local player = room:getPlayerById(effect.from)
     if #target.player_cards[Player.Hand] < target.hp then
       target:drawCards(2)
-      room:broadcastSkillInvoke(self.name, 1)
+      player:broadcastSkillInvoke(self.name, 1)
     else
       room:askForDiscard(target, 2, 2, true, self.name, false)
-      room:broadcastSkillInvoke(self.name, 2)
+      player:broadcastSkillInvoke(self.name, 2)
     end
   end,
 }
@@ -1457,7 +1458,7 @@ local yanyu_give = fk.CreateTriggerSkill{
     self.cancel_cost = true
   end,
   on_use = function(self, event, target, player, data)
-    player.room:broadcastSkillInvoke("sp__yanyu")
+    player:broadcastSkillInvoke("sp__yanyu")
     local mark = player:getMark("@yanyu-phase")
     if type(mark) == "table" or #mark == 2 then
       local x = 3 - player:usedSkillTimes(self.name, Player.HistoryTurn)
@@ -2451,11 +2452,11 @@ local zishu = fk.CreateTriggerSkill{
           dummy:addSubcard(id)
         end
       end
-      room:broadcastSkillInvoke(self.name, 2)
+      player:broadcastSkillInvoke(self.name, 2)
       room:notifySkillInvoked(player, self.name, "negative")
       room:moveCardTo(dummy, Card.DiscardPile, nil, fk.ReasonJustMove, self.name)
     else
-      room:broadcastSkillInvoke(self.name, 1)
+      player:broadcastSkillInvoke(self.name, 1)
       room:notifySkillInvoked(player, self.name, "drawcard")
       player:drawCards(1, self.name)
     end
