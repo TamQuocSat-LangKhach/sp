@@ -236,18 +236,18 @@ local manjuan = fk.CreateTriggerSkill{
         move.toArea = Card.DiscardPile
         move.moveReason = fk.ReasonPutIntoDiscardPile
         if player.phase ~= Player.NotActive then
-          room:broadcastSkillInvoke(self.name)
+          player:broadcastSkillInvoke(self.name)
           room:notifySkillInvoked(player, self.name, "special")
           move.extra_data = move.extra_data or {}
           move.extra_data.manjuan = player.id
         else
-          room:broadcastSkillInvoke(self.name)
+          player:broadcastSkillInvoke(self.name)
           room:notifySkillInvoked(player, self.name, "negative")
         end
       end
       if event == fk.AfterCardsMove and move.toArea == Card.DiscardPile and
         move.extra_data and move.extra_data.manjuan and move.extra_data.manjuan == player.id then
-        room:broadcastSkillInvoke(self.name)
+        player:broadcastSkillInvoke(self.name)
         room:notifySkillInvoked(player, self.name, "drawcard")
         for _, info in ipairs(move.moveInfo) do
           local cards = table.filter(room.discard_pile, function(id)
@@ -331,7 +331,7 @@ local zuixiang_trigger = fk.CreateTriggerSkill{
     return true
   end,
   on_use = function(self, event, target, player, data)
-    player.room:broadcastSkillInvoke("zuixiang")
+    player:broadcastSkillInvoke("zuixiang")
     if data.card.sub_type == Card.SubtypeDelayedTrick then  --取消延时锦囊
       AimGroup:cancelTarget(data, player.id)
     else
@@ -869,7 +869,7 @@ local anxian = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local room = player.room
     if event == fk.DamageCaused then
-      room:broadcastSkillInvoke(self.name, 1)
+      player:broadcastSkillInvoke(self.name, 1)
       room:notifySkillInvoked(player, self.name, "control")
       if not data.to:isKongcheng() then
         room:askForDiscard(data.to, 1, 1, false, self.name, false)
@@ -877,7 +877,7 @@ local anxian = fk.CreateTriggerSkill{
       player:drawCards(1, self.name)
       return true
     else
-      room:broadcastSkillInvoke(self.name, 2)
+      player:broadcastSkillInvoke(self.name, 2)
       room:notifySkillInvoked(player, self.name, "defensive")
       table.insertIfNeed(data.nullifiedTargets, player.id)
       room:throwCard(self.cost_data, self.name, player, player)
