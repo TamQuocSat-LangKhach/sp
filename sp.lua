@@ -614,14 +614,12 @@ local yuanhu_active = fk.CreateActiveSkill{
   mute = true,
   card_num = 1,
   target_num = 1,
-  can_use = function(self, player)
-    return not player:isNude()
-  end,
   card_filter = function(self, to_select, selected, targets)
     return #selected == 0 and Fk:getCardById(to_select).type == Card.TypeEquip
   end,
   target_filter = function(self, to_select, selected, cards)
-    return #selected == 0 and #cards == 1 and Fk:currentRoom():getPlayerById(to_select):getEquipment(Fk:getCardById(cards[1]).sub_type) == nil
+    return #selected == 0 and #cards == 1 and
+      #Fk:currentRoom():getPlayerById(to_select):getAvailableEquipSlots(Fk:getCardById(cards[1]).sub_type) > 0
   end,
   on_use = function(self, room, effect)
     local player = room:getPlayerById(effect.from)
@@ -754,26 +752,27 @@ local wuji = fk.CreateTriggerSkill{
       player:usedSkillTimes(self.name, Player.HistoryGame) == 0
   end,
   can_wake = function(self, event, target, player, data)
-    return player:getMark("wuji-turn") > 2
+    local n = 0
+    player.room.logic:getEventsOfScope(GameEvent.ChangeHp, 1, function(e)
+      local damage = e.data[5]
+      if damage and player == damage.from then
+        n = n + damage.damage
+      end
+    end, Player.HistoryTurn)
+    return n > 2
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
     room:changeMaxHp(player, 1)
-    room:recover({
-      who = player,
-      num = 1,
-      recoverBy = player,
-      skillName = self.name
-    })
+    if player:isWounded() then
+      room:recover({
+        who = player,
+        num = 1,
+        recoverBy = player,
+        skillName = self.name
+      })
+    end
     room:handleAddLoseSkills(player, "-huxiao", nil, true, false)
-  end,
-
-  refresh_events = {fk.Damage},
-  can_refresh = function(self, event, target, player, data)
-    return target == player and player.phase ~= Player.NotActive
-  end,
-  on_refresh = function(self, event, target, player, data)
-    player.room:addPlayerMark(player, "wuji-turn", data.damage)
   end,
 }
 guanyinping:addSkill(xueji)
@@ -782,11 +781,11 @@ guanyinping:addSkill(wuji)
 Fk:loadTranslationTable{
   ["guanyinping"] = "关银屏",
   ["xueji"] = "血祭",
-  [":xueji"] = "出牌阶段，你可弃置一张红色牌，并对你攻击范围内的至多X名其他角色各造成1点伤害，然后这些角色各摸一张牌。X为你损失的体力值。每阶段限一次。",
+  [":xueji"] = "出牌阶段限一次，你可弃置一张红色牌，并对你攻击范围内的至多X名其他角色各造成1点伤害（X为你损失的体力值），然后这些角色各摸一张牌。",
   ["huxiao"] = "虎啸",
   [":huxiao"] = "若你于出牌阶段使用的【杀】被【闪】抵消，则本阶段你可以额外使用一张【杀】。",
   ["wuji"] = "武继",
-  [":wuji"] = "觉醒技，回合结束阶段开始时，若本回合你已造成3点或更多伤害，你须加1点体力上限并回复1点体力，然后失去技能〖虎啸〗。",
+  [":wuji"] = "觉醒技，结束阶段开始时，若本回合你已造成3点或更多伤害，你须加1点体力上限并回复1点体力，然后失去技能〖虎啸〗。",
 
   ["$xueji1"] = "取你首级，祭先父之灵！",
   ["$xueji2"] = "这炽热的鲜血，父亲，你可感觉得到？",
@@ -809,9 +808,9 @@ local tianming = fk.CreateTriggerSkill{
     if player:isNude() then
       return player.room:askForSkillInvoke(player, self.name, data, "#tianming-cost")
     else
-      local cards = player.room:askForDiscard(player, math.min(2, #player:getCardIds{Player.Hand, Player.Equip}), 2,
+      local cards = player.room:askForDiscard(player, math.min(2, #player:getCardIds("he")), 2,
         true, self.name, true, ".", "#tianming-cost", true)
-      if #cards >= math.min(2, #player:getCardIds{Player.Hand, Player.Equip}) then
+      if #cards >= math.min(2, #player:getCardIds("he")) then
         self.cost_data = cards
         return true
       end
@@ -823,30 +822,22 @@ local tianming = fk.CreateTriggerSkill{
       room:throwCard(self.cost_data, self.name, player, player)
     end
     player:drawCards(2, self.name)
-    local n = player.hp
-    for _, p in ipairs(room:getOtherPlayers(player)) do
-      if p.hp > n then
-        n = p.hp
-      end
-    end
-    local tos = {}
-    for _, p in ipairs(room:getOtherPlayers(player)) do
-      if p.hp == n then
-        table.insert(tos, p)
-      end
-    end
-    if #tos > 1 then return end
-    local to = tos[1]
+    local to = table.filter(room.alive_players, function(p)
+      return table.every(room:getOtherPlayers(p), function(t)
+        return p.hp > t.hp
+      end)
+    end)
+    if #to == 0 or to[1] == player then return end
+    to = to[1]
     if to:isNude() then
       if room:askForSkillInvoke(to, self.name, data, "#tianming-cost") then
-        to:drawCards(2)
+        to:drawCards(2, self.name)
       end
     else
-      local cards = room:askForDiscard(to, math.min(2, #to:getCardIds{Player.Hand, Player.Equip}), 2,
-        true, self.name, true, ".", "#tianming-cost", true)
-      if #cards >= math.min(2, #to:getCardIds{Player.Hand, Player.Equip}) then
+      local cards = room:askForDiscard(to, math.min(2, #to:getCardIds("he")), 2, true, self.name, true, ".", "#tianming-cost", true)
+      if #cards >= math.min(2, #to:getCardIds("he")) then
         room:throwCard(cards, self.name, to, to)
-        to:drawCards(2)
+        to:drawCards(2, self.name)
       end
     end
   end,
@@ -869,15 +860,11 @@ local mizhao = fk.CreateActiveSkill{
     local player = room:getPlayerById(effect.from)
     local target = room:getPlayerById(effect.tos[1])
     local dummy = Fk:cloneCard("dilu")
-    dummy:addSubcards(player.player_cards[Player.Hand])
+    dummy:addSubcards(player:getCardIds("h"))
     room:obtainCard(target.id, dummy, false, fk.ReasonGive)
-    local targets = {}
-    for _, p in ipairs(room:getOtherPlayers(target)) do
-      if not p:isKongcheng() and p ~= player then
-        table.insert(targets, p.id)
-      end
-    end
-    if #targets == 0 then return end
+    local targets = table.map(table.filter(room:getOtherPlayers(player), function(p)
+      return not p:isKongcheng() and p ~= target end), function(p) return p.id end)
+    if player.dead or target.dead or #targets == 0 then return end
     local to = room:askForChoosePlayers(player, targets, 1, 1, "#mizhao-choose::"..target.id, self.name, false)
     if #to == 0 then
       to = room:getPlayerById(table.random(targets))
@@ -894,6 +881,7 @@ local mizhao = fk.CreateActiveSkill{
         winner = to
         loser = target
       end
+      if loser.dead then return end
       room:useVirtualCard("slash", nil, winner, {loser}, self.name)
     end
   end
@@ -903,8 +891,8 @@ liuxie:addSkill(mizhao)
 Fk:loadTranslationTable{
   ["liuxie"] = "刘协",
   ["tianming"] = "天命",
-  [":tianming"] = "当你成为【杀】的目标时，你可以弃置两张牌（不足则全弃，无牌则不弃），然后摸两张牌；"..
-  "若此时全场体力值最多的角色仅有一名（且不是你），该角色也可以如此做。",
+  [":tianming"] = "当你成为【杀】的目标时，你可以弃置两张牌（不足则全弃，无牌则不弃），然后摸两张牌；然后若场上体力唯一最多的角色不为你，"..
+  "该角色也可以如此做。",
   ["mizhao"] = "密诏",
   [":mizhao"] = "出牌阶段，你可以将所有手牌（至少一张）交给一名其他角色。若如此做，你令该角色与你指定的另一名有手牌的角色拼点，"..
   "视为拼点赢的角色对没赢的角色使用一张【杀】。（每阶段限一次。）",
@@ -2666,6 +2654,13 @@ Fk:loadTranslationTable{
   ["zhuji"] = "助祭",
   [":zhuji"] = "当一名角色造成雷电伤害时，你可以令其进行一次判定，若结果为黑色，此伤害+1；若结果为红色，该角色获得此牌。",
   ["#zhuji-invoke"] = "助祭：你可令 %dest 判定，若为黑色则此伤害+1，若为红色其获得判定牌",
+
+  --CV：穆小橘v
+  ["$fulu1"] = "电母雷公，速降神通。",
+  ["$fulu2"] = "山岳高昂，五雷速发。",
+  ["$zhuji1"] = "大神宏量，请昭太平！",
+  ["$zhuji2"] = "惠民济困，共辟黄天。",
+  ["~huangjinleishi"] = "速报大贤良师……大事已泄……",
 }
 
 local wenpin = General(extension, "wenpin", "wei", 4)

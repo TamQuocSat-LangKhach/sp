@@ -253,10 +253,10 @@ local manjuan = fk.CreateTriggerSkill{
           local cards = table.filter(room.discard_pile, function(id)
             return Fk:getCardById(id, true).number == Fk:getCardById(info.cardId, true).number end)
           if #cards > 0 then
-            local result = room:askForGuanxing(player, cards, nil, {1, 1}, "", true, {"DiscardPile", "$Hand"})
-            if #result.bottom > 0 then
+            local ids = room:askForCardsChosen(player, player, 0, 1, {card_data = {{"DiscardPile", cards}}}, self.name)
+            if #ids > 0 then
               room:moveCards({
-                ids = result.bottom,
+                ids = ids,
                 fromArea = Card.DiscardPile,
                 to = player.id,
                 toArea = Card.PlayerHand,
