@@ -31,26 +31,33 @@ local jilei = fk.CreateTriggerSkill{
     local choice = room:askForChoice(player, {"basic", "trick", "equip"}, self.name)
     local types = data.from:getMark("@jilei-turn")
     if types == 0 then types = {} end
-    table.insertIfNeed(types, choice)
+    table.insertIfNeed(types, choice .. "_char")
     room:setPlayerMark(data.from, "@jilei-turn", types)
   end,
 }
 local jilei_prohibit = fk.CreateProhibitSkill{
   name = "#jilei_prohibit",
   prohibit_use = function(self, player, card)
-    if player:getMark("@jilei-turn") ~= 0 then
-      return table.contains(player:getMark("@jilei-turn"), card:getTypeString())
+    local mark = player:getMark("@jilei-turn")
+    if type(mark) == "table" and table.contains(mark, card:getTypeString() .. "_char") then
+      local subcards = card:isVirtual() and card.subcards or {card.id}
+      return #subcards > 0 and table.every(subcards, function(id)
+        return table.contains(player:getCardIds(Player.Hand), id)
+      end)
     end
   end,
   prohibit_response = function(self, player, card)
-    if player:getMark("@jilei-turn") ~= 0 then
-      return table.contains(player:getMark("@jilei-turn"), card:getTypeString())
+    local mark = player:getMark("@jilei-turn")
+    if type(mark) == "table" and table.contains(mark, card:getTypeString() .. "_char") then
+      local subcards = card:isVirtual() and card.subcards or {card.id}
+      return #subcards > 0 and table.every(subcards, function(id)
+        return table.contains(player:getCardIds(Player.Hand), id)
+      end)
     end
   end,
   prohibit_discard = function(self, player, card)
-    if player:getMark("@jilei-turn") ~= 0 then
-      return table.contains(player:getMark("@jilei-turn"), card:getTypeString())
-    end
+    local mark = player:getMark("@jilei-turn")
+    return type(mark) == "table" and table.contains(mark, card:getTypeString() .. "_char")
   end,
 }
 jilei:addRelatedSkill(jilei_prohibit)
@@ -170,7 +177,7 @@ local juesi = fk.CreateActiveSkill{
     return not player:isKongcheng()
   end,
   card_filter = function(self, to_select, selected)
-    return #selected == 0 and Fk:getCardById(to_select).trueName == "slash"
+    return #selected == 0 and Fk:getCardById(to_select).trueName == "slash" and not Self:prohibitDiscard(Fk:getCardById(to_select))
   end,
   target_filter = function(self, to_select, selected)
     local target = Fk:currentRoom():getPlayerById(to_select)
@@ -232,13 +239,16 @@ local xiuluo = fk.CreateTriggerSkill{
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    room:throwCard(self.cost_data, self.name, player, player)
     local suit = Fk:getCardById(self.cost_data[1], true).suit
+    room:throwCard(self.cost_data, self.name, player, player)
     local cards = table.filter(player:getCardIds(Player.Judge), function(id)
       return Fk:getCardById(id, true).suit == suit end)
-    room:fillAG(player, cards)
-    local id = room:askForAG(player, cards, false, self.name)
-    room:closeAG(player)
+    if #cards == 0 then return false end
+    local id = room:askForCardChosen(player, player, {
+      card_data = {
+        { "$Judge", cards }
+      }
+    }, self.name)
     room:throwCard(id, self.name, player, player)
   end
 }
@@ -805,12 +815,21 @@ local tianming = fk.CreateTriggerSkill{
     return target == player and player:hasSkill(self.name) and data.card.trueName == "slash"
   end,
   on_cost = function(self, event, target, player, data)
-    if player:isNude() then
-      return player.room:askForSkillInvoke(player, self.name, data, "#tianming-cost")
+    local x = 0
+    for _, id in ipairs(player:getCardIds(Player.Hand)) do
+      if not player:prohibitDiscard(Fk:getCardById(id)) then
+        x = x+1
+        if x == 2 then break end
+      end
+    end
+    if x == 0 then
+      if player.room:askForSkillInvoke(player, self.name, data, "#tianming-cost") then
+        self.cost_data = nil
+        return true
+      end
     else
-      local cards = player.room:askForDiscard(player, math.min(2, #player:getCardIds("he")), 2,
-        true, self.name, true, ".", "#tianming-cost", true)
-      if #cards >= math.min(2, #player:getCardIds("he")) then
+      local cards = player.room:askForDiscard(player, x, 2, true, self.name, true, ".", "#tianming-cost", true)
+      if #cards > 0 then
         self.cost_data = cards
         return true
       end
@@ -821,23 +840,35 @@ local tianming = fk.CreateTriggerSkill{
     if self.cost_data then
       room:throwCard(self.cost_data, self.name, player, player)
     end
-    player:drawCards(2, self.name)
-    local to = table.filter(room.alive_players, function(p)
-      return table.every(room:getOtherPlayers(p), function(t)
-        return p.hp > t.hp
-      end)
-    end)
-    if #to == 0 or to[1] == player then return end
+    if player.dead then return false end
+    room:drawCards(player, 2, self.name)
+    local to = {}
+    local x = 0
+    for _, p in ipairs(room.alive_players) do
+      if x < p.hp then
+        x = p.hp
+        to = {p}
+      elseif x == p.hp then
+        table.insert(to, p)
+      end
+    end
+    if #to ~= 1 or to[1] == player then return end
     to = to[1]
-    if to:isNude() then
+    x = 0
+    for _, id in ipairs(to:getCardIds(Player.Hand)) do
+      if not to:prohibitDiscard(Fk:getCardById(id)) then
+        x = x+1
+        if x == 2 then break end
+      end
+    end
+    if x == 0 then
       if room:askForSkillInvoke(to, self.name, data, "#tianming-cost") then
         to:drawCards(2, self.name)
       end
     else
-      local cards = room:askForDiscard(to, math.min(2, #to:getCardIds("he")), 2, true, self.name, true, ".", "#tianming-cost", true)
-      if #cards >= math.min(2, #to:getCardIds("he")) then
-        room:throwCard(cards, self.name, to, to)
-        to:drawCards(2, self.name)
+      local cards = room:askForDiscard(to, x, 2, true, self.name, true, ".", "#tianming-cost")
+      if #cards > 0 and not to.dead then
+        room:drawCards(to, 2, self.name)
       end
     end
   end,
@@ -862,9 +893,10 @@ local mizhao = fk.CreateActiveSkill{
     local dummy = Fk:cloneCard("dilu")
     dummy:addSubcards(player:getCardIds("h"))
     room:obtainCard(target.id, dummy, false, fk.ReasonGive)
+    if player.dead or target.dead or target:isKongcheng() then return end
     local targets = table.map(table.filter(room:getOtherPlayers(player), function(p)
       return not p:isKongcheng() and p ~= target end), function(p) return p.id end)
-    if player.dead or target.dead or #targets == 0 then return end
+    if #targets == 0 then return end
     local to = room:askForChoosePlayers(player, targets, 1, 1, "#mizhao-choose::"..target.id, self.name, false)
     if #to == 0 then
       to = room:getPlayerById(table.random(targets))
@@ -1093,12 +1125,12 @@ Fk:loadTranslationTable{
 
   ["$baobian1"] = "变可生，不变则死。",
   ["$baobian2"] = "适时而动，穷极则变。",
-  --["$tiaoxin1"] = "跪下受降，饶你不死！",
-  --["$tiaoxin2"] = "黄口小儿，可听过将军名号？",
-  --["$paoxiao1"] = "受死吧！",
-  --["$paoxiao2"] = "喝！",
-  --["$shensu1"] = "今日有恙在身，须得速战速决！",
-  --["$shensu2"] = "冲杀敌阵，来去如电！",
+  ["$ol_ex__tiaoxin_xiahouba1"] = "跪下受降，饶你不死！",
+  ["$ol_ex__tiaoxin_xiahouba2"] = "黄口小儿，可听过将军名号？",
+  ["$ex__paoxiao_xiahouba1"] = "喝！",
+  ["$ex__paoxiao_xiahouba2"] = "受死吧！",
+  ["$ol_ex__shensu_xiahouba1"] = "冲杀敌阵，来去如电！",
+  ["$ol_ex__shensu_xiahouba2"] = "今日有恙在身，须得速战速决！",
   ["~xiahouba"] = "弃魏投蜀，死而无憾。",
 }
 
@@ -2018,6 +2050,12 @@ Fk:loadTranslationTable{
   ["#yinbing-cost"] = "引兵：你可以将任意张非基本牌置于你的武将牌上",
   ["#yinbing-invoke"] = "引兵：你需移去一张“引兵”牌（点“取消”则随机移去一张）",
   ["#juedi-choose"] = "绝地：令一名其他角色获得“引兵”牌然后回复1点体力并摸等量的牌，或点“取消”移去“引兵”牌令自己摸牌",
+
+  ["$yinbing1"] = "追兵凶猛，末将断后！",
+  ["$yinbing2"] = "将军走此小道，追兵交我应付！",
+  ["$juedi1"] = "困兽之斗，以全忠义！",
+  ["$juedi2"] = "提起武器，最后一搏！",
+  ["~zumao"] = "孙将军，已经，安全了吧……",
 }
 
 local dingfeng = General(extension, "dingfeng", "wu", 4)
@@ -2140,6 +2178,14 @@ Fk:loadTranslationTable{
   [":juyi"] = "觉醒技，准备阶段开始时，若你已受伤且体力上限大于存活角色数，你须将手牌摸至体力上限，然后获得技能“崩坏”和“威重”。",
   ["weizhong"] = "威重",
   [":weizhong"] = "锁定技，每当你的体力上限增加或减少时，你摸一张牌。",
+
+  ["$gongao1"] = "攻城拔寨，建功立业。",
+  ["$gongao2"] = "恪尽职守，忠心事主。",
+  ["$juyi1"] = "司马氏篡权，我当替天伐之！",
+  ["$juyi2"] = "若国有难，吾当举义。",
+  ["$weizhong"] = "定当夷司马氏三族！",
+  ["$benghuai_zhugedan"] = "咳……咳咳……",
+  ["~zhugedan"] = "诸葛一氏定会为我复仇！",
 }
 
 local hetaihou = General(extension, "hetaihou", "qun", 3, 3, General.Female)
@@ -2408,6 +2454,12 @@ Fk:loadTranslationTable{
   [":naman"] = "每当其他角色打出的【杀】进入弃牌堆时，你可以获得之。",
   ["@xiemu"] = "协穆",
   ["#xiemu_record"] = "协穆",
+
+  ["$xiemu1"] = "暴戾之气，伤人害己。",
+  ["$xiemu2"] = "休要再起战事。",
+  ["$naman1"] = "弃暗投明，光耀门楣！",
+  ["$naman2"] = "慢着，让我来！",
+  ["~nos__maliang"] = "皇叔为何不听我之言？",
 }
 
 local maliang = General(extension, "maliang", "shu", 3)
