@@ -1957,15 +1957,13 @@ local yinbing = fk.CreateTriggerSkill{
   end,
   on_cost = function(self, event, target, player, data)
     local room = player.room
-    local cards = {}
     if event == fk.EventPhaseStart then
-      cards = room:askForCard(player, 1, 999, true, self.name, true, ".|.|.|.|.|trick,equip", "#yinbing-cost")
+      local cards = room:askForCard(player, 1, 999, true, self.name, true, ".|.|.|.|.|trick,equip", "#yinbing-cost")
+      if #cards > 0 then
+        self.cost_data = cards
+        return true
+      end
     else
-      cards = room:askForCard(player, 1, 1, false, self.name, true, ".|.|.|yinbing|.|.", "#yinbing-invoke", "yinbing")
-      if #cards == 0 then cards = {player:getPile(self.name)[math.random(1, #player:getPile(self.name))]} end
-    end
-    if #cards > 0 then
-      self.cost_data = cards
       return true
     end
   end,
@@ -1974,9 +1972,16 @@ local yinbing = fk.CreateTriggerSkill{
     if event == fk.EventPhaseStart then
       player:addToPile(self.name, self.cost_data, false, self.name)
     else
+      local cards = player:getPile(self.name)
+      if #cards == 0 then return false end
+      local id = room:askForCardChosen(player, player, {
+        card_data = {
+          { self.name, cards }
+        }
+      }, self.name)
       room:moveCards({
         from = player.id,
-        ids = self.cost_data,
+        ids = {id},
         toArea = Card.DiscardPile,
         moveReason = fk.ReasonPutIntoDiscardPile,
         skillName = self.name,
@@ -1993,39 +1998,28 @@ local juedi = fk.CreateTriggerSkill{
   can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(self.name) and player.phase == Player.Start and #player:getPile("yinbing") > 0
   end,
-  on_cost = function(self, event, target, player, data)
+  on_use = function(self, event, target, player, data)
     local room = player.room
     local targets = {}
-    for _, p in ipairs(room:getOtherPlayers(player)) do
-      if player.hp >= p.hp then
+    for _, p in ipairs(room.alive_players) do
+      if player.hp >= p.hp and player ~= p then
         table.insertIfNeed(targets, p.id)
       end
     end
-    local to = room:askForChoosePlayers(player, targets, 1, 1, "#juedi-choose", self.name, false)
-    if #to > 0 then
-      self.cost_data = to[1]
-    else
-      self.cost_data = player.id
-    end
-    return true
-  end,
-  on_use = function(self, event, target, player, data)
-    local room = player.room
-    local n = #player:getPile("yinbing")
-    if self.cost_data == player.id then
+    local tos = room:askForChoosePlayers(player, targets, 1, 1, "#juedi-choose", self.name, true, false)
+    if #tos > 0 then
+      local to = room:getPlayerById(tos[1])
+      local x = #player:getPile("yinbing")
       room:moveCards({
         from = player.id,
         ids = player:getPile("yinbing"),
-        toArea = Card.DiscardPile,
-        moveReason = fk.ReasonPutIntoDiscardPile,
+        to = tos[1],
+        toArea = Card.PlayerHand,
+        moveReason = fk.ReasonPrey,
         skillName = self.name,
+        proposer = player.id,
       })
-      player:drawCards(n, self.name)
-    else
-      local to = room:getPlayerById(self.cost_data)
-      local dummy = Fk:cloneCard("dilu")
-      dummy:addSubcards(player:getPile("yinbing"))
-      room:obtainCard(to.id, dummy, false, fk.ReasonGive)
+      if to.dead then return false end
       if to:isWounded() then
         room:recover({
           who = to,
@@ -2034,7 +2028,22 @@ local juedi = fk.CreateTriggerSkill{
           skillName = self.name
         })
       end
-      to:drawCards(n, self.name)
+      if not to.dead then
+        room:drawCards(to, x, self.name)
+      end
+    else
+      room:moveCards({
+        from = player.id,
+        ids = player:getPile("yinbing"),
+        toArea = Card.DiscardPile,
+        moveReason = fk.ReasonPutIntoDiscardPile,
+        skillName = self.name,
+        proposer = player.id,
+      })
+      local x = player.maxHp - player:getHandcardNum()
+      if x > 0 then
+        room:drawCards(player, x, self.name)
+      end
     end
   end,
 }
@@ -2455,8 +2464,8 @@ Fk:loadTranslationTable{
   ["@xiemu"] = "协穆",
   ["#xiemu_record"] = "协穆",
 
-  ["$xiemu1"] = "暴戾之气，伤人害己。",
-  ["$xiemu2"] = "休要再起战事。",
+  ["$xiemu1"] = "休要再起战事。",
+  ["$xiemu2"] = "暴戾之气，伤人害己。",
   ["$naman1"] = "弃暗投明，光耀门楣！",
   ["$naman2"] = "慢着，让我来！",
   ["~nos__maliang"] = "皇叔为何不听我之言？",
