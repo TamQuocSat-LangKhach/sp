@@ -1363,6 +1363,14 @@ Fk:loadTranslationTable{
   [":luoyan"] = "锁定技，若你的武将牌上有牌，你视为拥有技能“天香”和“流离”。",
   ["#xingwu-cost"] = "星舞：你可以将一张与你本回合使用的牌颜色均不同的手牌置为“星舞”牌",
   ["#xingwu-choose"] = "星舞：对一名男性角色造成2点伤害并弃置其装备区所有牌",
+
+  ["$xingwu1"] = "哼，不要小瞧女孩子哦！",
+  ["$xingwu2"] = "姐妹齐心，其利断金。",
+  ["$tianxiang_daqiaoxiaoqiao1"] = "替我挡着吧~",
+  ["$tianxiang_daqiaoxiaoqiao2"] = "哼！我才不怕你呢~",
+  ["$liuli_daqiaoxiaoqiao1"] = "呵呵，交给你啦~",
+  ["$liuli_daqiaoxiaoqiao2"] = "不懂得怜香惜玉么~",
+  ["~daqiaoxiaoqiao"] = "伯符，公瑾，请一定要守护住我们的江东啊！",
 }
 
 local xiahoushi = General(extension, "sp__xiahoushi", "shu", 3, 3, General.Female)
@@ -1593,6 +1601,10 @@ Fk:loadTranslationTable{
   [":xiaoguo"] = "其他角色的结束阶段开始时，你可以弃置一张基本牌。若如此做，该角色需弃置一张装备牌并令你摸一张牌，否则受到你对其造成的1点伤害。",
   ["#xiaoguo-invoke"] = "骁果：你可以弃置一张基本牌，%dest 需弃置一张装备牌并令你摸一张牌，否则你对其造成1点伤害",
   ["#xiaoguo-discard"] = "骁果：你需弃置一张装备牌并令 %src 摸一张牌，否则其对你造成1点伤害",
+
+  ["$xiaoguo1"] = "三军听我号令，不得撤退！",
+  ["$xiaoguo2"] = "看我先登城头，立下首功！",
+  ["~yuejin"] = "箭疮发作，吾命休矣。",
 }
 
 local zhangbao = General(extension, "zhangbao", "qun", 3)
@@ -1668,6 +1680,12 @@ Fk:loadTranslationTable{
   [":yingbing"] = "受到“咒缚”技能影响的角色进行判定时，你可以摸两张牌。",
   ["zhangbao_zhou"] = "咒",
   ["#zhoufu_trigger"] = "咒缚",
+
+  ["$zhoufu1"] = "违吾咒者，倾死灭亡。",
+  ["$zhoufu2"] = "咒宝符命，速显威灵。",
+  ["$yingbing1"] = "朱雀玄武，誓为我征。",
+  ["$yingbing2"] = "所呼立至，所召立前。",
+  ["~zhangbao"] = "黄天……为何？！",
 }
 
 local caoang = General(extension, "caoang", "wei", 4)
@@ -1802,6 +1820,14 @@ Fk:loadTranslationTable{
   [":mingzhe"] = "每当你于回合外使用、打出或因弃置而失去一张红色牌时，你可以摸一张牌。",
   ["#huanshi-invoke"] = "缓释：你可以令 %dest 观看你的手牌并打出其中一张牌修改其判定",
   ["#hongyuan-cost"] = "弘援：你可以少摸一张牌，令至多两名其他角色各摸一张牌",
+
+  ["$huanshi1"] = "缓乐之危急，释兵之困顿。",
+  ["$huanshi2"] = "尽死生之力，保友邦之安。",
+  ["$hongyuan1"] = "诸将莫慌，粮草已到。",
+  ["$hongyuan2"] = "自舍其身，施于天下。",
+  ["$mingzhe1"] = "明以洞察，哲以保身。",
+  ["$mingzhe2"] = "塞翁失马，焉知非福？",
+  ["~zhugejin"] = "君臣不相负，来世复君臣。",
 }
 
 local xingcai = General(extension, "xingcai", "shu", 3, 3, General.Female)
@@ -1938,6 +1964,8 @@ Fk:loadTranslationTable{
   [":kuangfu"] = "每当你使用【杀】对目标角色造成一次伤害后，你可以选择一项: 将其装备区里的一张牌置入你的装备区；或弃置其装备区里的一张牌。",
   ["kuangfu_move"] = "将其一张装备置入你的装备区",
   ["kuangfu_discard"] = "弃置其一张装备",
+  
+  ["~panfeng"] = "来者……可是魔将……",	
 }
 
 local zumao = General(extension, "zumao", "wu", 4)
@@ -2773,6 +2801,10 @@ Fk:loadTranslationTable{
   ["#zhenwei-invoke"] = "镇卫：你可以弃置一张牌将%arg转移给你，或取消之并令使用者回合结束时收回",
   ["zhenwei_transfer"] = "摸一张牌并将此牌转移给你",
   ["zhenwei_recycle"] = "取消此牌，回合结束时使用者将之收回",
+  
+  ["$zhenwei1"] = "再敢来犯，仍叫你无功而返！",
+  ["$zhenwei2"] = "江夏防线，固若金汤！",
+  ["~wenpin"] = "终于……也守不住了……",
 }
 
 local simalang = General(extension, "simalang", "wei", 3)
@@ -2847,6 +2879,12 @@ Fk:loadTranslationTable{
   [":quji"] = "出牌阶段限一次，若你已受伤，你可以弃置X张牌并选择至多X名已受伤的角色，令这些角色各回复1点体力，然后若此此你以此法弃置过的牌中有黑色牌，"..
   "你失去1点体力。（X为你已损失的体力值）",
   ["#junbing-give"] = "郡兵：将%arg张手牌交给 %dest",
+  
+  ["$junbing1"] = "男儿慷慨，军中豪迈。",
+  ["$junbing2"] = "郡国当有搜狩习战之备。",
+  ["$quji1"] = "若不去兵之疾，则将何以守国？",
+  ["$quji2"] = "愿为将士，略尽绵薄。",
+  ["~simalang"] = "微功未效，有辱国恩……",
 }
 
 return extension
