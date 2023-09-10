@@ -96,7 +96,7 @@ local yicong_audio = fk.CreateTriggerSkill{
 
   refresh_events = {fk.HpChanged},
   can_refresh = function(self, event, target, player, data)
-    return target == player and player:hasSkill("yicong")
+    return target == player and player:hasSkill("yicong") and not player:isFakeSkill("yicong")
   end,
   on_refresh = function(self, event, target, player, data)
     local room = player.room
