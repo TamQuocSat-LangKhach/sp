@@ -674,6 +674,7 @@ local yuanhu_active = fk.CreateActiveSkill{
     return #selected == 0 and #cards == 1 and
       #Fk:currentRoom():getPlayerById(to_select):getAvailableEquipSlots(Fk:getCardById(cards[1]).sub_type) > 0
   end,
+  can_use = Util.FalseFunc,
   on_use = function(self, room, effect)
     local player = room:getPlayerById(effect.from)
     local target = room:getPlayerById(effect.tos[1])
