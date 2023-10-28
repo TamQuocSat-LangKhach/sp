@@ -663,7 +663,7 @@ Fk:loadTranslationTable{
 
 local caohong = General(extension, "caohong", "wei", 4)
 local yuanhu_active = fk.CreateActiveSkill{
-  name = "yuanhu_active",
+  name = "#yuanhu_active",
   mute = true,
   card_num = 1,
   target_num = 1,
@@ -726,7 +726,7 @@ local yuanhu = fk.CreateTriggerSkill{
     player.room:askForUseActiveSkill(player, "#yuanhu_active", "#yuanhu-invoke", true)
   end,
 }
-Fk:addSkill(yuanhu_active)
+yuanhu:addRelatedSkill(yuanhu_active)
 caohong:addSkill(yuanhu)
 Fk:loadTranslationTable{
   ["caohong"] = "曹洪",
