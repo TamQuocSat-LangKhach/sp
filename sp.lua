@@ -3050,7 +3050,7 @@ local quji = fk.CreateActiveSkill{
         room:recover({
           who = to,
           num = 1,
-          recoverBy = player.id,
+          recoverBy = player,
           skillName = self.name
         })
       end
