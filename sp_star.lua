@@ -1,6 +1,8 @@
 local extension = Package("sp_star")
 extension.extensionName = "sp"
 
+local U = require "packages/utility/utility"
+
 Fk:loadTranslationTable{
   ["sp_star"] = "☆SP",
   ["starsp"] = "☆SP",
@@ -754,7 +756,7 @@ local shichoul = fk.CreateTriggerSkill{
     local room = player.room
     room:setPlayerMark(target, "@@shichoul", 0)
     local to = room:getPlayerById(player:getMark("shichoul"))
-    local mark = to:getMark("@@shichoul")
+    local mark = U.getMark(to:getMark("@@shichoul"))
     table.removeOne(mark, player.id)
     if #mark == 0 then mark = 0 end
     room:setPlayerMark(to, "@@shichoul", mark)
