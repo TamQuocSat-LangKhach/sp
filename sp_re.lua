@@ -45,7 +45,7 @@ local zhiman = fk.CreateTriggerSkill{
   name = "zhiman",
   events = {fk.DamageCaused},
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self.name) and data.to ~= player
+    return target == player and player:hasSkill(self) and data.to ~= player
   end,
   on_cost = function(self, event, target, player, data)
     return player.room:askForSkillInvoke(player, self.name, nil, "#zhiman-invoke::"..data.to.id)
@@ -173,7 +173,7 @@ local re__zishou = fk.CreateTriggerSkill{
   anim_type = "drawcard",
   events = {fk.DrawNCards},
   can_trigger = function(self, event, target, player, data)
-    return player:hasSkill(self.name) and player.phase == Player.Draw
+    return player:hasSkill(self) and player.phase == Player.Draw
   end,
   on_use = function(self, event, target, player, data)
     local kingdoms = {}
@@ -186,7 +186,7 @@ local re__zishou = fk.CreateTriggerSkill{
 local zishou_prohibit = fk.CreateProhibitSkill{
   name = "#zishou_prohibit",
   is_prohibited = function(self, from, to, card)
-    if from:hasSkill(self.name) then
+    if from:hasSkill(self) then
       return from:usedSkillTimes("re__zishou") > 0 and from ~= to
     end
   end,
@@ -206,7 +206,7 @@ local re__qianxi = fk.CreateTriggerSkill{
   anim_type = "control",
   events = {fk.EventPhaseStart},
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self.name) and player.phase == Player.Start
+    return target == player and player:hasSkill(self) and player.phase == Player.Start
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
@@ -329,7 +329,7 @@ local pojun = fk.CreateTriggerSkill{
   anim_type = "offensive",
   events = {fk.TargetSpecified},
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self.name) and player.phase == Player.Play and data.card.trueName == "slash" and
+    return target == player and player:hasSkill(self) and player.phase == Player.Play and data.card.trueName == "slash" and
       not player.room:getPlayerById(data.to):isNude()
   end,
   on_use = function(self, event, target, player, data)
