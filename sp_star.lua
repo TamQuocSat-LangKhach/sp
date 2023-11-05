@@ -59,6 +59,8 @@ Fk:loadTranslationTable{
   ["chongzhen"] = "冲阵",
   [":chongzhen"] = "每当你发动〖龙胆〗使用或打出一张手牌时，你可以立即获得对方的一张手牌。",
   ["#chongzhen-invoke"] = "冲阵：你可以获得 %dest 的一张手牌",
+  ["$chongzhen1"] = "陷阵杀敌，一马当先！",
+  ["$chongzhen2"] = "贼将休走，可敢与我一战？",
 }
 
 local diaochan = General(extension, "starsp__diaochan", "qun", 3, 3, General.Female)
