@@ -758,7 +758,7 @@ local shichoul = fk.CreateTriggerSkill{
     local room = player.room
     room:setPlayerMark(target, "@@shichoul", 0)
     local to = room:getPlayerById(player:getMark("shichoul"))
-    local mark = U.getMark(to:getMark("@@shichoul"))
+    local mark = U.getMark(to, "@@shichoul")
     table.removeOne(mark, player.id)
     if #mark == 0 then mark = 0 end
     room:setPlayerMark(to, "@@shichoul", mark)
