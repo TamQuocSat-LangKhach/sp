@@ -16,7 +16,7 @@ local sanyao = fk.CreateActiveSkill{
     return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0 and not player:isNude()
   end,
   card_filter = function(self, to_select, selected)
-    return #selected == 0
+    return #selected == 0 and not Self:prohibitDiscard(Fk:getCardById(to_select))
   end,
   target_filter = function(self, to_select, selected)
     if #selected == 0 then
@@ -71,6 +71,9 @@ Fk:loadTranslationTable{
 
   ["$sanyao1"] = "三人成虎，事多有。",
   ["$sanyao2"] = "散谣惑敌，不攻自破！",
+  ["$zhiman1"] = "兵法谙熟于心，取胜千里之外！",
+  ["$zhiman2"] = "丞相多虑，且看我的！",
+  ["~re__masu"] = "败军之罪，万死难赎……",
 }
 
 local yujin = General(extension, "re__yujin", "wei", 4)
