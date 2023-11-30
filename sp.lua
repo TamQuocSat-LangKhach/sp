@@ -1,6 +1,8 @@
 local extension = Package("sp")
 extension.extensionName = "sp"
 
+local U = require "packages/utility/utility"
+
 Fk:loadTranslationTable{
   ["sp"] = "SP",
   ["hulao"] = "虎牢关",
@@ -2907,7 +2909,7 @@ local zhenwei = fk.CreateTriggerSkill{
   can_trigger = function(self, event, target, player, data)
     return player:hasSkill(self) and not player:isNude() and data.from ~= player.id and
       (data.card.trueName == "slash" or (data.card.type == Card.TypeTrick and data.card.color == Card.Black)) and
-      #AimGroup:getAllTargets(data.tos) == 1 and player.room:getPlayerById(data.to).hp < player.hp
+      U.isOnlyTarget(target, data, event) and target.hp < player.hp
   end,
   on_cost = function(self, event, target, player, data)
     local cards = player.room:askForDiscard(player, 1, 1, true, self.name, true, ".",
@@ -2920,16 +2922,18 @@ local zhenwei = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local room = player.room
     room:throwCard(self.cost_data, self.name, player, player)
+    if player.dead then return false end
     local choice = room:askForChoice(player, {"zhenwei_transfer", "zhenwei_recycle"}, self.name)
     if choice == "zhenwei_transfer" then
       room:drawCards(player, 1, self.name)
-      if target:isProhibited(player, data.card) then return false end
+      if player.dead then return false end
+      local Notify_from = room:getPlayerById(data.from)
+      if Notify_from:isProhibited(player, data.card) then return false end
       if not data.card.skill:modTargetFilter(player.id, {}, data.from, data.card, false) then return false end
       local passed_target = {player.id}
       --target_filter cheak, for collateral,diversion...
       local c_pid
       --FIXME：借刀需要补modTargetFilter，不给targetFilter传使用者真是离大谱，目前只能通过强制修改Self来实现
-      local Notify_from = room:getPlayerById(data.from)
       Self = Notify_from
       local ho_spair_target = data.targetGroup[1]
       if #ho_spair_target > 1 then
@@ -2939,17 +2943,13 @@ local zhenwei = fk.CreateTriggerSkill{
           table.insert(passed_target, c_pid)
         end
       end
-      data.targetGroup = { passed_target }
+      AimGroup:cancelTarget(data, target.id)
+      AimGroup:addTargets(room, data, passed_target)
     else
-      TargetGroup:removeTarget(data.targetGroup, data.to)
+      AimGroup:cancelTarget(data, target.id)
       local use_from = room:getPlayerById(data.from)
-      if not use_from.dead then
-        local cardlist = data.card:isVirtual() and data.card.subcards or {data.card.id}
-        if #cardlist > 0 and table.every(cardlist, function (id)
-          return room:getCardArea(id) == Card.Processing
-        end) then
-          use_from:addToPile(self.name, data.card, true, self.name)
-        end
+      if not use_from.dead and U.hasFullRealCard(room, data.card) then
+        use_from:addToPile(self.name, data.card, true, self.name)
       end
     end
   end,
