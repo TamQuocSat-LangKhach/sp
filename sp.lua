@@ -759,7 +759,8 @@ local xueji = fk.CreateActiveSkill{
     return player:isWounded() and player:usedSkillTimes(self.name, Player.HistoryTurn) == 0
   end,
   card_filter = function(self, to_select, selected, targets)
-    return #selected == 0 and Fk:getCardById(to_select).color == Card.Red  --TODO: throw the weapon
+    return #selected == 0 and Fk:getCardById(to_select).color == Card.Red and not Self:prohibitDiscard(Fk:getCardById(to_select))
+    --TODO: throw the weapon
   end,
   target_filter = function(self, to_select, selected, cards)
     return #selected < Self:getLostHp() and Self:inMyAttackRange(Fk:currentRoom():getPlayerById(to_select))
@@ -767,17 +768,23 @@ local xueji = fk.CreateActiveSkill{
   on_use = function(self, room, effect)
     local player = room:getPlayerById(effect.from)
     room:throwCard(effect.cards, self.name, player, player)
-    for _, p in ipairs(effect.tos) do
-      room:damage{
-        from = player,
-        to = room:getPlayerById(p),
-        damage = 1,
-        skillName = self.name,
-      }
+    local tos = effect.tos
+    room:sortPlayersByAction(tos)
+    for _, pid in ipairs(tos) do
+      local p = room:getPlayerById(pid)
+      if not p.dead then
+        room:damage{
+          from = player,
+          to = p,
+          damage = 1,
+          skillName = self.name,
+        }
+      end
     end
-    for _, p in ipairs(effect.tos) do
-      if not room:getPlayerById(p).dead then
-        room:getPlayerById(p):drawCards(1)
+    for _, pid in ipairs(tos) do
+      local p = room:getPlayerById(pid)
+      if not p.dead then
+        p:drawCards(1)
       end
     end
   end,
@@ -794,7 +801,7 @@ local huxiao = fk.CreateTriggerSkill{
     end
   end,
   on_use = function(self, event, target, player, data)
-    player:addCardUseHistory(data.toCard.trueName, -1)
+    U.addSlashTargetMod(player, "cishu", 1)
   end,
 }
 local wuji = fk.CreateTriggerSkill{
@@ -2200,28 +2207,31 @@ local dingfeng = General(extension, "dingfeng", "wu", 4)
 local duanbing = fk.CreateTriggerSkill{
   name = "duanbing",
   anim_type = "offensive",
-  events = {fk.TargetSpecifying},
+  events = {fk.AfterCardTargetDeclared},
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self) and #player.room.alive_players > 2 and data.card.trueName == "slash"
+    return target == player and player:hasSkill(self) and data.card.trueName == "slash"
   end,
   on_cost = function(self, event, target, player, data)
     local room = player.room
     local targets = {}
     for _, p in ipairs(room:getOtherPlayers(player)) do
-      if not table.contains(data.tos[1], p.id) and player:distanceTo(p) == 1 and not player:isProhibited(p, data.card) then
+      if not table.contains(TargetGroup:getRealTargets(data.tos), p.id) and player:distanceTo(p) == 1 and not player:isProhibited(p, data.card) then
         table.insertIfNeed(targets, p.id)
       end
     end
-    local to = room:askForChoosePlayers(player, targets, 1, 1, "#duanbing-choose", self.name, true)
-    if #to > 0 then
-      self.cost_data = to[1]
-      return true
+    if #targets > 0 then
+      local tos = room:askForChoosePlayers(player, targets, 1, 1, "#duanbing-choose", self.name, true)
+      if #tos > 0 then
+        self.cost_data = tos[1]
+        return true
+      end
     end
   end,
   on_use = function(self, event, target, player, data)
-    TargetGroup:pushTargets(data.targetGroup, self.cost_data)
+    table.insert(data.tos, {self.cost_data})
   end,
 }
+dingfeng:addSkill(duanbing)
 local fenxun = fk.CreateActiveSkill{
   name = "fenxun",
   anim_type = "offensive",
@@ -2230,8 +2240,8 @@ local fenxun = fk.CreateActiveSkill{
   can_use = function(self, player)
     return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0 and not player:isNude()
   end,
-  card_filter = function(self, to_select, selected, targets)
-    return #selected == 0
+  card_filter = function(self, to_select, selected)
+    return #selected == 0 and not Self:prohibitDiscard(Fk:getCardById(to_select))
   end,
   target_filter = function(self, to_select, selected, cards)
     return #selected == 0 and to_select ~= Self.id
@@ -2239,10 +2249,22 @@ local fenxun = fk.CreateActiveSkill{
   on_use = function(self, room, effect)
     local player = room:getPlayerById(effect.from)
     room:throwCard(effect.cards, self.name, player, player)
-    player:setFixedDistance(room:getPlayerById(effect.tos[1]), 1)
+    local mark = U.getMark(player, "fenxun-turn")
+    table.insert(mark, effect.tos[1])
+    room:setPlayerMark(player, "fenxun-turn", mark)
   end,
 }
-dingfeng:addSkill(duanbing)
+local fenxun_distance = fk.CreateDistanceSkill{
+  name = "#fenxun_distance",
+  correct_func = function(self, from, to) return 0 end,
+  fixed_func = function(self, from, to)
+    local mark = U.getMark(from, "fenxun-turn")
+    if table.contains(mark, to.id) then
+      return 1
+    end
+  end,
+}
+fenxun:addRelatedSkill(fenxun_distance)
 dingfeng:addSkill(fenxun)
 Fk:loadTranslationTable{
   ["dingfeng"] = "丁奉",
