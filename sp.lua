@@ -801,7 +801,7 @@ local huxiao = fk.CreateTriggerSkill{
     end
   end,
   on_use = function(self, event, target, player, data)
-    U.addSlashTargetMod(player, "cishu", 1)
+    player.room:addPlayerMark(player, MarkEnum.SlashResidue.."-phase")
   end,
 }
 local wuji = fk.CreateTriggerSkill{
