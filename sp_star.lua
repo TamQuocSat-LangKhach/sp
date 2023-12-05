@@ -59,21 +59,23 @@ Fk:loadTranslationTable{
   ["chongzhen"] = "冲阵",
   [":chongzhen"] = "每当你发动〖龙胆〗使用或打出一张手牌时，你可以立即获得对方的一张手牌。",
   ["#chongzhen-invoke"] = "冲阵：你可以获得 %dest 的一张手牌",
+
   ["$chongzhen1"] = "陷阵杀敌，一马当先！",
   ["$chongzhen2"] = "贼将休走，可敢与我一战？",
+  ["~starsp__zhaoyun"] = "这……就是失败的滋味吗……",
 }
 
 local diaochan = General(extension, "starsp__diaochan", "qun", 3, 3, General.Female)
 local lihun = fk.CreateActiveSkill{
   name = "lihun",
-  anim_type = "control",
+  mute = true,
   card_num = 1,
   target_num = 1,
   can_use = function(self, player)
     return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
   end,
   card_filter = function(self, to_select, selected)
-    return #selected == 0
+    return #selected == 0 and not Self:prohibitDiscard(Fk:getCardById(to_select))
   end,
   target_filter = function(self, to_select, selected)
     local target = Fk:currentRoom():getPlayerById(to_select)
@@ -82,15 +84,18 @@ local lihun = fk.CreateActiveSkill{
   on_use = function(self, room, effect)
     local player = room:getPlayerById(effect.from)
     local target = room:getPlayerById(effect.tos[1])
-    room:throwCard(effect.cards, self.name, player, player)
-    local dummy = Fk:cloneCard("dilu")
-    dummy:addSubcards(target:getCardIds(Player.Hand))
-    room:obtainCard(player.id, dummy, false, fk.ReasonPrey)
-    player:turnOver()
+    player:broadcastSkillInvoke(self.name, 1)
+    room:notifySkillInvoked(player, self.name, "control")
     local mark = player:getMark("lihun-phase")
     if mark == 0 then mark = {} end
     table.insertIfNeed(mark, target.id)
     room:setPlayerMark(player, "lihun-phase", mark)
+    room:throwCard(effect.cards, self.name, player, player)
+    if player.dead or target.dead or target:isKongcheng() then return end
+    local dummy = Fk:cloneCard("dilu")
+    dummy:addSubcards(target:getCardIds("h"))
+    room:moveCardTo(dummy, Card.PlayerHand, player, fk.ReasonPrey, self.name, nil, false, player.id)
+    player:turnOver()
   end,
 }
 local lihun_record = fk.CreateTriggerSkill{
@@ -100,24 +105,24 @@ local lihun_record = fk.CreateTriggerSkill{
   can_trigger = function(self, event, target, player, data)
     return target == player and player.phase == Player.Play and player:usedSkillTimes("lihun", Player.HistoryPhase) > 0
   end,
-  on_cost = function(self, event, target, player, data)
-    return true
-  end,
+  on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
     local room = player.room
+    player:broadcastSkillInvoke("lihun", 2)
+    room:notifySkillInvoked(player, "lihun", "control")
     local mark = player:getMark("lihun-phase")
     for _, id in ipairs(mark) do
       local to = room:getPlayerById(id)
-      if to.dead or player:isNude() then return end
-      local n = math.min(to.hp, #player:getCardIds{Player.Hand, Player.Equip})
+      if player.dead or to.dead or player:isNude() then return end
+      local n = math.min(to.hp, #player:getCardIds("he"))
       local dummy = Fk:cloneCard("dilu")
-      if n == #player:getCardIds{Player.Hand, Player.Equip} then
-        dummy:addSubcards(player:getCardIds{Player.Hand, Player.Equip})
+      if n >= #player:getCardIds("he") then
+        dummy:addSubcards(player:getCardIds("he"))
       else
         local cards = room:askForCard(player, n, n, true, "lihun", false, ".", "#lihun-give::"..to.id..":"..n)
         dummy:addSubcards(cards)
       end
-      room:obtainCard(to.id, dummy, false, fk.ReasonGive)
+      room:moveCardTo(dummy, Card.PlayerHand, to, fk.ReasonGive, "lihun", nil, false, player.id)
     end
   end,
 }
@@ -130,6 +135,10 @@ Fk:loadTranslationTable{
   [":lihun"] = "出牌阶段，你可以弃置一张牌并将你的武将牌翻面，若如此做，指定一名男性角色，获得其所有手牌。"..
   "出牌阶段结束时，你须为该角色的每一点体力分配给其一张牌，每回合限一次。",
   ["#lihun-give"] = "离魂：你需交还 %dest %arg张牌",
+
+  ["$lihun1"] = "将军~这些都赏给妾身好不好嘛~",
+  ["$lihun2"] = "这些人家不喜欢嘛~还给你吧~",
+  ["~starsp__diaochan"] = "义父，来世再做您的好女儿……",
 }
 
 local caoren = General(extension, "starsp__caoren", "wei", 4)
@@ -205,6 +214,12 @@ Fk:loadTranslationTable{
   ["yanzheng"] = "严整",
   [":yanzheng"] = "若你的手牌数大于你的体力值，你可以将你装备区内的牌当【无懈可击】使用。",
   ["#kuiwei-discard"] = "溃围：你需弃置%arg张牌",
+
+  ["$kuiwei1"] = "将军~齐兵列队，准备突围！",
+  ["$kuiwei2"] = "这些人家不喜欢嘛~休整片刻，且待我杀出一条血路！",
+  ["$yanzheng1"] = "任你横行霸道，我自岿然不动。",
+  ["$yanzheng2"] = "行伍严整，百战不殆！",
+  ["~starsp__caoren"] = "城在人在，城破人亡……",
 }
 
 local pangtong = General(extension, "starsp__pangtong", "qun", 3)
