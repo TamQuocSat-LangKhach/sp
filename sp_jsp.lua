@@ -216,12 +216,19 @@ local kunfen = fk.CreateTriggerSkill{
   can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(self) and player.phase == Player.Finish
   end,
-  on_cost = function(self, event, target, player, data)
-    if player:usedSkillTimes("fengliang", Player.HistoryGame) == 0 then
-      return true
-    else
-      return player.room:askForSkillInvoke(player, self.name)
+  on_use = function(self, event, target, player, data)
+    player.room:loseHp(player, 1, self.name)
+    if player:isAlive() then
+      player.room:drawCards(player, 2, self.name)
     end
+  end,
+}
+local kunfenEx = fk.CreateTriggerSkill{
+  name = "kunfenEx",
+  anim_type = "drawcard",
+  events = {fk.EventPhaseStart},
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player:hasSkill(self) and player.phase == Player.Finish
   end,
   on_use = function(self, event, target, player, data)
     player.room:loseHp(player, 1, self.name)
@@ -251,9 +258,10 @@ local fengliang = fk.CreateTriggerSkill{
       recoverBy = player,
       skillName = self.name
     })
-    room:handleAddLoseSkills(player, "tiaoxin", nil)
+    room:handleAddLoseSkills(player, "-kunfen|kunfenEx|tiaoxin", nil)
   end,
 }
+Fk:addSkill(kunfenEx)
 jiangwei:addSkill(kunfen)
 jiangwei:addSkill(fengliang)
 jiangwei:addRelatedSkill("tiaoxin")
