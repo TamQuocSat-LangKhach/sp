@@ -723,8 +723,9 @@ local zhaolie = fk.CreateTriggerSkill{
 }
 local shichoul = fk.CreateTriggerSkill{
   name = "shichoul$",
-  anim_type = "control",
-  frequency = Skill.Limited,
+  -- anim_type = "control",
+  -- frequency = Skill.Limited,
+  mute = true,
   events = {fk.EventPhaseStart, fk.DamageInflicted},
   can_trigger = function(self, event, target, player, data)
     if target == player then
@@ -1061,6 +1062,7 @@ Fk:loadTranslationTable{
 local xiahoudun = General(extension, "starsp__xiahoudun", "wei", 4)
 local fenyong = fk.CreateTriggerSkill{
   name = "fenyong",
+  mute = true,
   anim_type = "defensive",
   events = {fk.Damaged, fk.DamageInflicted},
   can_trigger = function(self, event, target, player, data)
@@ -1080,9 +1082,13 @@ local fenyong = fk.CreateTriggerSkill{
     end
   end,
   on_use = function(self, event, target, player, data)
+    local room = player.room
+    room:notifySkillInvoked(player, self.name)
     if event == fk.Damaged then
-      player.room:setPlayerMark(player, "@@fenyong", 1)
+      player:broadcastSkillInvoke(self.name, 1)
+      room:setPlayerMark(player, "@@fenyong", 1)
     else
+      player:broadcastSkillInvoke(self.name, 2)
       return true
     end
   end,
@@ -1095,6 +1101,7 @@ local xuehen = fk.CreateTriggerSkill{
     return player:hasSkill(self) and target.phase == Player.Finish and player:getMark("@@fenyong") > 0
   end,
   on_cost = function(self, event, target, player, data)
+    -- 懒得重写.jpg
     return true
   end,
   on_use = function(self, event, target, player, data)
@@ -1144,15 +1151,21 @@ xiahoudun:addSkill(fenyong)
 xiahoudun:addSkill(xuehen)
 Fk:loadTranslationTable{
   ["starsp__xiahoudun"] = "夏侯惇",
-  ["fenyong"] = "奋勇",
+  ["fenyong"] = "愤勇",
   [":fenyong"] = "每当你受到一次伤害后，你可以竖置你的体力牌；当你的体力牌为竖置状态时，防止你受到的所有伤害。",
   ["xuehen"] = "雪恨",
   [":xuehen"] = "每个角色的回合结束阶段开始时，若你的体力牌为竖置状态，你须横置之，然后选择一项：1.弃置当前回合角色X张牌（X为你已损失的体力值）；"..
   "2.视为对一名任意角色使用一张【杀】。",
-  ["#fenyong-invoke"] = "奋勇：你可以竖置你的体力牌！",
+  ["#fenyong-invoke"] = "愤勇：你可以竖置你的体力牌！",
   ["@@fenyong"] = "体力牌竖置",
   ["#xuehen-slash"] = "雪恨：选择一名角色视为对其使用【杀】",
   ["#xuehen-choose"] = "雪恨：选择一名角色视为对其使用【杀】，或点“取消”弃置 %dest %arg张牌",
+
+  ["$fenyong1"] = "独目苍狼，虽伤亦勇！",
+  ["$fenyong2"] = "愤勇当先，鬼神难伤！",
+  ["$xuehen1"] = "汝等凶逆，岂欲望生乎！",
+  ["$xuehen2"] = "夺目之恨犹在，今必斩汝！",
+  ["$~starsp__xiahoudun"] = "凛然领军出，马革裹尸还。",
 }
 
 return extension
