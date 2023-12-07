@@ -271,6 +271,8 @@ Fk:loadTranslationTable{
   [":kunfen"] = "锁定技，结束阶段开始时，你失去1点体力，然后摸两张牌。",
   ["fengliang"] = "逢亮",
   [":fengliang"] = "觉醒技，当你进入濒死状态时，你减1点体力上限并将体力值回复至2点，然后获得技能〖挑衅〗，将技能〖困奋〗改为非锁定技。",
+  ["kunfenEx"] = "困奋",
+  [":kunfenEx"] = "结束阶段开始时，你失去1点体力，然后摸两张牌。",
 }
 
 local zhaoyun = General(extension, "jsp__zhaoyun", "qun", 3)
