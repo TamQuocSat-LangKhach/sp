@@ -258,7 +258,20 @@ local fengliang = fk.CreateTriggerSkill{
       recoverBy = player,
       skillName = self.name
     })
-    room:handleAddLoseSkills(player, "-kunfen|kunfenEx|tiaoxin", nil)
+    room:handleAddLoseSkills(player, "tiaoxin", nil, true, false)
+    if player:hasSkill("kunfen", true) then
+      if player.phase == Player.Finish and player:usedSkillTimes("kunfen", Player.HistoryPhase) > 0 then
+        room:handleAddLoseSkills(player, "-kunfen", nil, false, true)
+        local phase = room.logic:getCurrentEvent():findParent(GameEvent.Phase)
+        if phase ~= nil then
+          phase:addCleaner(function()
+            room:handleAddLoseSkills(player, "kunfenEx", nil, false, true)
+          end)
+        end
+      else
+        room:handleAddLoseSkills(player, "-kunfen|kunfenEx", nil, false, true)
+      end
+    end
   end,
 }
 Fk:addSkill(kunfenEx)
@@ -272,7 +285,7 @@ Fk:loadTranslationTable{
   ["fengliang"] = "逢亮",
   [":fengliang"] = "觉醒技，当你进入濒死状态时，你减1点体力上限并将体力值回复至2点，然后获得技能〖挑衅〗，将技能〖困奋〗改为非锁定技。",
   ["kunfenEx"] = "困奋",
-  [":kunfenEx"] = "结束阶段开始时，你失去1点体力，然后摸两张牌。",
+  [":kunfenEx"] = "结束阶段开始时，你可以失去1点体力，然后摸两张牌。",
 }
 
 local zhaoyun = General(extension, "jsp__zhaoyun", "qun", 3)
