@@ -566,7 +566,7 @@ local mouduan = fk.CreateTriggerSkill{
   name = "mouduan",
   anim_type = "switch",
   switch_skill_name = "mouduan",
-  events = {fk.AfterCardsMove, fk.EventPhaseChanging},
+  events = {fk.AfterCardsMove, fk.TurnStart},
   can_trigger = function(self, event, target, player, data)
     if player:hasSkill(self) then
       if player:getSwitchSkillState(self.name, false) == fk.SwitchYang then
@@ -577,7 +577,7 @@ local mouduan = fk.CreateTriggerSkill{
           end
         end
       else
-        return event == fk.EventPhaseChanging and data.from == Player.RoundStart
+        return event == fk.TurnStart
       end
     end
   end,

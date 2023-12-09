@@ -2343,16 +2343,14 @@ local zhendu = fk.CreateTriggerSkill{
 local qiluan = fk.CreateTriggerSkill{
   name = "qiluan",
   anim_type = "offensive",
-  events = {fk.EventPhaseChanging},
+  events = {fk.TurnEnd},
   can_trigger = function(self, event, target, player, data)
-    if data.to == Player.NotActive and player:hasSkill(self) then
-      return #player.room.logic:getEventsOfScope(GameEvent.Death, 1, function (e)
-        local deathData = e.data[1]
-        if deathData.damage and deathData.damage.from == player then
-          return true
-        end
-      end, Player.HistoryTurn) > 0
-    end
+    return player:hasSkill(self) and #player.room.logic:getEventsOfScope(GameEvent.Death, 1, function (e)
+      local deathData = e.data[1]
+      if deathData.damage and deathData.damage.from == player then
+        return true
+      end
+    end, Player.HistoryTurn) > 0
   end,
   on_use = function(self, event, target, player, data)
     player:drawCards(3, self.name)
