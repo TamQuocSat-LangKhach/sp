@@ -2392,7 +2392,8 @@ local meibu = fk.CreateTriggerSkill{
 local meibu_filter = fk.CreateFilterSkill{
   name = "#meibu_filter",
   card_filter = function(self, to_select, player)
-    return player:getMark("meibu-turn") > 0 and to_select.type == Card.TypeTrick
+    return player:getMark("meibu-turn") > 0 and to_select.type == Card.TypeTrick and
+    table.contains(player.player_cards[Player.Hand], to_select.id)
   end,
   view_as = function(self, to_select)
     local card = Fk:cloneCard("slash", to_select.suit, to_select.number)
