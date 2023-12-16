@@ -2911,30 +2911,23 @@ local zhenwei = fk.CreateTriggerSkill{
     if choice == "zhenwei_transfer" then
       room:drawCards(player, 1, self.name)
       if player.dead then return false end
-      local Notify_from = room:getPlayerById(data.from)
-      if Notify_from:isProhibited(player, data.card) then return false end
-      if not data.card.skill:modTargetFilter(player.id, {}, data.from, data.card, false) then return false end
-      local passed_target = {player.id}
-      --target_filter cheak, for collateral,diversion...
-      local c_pid
-      --FIXME：借刀需要补modTargetFilter，不给targetFilter传使用者真是离大谱，目前只能通过强制修改Self来实现
-      Self = Notify_from
-      local ho_spair_target = data.targetGroup[1]
-      if #ho_spair_target > 1 then
-        for i = 2, #ho_spair_target, 1 do
-          c_pid = ho_spair_target[i]
-          if not data.card.skill:targetFilter(c_pid, passed_target, {}, data.card) then return false end
-          table.insert(passed_target, c_pid)
+      if U.canTransferTarget(player, data) then
+        local targets = {player.id}
+        if type(data.subTargets) == "table" then
+          table.insertTable(targets, data.subTargets)
         end
+        AimGroup:addTargets(room, data, targets)
+        AimGroup:cancelTarget(data, target.id)
+        return true
       end
-      AimGroup:cancelTarget(data, target.id)
-      AimGroup:addTargets(room, data, passed_target)
     else
-      AimGroup:cancelTarget(data, target.id)
+      data.tos = AimGroup:initAimGroup({})
+      data.targetGroup = {}
       local use_from = room:getPlayerById(data.from)
       if not use_from.dead and U.hasFullRealCard(room, data.card) then
         use_from:addToPile(self.name, data.card, true, self.name)
       end
+      return true
     end
   end,
 }
