@@ -317,20 +317,42 @@ local chixin = fk.CreateViewAsSkill{
     return card
   end,
 }
+local chixin_targetmod = fk.CreateTargetModSkill{
+  name = "#chixin_targetmod",
+  bypass_times = function(self, player, skill, scope, card, to)
+    return player:hasSkill(self) and skill.trueName == "slash_skill"
+    and scope == Player.HistoryPhase and player:inMyAttackRange(to) and to:getMark("chixin_slashed-phase") == 0
+  end
+}
 local chixin_record = fk.CreateTriggerSkill{
   name = "#chixin_record",
-
-  refresh_events = {fk.TargetSpecified},
+  mute = true,
+  refresh_events = {fk.TargetSpecified, fk.EventAcquireSkill},
   can_refresh = function(self, event, target, player, data)
-    if target == player and player:hasSkill(self) and data.card and data.card.trueName == "slash" then
+    if event == fk.EventAcquireSkill then
+      return target == player and data == self and player.phase == Player.Play
+    end
+    if target == player and player:hasSkill(self, true) and data.card and data.card.trueName == "slash" then
       local to = player.room:getPlayerById(data.to)
-      return to:getMark("chixin-turn") == 0 and player:inMyAttackRange(to)
+      return to and to:getMark("chixin_slashed-phase") == 0
     end
   end,
   on_refresh = function(self, event, target, player, data)
     local room = player.room
-    player:addCardUseHistory(data.card.trueName, -1)
-    room:addPlayerMark(room:getPlayerById(data.to), "chixin-turn", 1)
+    if event == fk.EventAcquireSkill then
+      room.logic:getEventsOfScope(GameEvent.UseCard, 1, function(e)
+        local use = e.data[1]
+        if use.from == player.id and use.tos and use.card and use.card.trueName == "slash" then
+          table.every(TargetGroup:getRealTargets(use.tos), function(pid)
+            local to = room:getPlayerById(pid)
+            if to then room:addPlayerMark(to, "chixin_slashed-phase", 1) end
+          end)
+        end
+        return false
+      end, Player.HistoryPhase)
+    else
+      room:addPlayerMark(room:getPlayerById(data.to), "chixin_slashed-phase", 1)
+    end
   end,
 }
 local suiren = fk.CreateTriggerSkill{
@@ -364,6 +386,7 @@ local suiren = fk.CreateTriggerSkill{
     room:getPlayerById(self.cost_data):drawCards(3, self.name)
   end,
 }
+chixin:addRelatedSkill(chixin_targetmod)
 chixin:addRelatedSkill(chixin_record)
 zhaoyun:addSkill("yicong")
 zhaoyun:addSkill(chixin)
@@ -374,6 +397,8 @@ Fk:loadTranslationTable{
   [":chixin"] = "你可以将<font color='red'>♦</font>牌当【杀】或【闪】使用或打出。出牌阶段，你对你攻击范围内的每名角色均可使用一张【杀】。",
   ["suiren"] = "随仁",
   [":suiren"] = "限定技，准备阶段开始时，你可以失去技能〖义从〗，然后加1点体力上限并回复1点体力，再令一名角色摸三张牌。",
+  ["#chixin_targetmod"] = "赤心",
+  ["#chixin_record"] = "赤心",
   ["#suiren-choose"] = "随仁：你可以失去〖义从〗，然后加1点体力上限并回复1点体力，令一名角色摸三张牌",
 }
 

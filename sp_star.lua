@@ -272,7 +272,7 @@ local manjuan = fk.CreateTriggerSkill{
           local cards = table.filter(room.discard_pile, function(id)
             return Fk:getCardById(id, true).number == Fk:getCardById(info.cardId, true).number end)
           if #cards > 0 then
-            local ids = room:askForCardsChosen(player, player, 0, 1, {card_data = {{"DiscardPile", cards}}}, self.name)
+            local ids = room:askForCardsChosen(player, player, 0, 1, {card_data = {{"pile_discard", cards}}}, self.name)
             if #ids > 0 then
               room:moveCards({
                 ids = ids,
@@ -418,7 +418,6 @@ Fk:loadTranslationTable{
   [":zuixiang"] = "限定技，回合开始阶段开始时，你可以展示牌库顶的3张牌置于你的武将牌上，你不可以使用或打出与该些牌同类的牌，所有同类牌对你无效。"..
   "之后每个你的回合开始阶段，你须重复展示一次，直至该些牌中任意两张点数相同时，将你武将牌上的全部牌置于你的手上。",
   --当“醉乡”牌中有装备牌时，你的装备技能无效；以你为目标的【杀】结算过程中使用者的装备技能无效。
-  ["DiscardPile"] = "弃牌堆",
   ["#manjuan-invoke"] = "漫卷：你可以从弃牌堆中依次选择相同点数的牌置入手牌",
   ["#zuixiang-invoke"] = "醉乡：你可以发动“醉乡”",
   ["#zuixiang_trigger"] = "醉乡",
