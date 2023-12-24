@@ -555,17 +555,13 @@ local jianshu = fk.CreateActiveSkill{
     room:obtainCard(target.id, Fk:getCardById(effect.cards[1]), false, fk.ReasonGive)
     local targets = {}
     for _, p in ipairs(room:getOtherPlayers(target)) do
-      if not p:isKongcheng() and p:inMyAttackRange(target) then
+      if p:inMyAttackRange(target) and target:canPindian(p) and p:canPindian(target) then
         table.insert(targets, p.id)
       end
     end
     if #targets == 0 then return end
     local to = room:askForChoosePlayers(player, targets, 1, 1, "#jianshu-choose::"..target.id, self.name, false)
-    if #to == 0 then
-      to = room:getPlayerById(table.random(targets))
-    else
-      to = room:getPlayerById(to[1])
-    end
+    to = room:getPlayerById(to[1])
     local pindian = target:pindian({to}, self.name)
     if pindian.results[to.id].winner then
       local winner, loser
@@ -842,20 +838,14 @@ local tianming = fk.CreateTriggerSkill{
     return target == player and player:hasSkill(self) and data.card.trueName == "slash"
   end,
   on_cost = function(self, event, target, player, data)
-    local x = 0
-    for _, id in ipairs(player:getCardIds(Player.Hand)) do
-      if not player:prohibitDiscard(Fk:getCardById(id)) then
-        x = x+1
-        if x == 2 then break end
-      end
-    end
-    if x == 0 then
+    local ids = table.filter(player:getCardIds("he"), function(id) return not player:prohibitDiscard(Fk:getCardById(id)) end)
+    if #ids < 3 then
       if player.room:askForSkillInvoke(player, self.name, data, "#tianming-cost") then
-        self.cost_data = nil
+        self.cost_data = ids
         return true
       end
     else
-      local cards = player.room:askForDiscard(player, x, 2, true, self.name, true, ".", "#tianming-cost", true)
+      local cards = player.room:askForDiscard(player, 2, 2, true, self.name, true, ".", "#tianming-cost", true)
       if #cards > 0 then
         self.cost_data = cards
         return true
@@ -864,11 +854,10 @@ local tianming = fk.CreateTriggerSkill{
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    if self.cost_data then
-      room:throwCard(self.cost_data, self.name, player, player)
+    room:throwCard(self.cost_data, self.name, player, player)
+    if not player.dead then
+      player:drawCards(2, self.name)
     end
-    if player.dead then return false end
-    room:drawCards(player, 2, self.name)
     local to = {}
     local x = 0
     for _, p in ipairs(room.alive_players) do
@@ -882,7 +871,7 @@ local tianming = fk.CreateTriggerSkill{
     if #to ~= 1 or to[1] == player then return end
     to = to[1]
     x = 0
-    for _, id in ipairs(to:getCardIds(Player.Hand)) do
+    for _, id in ipairs(to:getCardIds("he")) do
       if not to:prohibitDiscard(Fk:getCardById(id)) then
         x = x+1
         if x == 2 then break end
@@ -919,15 +908,12 @@ local mizhao = fk.CreateActiveSkill{
     dummy:addSubcards(player:getCardIds("h"))
     room:obtainCard(target.id, dummy, false, fk.ReasonGive)
     if player.dead or target.dead or target:isKongcheng() then return end
-    local targets = table.map(table.filter(room:getOtherPlayers(player), function(p)
-      return not p:isKongcheng() and p ~= target end), function(p) return p.id end)
+    local targets = table.filter(room:getOtherPlayers(player), function(p)
+      return target:canPindian(p) and p ~= target
+    end)
     if #targets == 0 then return end
-    local to = room:askForChoosePlayers(player, targets, 1, 1, "#mizhao-choose::"..target.id, self.name, false)
-    if #to == 0 then
-      to = room:getPlayerById(table.random(targets))
-    else
-      to = room:getPlayerById(to[1])
-    end
+    local tos = room:askForChoosePlayers(player, table.map(targets, Util.IdMapper), 1, 1, "#mizhao-choose::"..target.id, self.name, false)
+    local to = room:getPlayerById(tos[1])
     local pindian = target:pindian({to}, self.name)
     if pindian.results[to.id].winner then
       local winner, loser
@@ -951,7 +937,7 @@ Fk:loadTranslationTable{
   [":tianming"] = "当你成为【杀】的目标时，你可以弃置两张牌（不足则全弃，无牌则不弃），然后摸两张牌；然后若场上体力唯一最多的角色不为你，"..
   "该角色也可以如此做。",
   ["mizhao"] = "密诏",
-  [":mizhao"] = "出牌阶段，你可以将所有手牌（至少一张）交给一名其他角色。若如此做，你令该角色与你指定的另一名有手牌的角色拼点，"..
+  [":mizhao"] = "出牌阶段，你可以将所有手牌（至少一张）交给一名其他角色。若如此做，你令该角色与你指定的另一名有手牌的其他角色拼点，"..
   "视为拼点赢的角色对没赢的角色使用一张【杀】。（每阶段限一次。）",
   ["#tianming-cost"] = "天命：你可以弃置两张牌（不足则全弃，无牌则不弃），然后摸两张牌",
   ["#mizhao-choose"] = "密诏：选择与 %dest 拼点的角色，赢者视为对没赢者使用【杀】",
@@ -981,7 +967,7 @@ local jieyuan = fk.CreateTriggerSkill{
     local pattern, prompt
     if event == fk.DamageCaused then
       pattern = ".|.|spade,club|.|.|."
-      prompt = "#jieyuan1-invoke::"..data.from.id
+      prompt = "#jieyuan1-invoke::"..data.to.id
     else
       pattern = ".|.|heart,diamond|.|.|."
       prompt = "#jieyuan2-invoke"
