@@ -150,12 +150,46 @@ local yongsi = fk.CreateTriggerSkill{
   end,
 }
 yuanshu:addSkill(yongsi)
+local weidi = fk.CreateTriggerSkill{
+  name = "weidi",
+  events = {fk.GameStart, fk.EventAcquireSkill},
+  frequency = Skill.Compulsory,
+  can_trigger = function(self, event, target, player, data)
+    if player:hasSkill(self) and target ~= player then
+      if event == fk.GameStart then
+        return true
+      else
+        return data.lordSkill and not player:hasSkill(data, true) and target.role == "lord"
+      end
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local skills = {}
+    if event == fk.GameStart then
+      local lord = room:getLord()
+      if lord and lord ~= player then
+        for _, s in ipairs(lord.player_skills) do
+          if s.lordSkill then
+            table.insert(skills, s.name)
+          end
+        end
+      end
+    else
+      table.insert(skills, data.name)
+    end
+    if #skills > 0 then
+      room:handleAddLoseSkills(player, table.concat(skills, "|"), nil)
+    end
+  end,
+}
+yuanshu:addSkill(weidi)
 Fk:loadTranslationTable{
   ["yuanshu"] = "袁术",
   ["yongsi"] = "庸肆",
   [":yongsi"] = "锁定技，摸牌阶段，你额外摸X张牌，X为场上现存势力数。弃牌阶段，你至少须弃掉等同于场上现存势力数的牌（不足则全弃）。",
   ["weidi"] = "伪帝",
-  [":weidi"] = "锁定技，你拥有当前主公的主公技。",
+  [":weidi"] = "锁定技，你视为拥有主公的主公技。",
   ["#yongsi-discard"] = "庸肆：你需弃掉等同于场上现存势力数的牌（%arg张）",
 
   ["$yongsi1"] = "大汉天下，已半入我手！",
@@ -587,11 +621,11 @@ local yongdi = fk.CreateTriggerSkill{
   events = {fk.Damaged},
   can_trigger = function(self, event, target, player, data)
     return target == player and target:hasSkill(self) and player:usedSkillTimes(self.name, Player.HistoryGame) == 0 and
-      table.find(player.room:getOtherPlayers(player), function (p) return p.gender == General.Male end)
+      table.find(player.room:getOtherPlayers(player), function (p) return U.isMale(p) end)
   end,
   on_cost = function(self, event, target, player, data)
     local to = player.room:askForChoosePlayers(player, table.map(table.filter(player.room:getOtherPlayers(player), function(p)
-      return p.gender == General.Male end), function(p) return p.id end), 1, 1, "#yongdi-choose", self.name, true)
+      return U.isMale(p) end), Util.IdMapper), 1, 1, "#yongdi-choose", self.name, true)
     if #to > 0 then
       self.cost_data = to[1]
       return true
@@ -605,6 +639,13 @@ local yongdi = fk.CreateTriggerSkill{
       for _, skill in ipairs(Fk.generals[to.general].skills) do
         if skill.lordSkill then
           room:handleAddLoseSkills(to, skill.name, nil)
+        end
+      end
+      if to.deputyGeneral ~= "" then
+        for _, skill in ipairs(Fk.generals[to.deputyGeneral].skills) do
+          if skill.lordSkill then
+            room:handleAddLoseSkills(to, skill.name, nil)
+          end
         end
       end
     end
