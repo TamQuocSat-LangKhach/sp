@@ -7,7 +7,7 @@ return {
   [":danlao"] = "After you become target of a trick that affects you and other hero(s), you can draw 1 → this trick becomes ineffective on you.",
   ["jilei"] = "The Wishing Bone",
   [":jilei"] = "After you suffer DMG, you can voice out a card type (basic, trick or equipment). The hero that dealt you DMG can’t use, play or discard hand cards of that type until the End of that Turn.",
-  ["@jilei-turn"] = "The Wishing Bone",
+  ["@jilei-turn"] = "W. Bone",
 
   ["gongsunzan"] = "Gongsun Zan",
   ["yicong"] = "Righteous Cavalry",
@@ -173,7 +173,7 @@ return {
   [":shenxian"] = "when other hero discards a basic card outside your turn, you can draw 1.",
   ["qiangwu"] = "Spear Dance",
   [":qiangwu"] = "1x Action Phase, you can be judged. Until the end of turn, your Slash which value is _ the result are: <, rangeless; >, countless.",
-  ["@qiangwu-turn"] = "Spear Dance",
+  ["@qiangwu-turn"] = "S. Dance",
 
   ["panfeng"] = "Pan Feng",
   ["kuangfu"] = "Mad Axe",
@@ -228,7 +228,7 @@ return {
   "when that kindom's other hero uses black card targeted to some players, if including you, you can draw 2.",
   ["naman"] = "Integrating Barbarians",
   [":naman"] = "After other hero’s Slash played are placed in the discard pile, you can get it.",
-  ["@xiemu"] = "Harmony Between",
+  ["@xiemu"] = "H. Bet.",
   ["#xiemu_record"] = "Harmony Between",
 
   ["maliang"] = "Ma Liang",
@@ -238,7 +238,7 @@ return {
   [":yingyuan"] = "1x type x turn, after you use a card in your turn, you can give that card to another hero.",
   ["#zishu-discard"] = "Autobiography",
   ["#yingyuan-card"] = "Support: you can give %arg to another hero",
-  ["@@zishu-inhand"] = "Autobiography",
+  ["@@zishu-inhand"] = "Autobio.",
 
   ["ganfuren"] = "Lady Gan",
   ["shushen"] = "Prudence",
@@ -332,7 +332,7 @@ return {
   ["#zhaolie-choose"] = "Shining Martyr: you can draw 1 card less, show the top 3 cards from the deck and make a hero suffers/discards base on #basics in",
   ["#zhaolie-discard"] = "Shining Martyr: discards %arg cards, or %src deal %arg2 DMG to you",
   ["#shichoul-choose"] = "Oath of Vengeance: you can choose a Shu player and give him 2 cards, Whenever you suffer DMG, transfer this DMG to him until he enters brink of death",
-  ["@@shichoul"] = "Oath",
+  ["@@shichoul"] = "Oath.",
 
   ["starsp__daqiao"] = "Da Qiao",
   ["yanxiao"] = "Smile",
@@ -364,7 +364,7 @@ return {
   [":xuehen"] = "At the End of Turn of every player, if your HP card is vertical, you must rotate it back to horizontal, then choose one:"..
   "<br>A) Discard X cards from the player who's turn is ending (X = #wounds). B) View it as using Slash on any player.",
   ["#fenyong-invoke"] = "Ferocious Courage: you can rotate your HP card such that it is vertical",
-  ["@@fenyong"] = "vertHP",
+  ["@@fenyong"] = "vert. HP",
   ["#xuehen-slash"] = "Wreak Vengeance: View it as using Slash on any player",
   ["#xuehen-choose"] = "Wreak Vengeance: View it as using Slash on any player，or discard %dest %arg cards",
 
@@ -383,7 +383,7 @@ return {
   ["zhuiji"] = "Chase",
   [":zhuiji"] = "(forced) Your distance is 1 to all heroes whose HP < yours.",
   ["cihuai"] = "Swear Revenge",
-  [":cihuai"] = "At the start of Action Phase, you can show all your hand cards, if that doesn’t have Slash, You can use/play Slash without actural card, until your #hand cards changes or someone die.",
+  [":cihuai"] = "At the start of Action Phase, you can show all your hand cards, if that doesn’t have Slash, You can use/play Slash without actual card, until your #hand cards changes or someone die.",
   ["#cihuai_invoke"] = "Swear Revenge",
 
   ["jsp__guanyu"] = "Guan Yu",
