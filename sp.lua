@@ -1558,17 +1558,19 @@ local yanyu_give = fk.CreateTriggerSkill{
 local xiaode = fk.CreateTriggerSkill{
   name = "xiaode",
   anim_type = "special",
-  events ={fk.Deathed},
+  events = {fk.Deathed},
   can_trigger = function(self, event, target, player, data)
     return player:hasSkill(self)
   end,
   on_cost = function(self, event, target, player, data)
     self.cost_data = {}
-    local skills = table.map(Fk.generals[target.general].skills, function(s) return s.name end)
-    for _, skill in ipairs(skills) do
-      if target:hasSkill(skill, true, true) and skill.frequency ~= Skill.Wake and not player:hasSkill(skill, true) and
-        string.sub(skill, #skill, #skill) ~= "$" and string.sub(skill, #skill, #skill) ~= "&" then
-        table.insertIfNeed(self.cost_data, skill)
+    local skills = Fk.generals[target.general]:getSkillNameList()
+    if target.deputyGeneral ~= "" then table.insertTable(skills, Fk.generals[target.deputyGeneral]:getSkillNameList()) end
+    for _, skill_name in ipairs(skills) do
+      local skill = Fk.skills[skill_name]
+      if skill.frequency ~= Skill.Wake and not player:hasSkill(skill, true) and
+        not skill.lordSkill and not skill_name:endsWith("&") then
+        table.insertIfNeed(self.cost_data, skill_name)
       end
     end
     return #self.cost_data > 0 and player.room:askForSkillInvoke(player, self.name, nil, "#xiaode-invoke::"..target.id)
@@ -1583,7 +1585,7 @@ local xiaode = fk.CreateTriggerSkill{
     room:setPlayerMark(player, self.name, mark)
   end,
 
-  refresh_events ={fk.TurnEnd},
+  refresh_events = {fk.TurnEnd},
   can_refresh = function(self, event, target, player, data)
     return target == player and player:getMark(self.name) ~= 0
   end,
