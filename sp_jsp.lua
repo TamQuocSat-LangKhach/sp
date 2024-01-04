@@ -450,8 +450,52 @@ local jiqiao = fk.CreateTriggerSkill{
     end
   end,
 }
-local linglong = fk.CreateMaxCardsSkill{
+local linglong = fk.CreateTriggerSkill{
   name = "linglong",
+  events = {fk.AskForCardUse, fk.AskForCardResponse},
+  frequency = Skill.Compulsory,
+  anim_type = "defensive",
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player:hasSkill(self) and not player:isFakeSkill(self) and
+      (data.cardName == "jink" or (data.pattern and Exppattern:Parse(data.pattern):matchExp("jink|0|nosuit|none"))) and
+      not player:getEquipment(Card.SubtypeArmor) and player:getMark(fk.MarkArmorNullified) == 0
+  end,
+  on_cost = function(self, event, target, player, data)
+    return player.room:askForSkillInvoke(player, self.name, data)
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local judgeData = {
+      who = player,
+      reason = "eight_diagram",
+      pattern = ".|.|heart,diamond",
+    }
+    room:judge(judgeData)
+
+    if judgeData.card.color == Card.Red then
+      if event == fk.AskForCardUse then
+        data.result = {
+          from = player.id,
+          card = Fk:cloneCard('jink'),
+        }
+        data.result.card.skillName = "eight_diagram"
+        data.result.card.skillName = "linglong"
+
+        if data.eventData then
+          data.result.toCard = data.eventData.toCard
+          data.result.responseToEvent = data.eventData.responseToEvent
+        end
+      else
+        data.result = Fk:cloneCard('jink')
+        data.result.skillName = "eight_diagram"
+        data.result.skillName = "linglong"
+      end
+      return true
+    end
+  end
+}
+local linglong_maxcards = fk.CreateMaxCardsSkill{
+  name = "#linglong_maxcards",
   correct_func = function(self, player)
     if player:hasSkill(self) and player:getEquipment(Card.SubtypeOffensiveRide) == nil and
       player:getEquipment(Card.SubtypeDefensiveRide) == nil then
@@ -460,44 +504,7 @@ local linglong = fk.CreateMaxCardsSkill{
     return 0
   end,
 }
-local linglong_record = fk.CreateTriggerSkill{
-  name = "#linglong_record",
-
-  refresh_events = {fk.GameStart, fk.AfterCardsMove},
-  can_refresh = function(self, event, target, player, data)
-    if player:hasSkill(self) then
-      if event == fk.GameStart then
-        return true
-      else
-        for _, move in ipairs(data) do
-          if move.from == player.id then
-            for _, info in ipairs(move.moveInfo) do
-              if info.fromArea == Card.PlayerEquip then
-                return true
-              end
-            end
-          end
-          if move.to == player.id and move.toArea == Player.Equip then
-            return true
-          end
-        end
-      end
-    end
-  end,
-  on_refresh = function(self, event, target, player, data)  --FIXME: 虚拟装备技能应该用statusSkill而非triggerSkill
-    if player:getEquipment(Card.SubtypeArmor) == nil and not player:hasSkill("#eight_diagram_skill", true) then
-      player.room:handleAddLoseSkills(player, "#eight_diagram_skill", "linglong", false, true)
-    elseif player:getEquipment(Card.SubtypeArmor) ~= nil and player:hasSkill("#eight_diagram_skill", true) then
-      player.room:handleAddLoseSkills(player, "-#eight_diagram_skill", nil, false, true)
-    end
-    if player:getEquipment(Card.SubtypeTreasure) == nil and not player:hasSkill("qicai", true) then
-      player.room:handleAddLoseSkills(player, "qicai", "linglong", false, true)
-    elseif player:getEquipment(Card.SubtypeTreasure) ~= nil and player:hasSkill("qicai", true) then
-      player.room:handleAddLoseSkills(player, "-qicai", nil, false, true)
-    end
-  end,
-}
-linglong:addRelatedSkill(linglong_record)
+linglong:addRelatedSkill(linglong_maxcards)
 huangyueying:addSkill(jiqiao)
 huangyueying:addSkill(linglong)
 huangyueying:addRelatedSkill("qicai")
