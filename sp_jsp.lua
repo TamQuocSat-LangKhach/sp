@@ -497,14 +497,22 @@ local linglong = fk.CreateTriggerSkill{
 local linglong_maxcards = fk.CreateMaxCardsSkill{
   name = "#linglong_maxcards",
   correct_func = function(self, player)
-    if player:hasSkill(self) and player:getEquipment(Card.SubtypeOffensiveRide) == nil and
+    if player:hasSkill("linglong") and player:getEquipment(Card.SubtypeOffensiveRide) == nil and
       player:getEquipment(Card.SubtypeDefensiveRide) == nil then
       return 1
     end
     return 0
   end,
 }
+local linglong_targetmod = fk.CreateTargetModSkill{
+  name = "#linglong_targetmod",
+  frequency = Skill.Compulsory,
+  bypass_distances = function(self, player, skill, card)
+    return player:hasSkill("linglong") and player:getEquipment(Card.SubtypeTreasure) == nil and card and card.type == Card.TypeTrick
+  end,
+}
 linglong:addRelatedSkill(linglong_maxcards)
+linglong:addRelatedSkill(linglong_targetmod)
 huangyueying:addSkill(jiqiao)
 huangyueying:addSkill(linglong)
 huangyueying:addRelatedSkill("qicai")
