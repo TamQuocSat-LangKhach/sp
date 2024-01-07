@@ -841,7 +841,7 @@ local yanxiao = fk.CreateActiveSkill{
     local card = Fk:cloneCard("yanxiao_trick")
     card:addSubcards(effect.cards)
     target:addVirtualEquip(card)
-    room:moveCardTo(card, Card.PlayerJudge, target, fk.ReasonJustMove, self.name)
+    room:moveCardTo(card, Card.PlayerJudge, target, fk.ReasonPut, self.name)
   end,
 }
 local yanxiao_trigger = fk.CreateTriggerSkill{
@@ -857,7 +857,7 @@ local yanxiao_trigger = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local dummy = Fk:cloneCard("dilu")
     dummy:addSubcards(player.player_cards[Player.Judge])
-    player.room:obtainCard(player.id, dummy, true, fk.ReasonJustMove)
+    player.room:obtainCard(player.id, dummy, true, fk.ReasonPrey)
   end,
 }
 local anxian = fk.CreateTriggerSkill{

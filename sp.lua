@@ -767,7 +767,7 @@ local xueji = fk.CreateActiveSkill{
     return Self:getLostHp()
   end,
   can_use = function(self, player)
-    return player:isWounded() and player:usedSkillTimes(self.name, Player.HistoryTurn) == 0
+    return player:isWounded() and player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
   end,
   card_filter = function(self, to_select, selected, targets)
     return #selected == 0 and Fk:getCardById(to_select).color == Card.Red and not Self:prohibitDiscard(Fk:getCardById(to_select))
@@ -795,7 +795,7 @@ local xueji = fk.CreateActiveSkill{
     for _, pid in ipairs(tos) do
       local p = room:getPlayerById(pid)
       if not p.dead then
-        p:drawCards(1)
+        p:drawCards(1, self.name)
       end
     end
   end,
@@ -827,18 +827,18 @@ local wuji = fk.CreateTriggerSkill{
   end,
   can_wake = function(self, event, target, player, data)
     local n = 0
-    player.room.logic:getEventsOfScope(GameEvent.ChangeHp, 1, function(e)
-      local damage = e.data[5]
-      if damage and player == damage.from then
+    U.getActualDamageEvents(player.room, 1, function(e)
+      local damage = e.data[1]
+      if damage.from == player then
         n = n + damage.damage
       end
-    end, Player.HistoryTurn)
+    end)
     return n > 2
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
     room:changeMaxHp(player, 1)
-    if player:isWounded() then
+    if player:isWounded() and not player.dead then
       room:recover({
         who = player,
         num = 1,
@@ -1282,7 +1282,7 @@ local songci = fk.CreateActiveSkill{
     room:setPlayerMark(player, self.name, mark)
     if target:getHandcardNum() < target.hp then
       player:broadcastSkillInvoke(self.name, 1)
-      target:drawCards(2)
+      target:drawCards(2, self.name)
     else
       player:broadcastSkillInvoke(self.name, 2)
       room:askForDiscard(target, 2, 2, true, self.name, false)
@@ -2488,7 +2488,7 @@ local mumu = fk.CreateTriggerSkill{
     end
     if Fk:getCardById(id).sub_type == Card.SubtypeWeapon then
       room:throwCard({id}, self.name, to, player)
-      player:drawCards(1)
+      player:drawCards(1, self.name)
     else
       if player:getEquipment(Card.SubtypeArmor) ~= nil then
         room:moveCards({
@@ -2781,8 +2781,7 @@ local shushen = fk.CreateTriggerSkill{
   end,
   on_cost = function(self, event, target, player, data)
     local room = player.room
-    local to = room:askForChoosePlayers(player, table.map(room:getOtherPlayers(player),
-      function(p) return p.id end), 1, 1, "#shushen-choose", self.name, true)
+    local to = room:askForChoosePlayers(player, table.map(room:getOtherPlayers(player), Util.IdMapper), 1, 1, "#shushen-choose", self.name, true)
     if #to > 0 then
       self.cost_data = to[1]
       return true
@@ -2798,7 +2797,7 @@ local shushen = fk.CreateTriggerSkill{
     end
     local choice = room:askForChoice(to, choices, self.name)
     if choice == "draw2" then
-      to:drawCards(2)
+      to:drawCards(2, self.name)
     else
       room:recover({
         who = to,

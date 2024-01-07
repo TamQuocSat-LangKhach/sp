@@ -261,11 +261,9 @@ local anxu = fk.CreateActiveSkill{
   card_num = 0,
   target_num = 2,
   can_use = function(self, player)
-    return player:usedSkillTimes(self.name) == 0
+    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
   end,
-  card_filter = function(self, to_select, selected)
-    return false
-  end,
+  card_filter = Util.FalseFunc,
   target_filter = function(self, to_select, selected)
     if #selected > 1 or to_select == Self.id then return false end
     if #selected == 0 then
@@ -283,7 +281,7 @@ local anxu = fk.CreateActiveSkill{
     local target1 = room:getPlayerById(use.tos[1])
     local target2 = room:getPlayerById(use.tos[2])
     local from, to
-    if #target1.player_cards[Player.Hand] < #target2.player_cards[Player.Hand] then
+    if target1:getHandcardNum() < target2:getHandcardNum() then
       from = target1
       to = target2
     else
@@ -291,20 +289,15 @@ local anxu = fk.CreateActiveSkill{
       to = target1
     end
     local card = room:askForCard(to, 1, 1, false, self.name, false, ".", "#anxu-give::"..from.id)
-    if #card == 0 then
-      card = {table.random(to.player_cards[Player.Hand])}
-    end
-    if #card > 0 then
-      room:obtainCard(from.id, Fk:getCardById(card[1]), false, fk.ReasonGive)
-    end
-    if #target1.player_cards[Player.Hand] == #target2.player_cards[Player.Hand] then
+    room:obtainCard(from.id, Fk:getCardById(card[1]), false, fk.ReasonGive)
+    if target1:getHandcardNum() == target2:getHandcardNum() and not player.dead then
       local choices = {"draw1"}
       if player:isWounded() then
         table.insert(choices, "recover")
       end
       local choice = room:askForChoice(player, choices, self.name)
       if choice == "draw1" then
-        player:drawCards(1)
+        player:drawCards(1, self.name)
       else
         room:recover({
           who = player,
