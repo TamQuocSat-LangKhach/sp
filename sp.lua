@@ -2564,7 +2564,7 @@ local xiemu = fk.CreateActiveSkill{
     return player:usedSkillTimes(self.name) == 0 and not player:isKongcheng()
   end,
   card_filter = function(self, to_select, selected)
-    return #selected == 0 and Fk:getCardById(to_select).trueName == "slash"
+    return #selected == 0 and Fk:getCardById(to_select).trueName == "slash" and not Self:prohibitDiscard(Fk:getCardById(to_select))
   end,
   on_use = function(self, room, effect)
     local player = room:getPlayerById(effect.from)
@@ -2729,19 +2729,25 @@ local yingyuan = fk.CreateTriggerSkill{
     end
   end,
   on_cost = function(self, event, target, player, data)
-    local to = player.room:askForChoosePlayers(player, table.map(player.room:getOtherPlayers(player), function(p)
-      return p.id end), 1, 1, "#yingyuan-card:::"..data.card:toLogString(), self.name, true)
+    local to = player.room:askForChoosePlayers(player, table.map(player.room:getOtherPlayers(player), Util.IdMapper), 1, 1, "#yingyuan-card:::"..data.card:toLogString(), self.name, true)
     if #to > 0 then
-      self.cost_data = to
+      self.cost_data = to[1]
       return true
     end
   end,
   on_use = function(self, event, target, player, data)
-    player.room:obtainCard(self.cost_data[1], data.card, false, fk.ReasonGive)
+    local room = player.room
+    room:moveCards({
+      to = self.cost_data,
+      toArea = Card.PlayerHand,
+      ids = room:getSubcardsByRule(data.card, { Card.Processing }),
+      proposer = player.id,
+      moveReason = fk.ReasonGive,
+    })
     local mark = player:getMark("yingyuan-turn")
     if mark == 0 then mark = {} end
     table.insert(mark, data.card.trueName)
-    player.room:setPlayerMark(player, "yingyuan-turn", mark)
+    room:setPlayerMark(player, "yingyuan-turn", mark)
   end,
 }
 maliang:addSkill(zishu)
