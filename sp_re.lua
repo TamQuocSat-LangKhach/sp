@@ -81,9 +81,19 @@ local yujin = General(extension, "re__yujin", "wei", 4)
 local jieyue = fk.CreateViewAsSkill{
   name = "jieyue",
   pattern = "jink,nullification",
+  mute = true,
   card_filter = function(self, to_select, selected)
     if #Self:getPile(self.name) == 0 then return end
     return #selected == 0 and Fk:currentRoom():getCardArea(to_select) ~= Player.Equip
+  end,
+  before_use = function(self, player, use)
+    if use.card.name == "jink" then
+      player:broadcastSkillInvoke(self.name, 3)
+      player.room:notifySkillInvoked(player, self.name, "defensive")
+    elseif use.card.name == "nullification" then
+      player:broadcastSkillInvoke(self.name, 4)
+      player.room:notifySkillInvoked(player, self.name, "defensive")
+    end
   end,
   view_as = function(self, cards)
     if #cards ~= 1 then return end
@@ -104,6 +114,7 @@ local jieyue = fk.CreateViewAsSkill{
 local jieyue_trigger = fk.CreateTriggerSkill{
   name = "#jieyue_trigger",
   anim_type = "control",
+  mute = true,
   events = {fk.EventPhaseStart},
   can_trigger = function(self, event, target, player, data)
     if target == player then
@@ -135,6 +146,8 @@ local jieyue_trigger = fk.CreateTriggerSkill{
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
+    player:broadcastSkillInvoke(self.name, math.random(1,2))
+    player.room:notifySkillInvoked(player, self.name, "defensive")
     if player.phase == Player.Finish then
       room:throwCard(self.cost_data[2], "jieyue", player, player)
       if player.dead then return end
@@ -170,6 +183,12 @@ Fk:loadTranslationTable{
   ["#jieyue_trigger"] = "节钺",
   ["#jieyue-cost"] = "节钺：你可以弃置一张手牌，令一名其他角色执行后续效果",
   ["#jieyue-give"] = "节钺：将一张牌置为 %src 的“节钺”牌，或其弃置你一张牌",
+
+  ["$jieyue1"] = "诸军严整，敌军自乱。",
+  ["$jieyue2"] = "安营驻寨，严守城防。",
+  ["$jieyue3"] = "不动如泰山。",
+  ["$jieyue4"] = "纪法严明，无懈可击。",
+  ["~re__yujin"] = "我，无颜面对丞相了……",
 }
 
 local liubiao = General(extension, "re__liubiao", "qun", 3)
@@ -204,6 +223,10 @@ Fk:loadTranslationTable{
   ["#re__liubiao"] = "跨蹈汉南",
   ["re__zishou"] = "自守",
   [":re__zishou"] = "摸牌阶段，你可以额外摸X张牌（X为全场势力数）。若如此做，直到回合结束，其他角色不能被选择为你使用牌的目标。",
+
+  ["$re__zishou1"] = "荆襄之地，固若金汤。",
+  ["$re__zishou2"] = "江河霸主，何惧之有？",
+  ["~re__liubiao"] = "优柔寡断，要不得啊。",
 }
 
 local madai = General(extension, "re__madai", "shu", 4)
@@ -248,6 +271,8 @@ Fk:loadTranslationTable{
   [":re__qianxi"] = "准备阶段开始时，你可以摸一张牌然后弃置一张牌。若如此做，你选择距离为1的一名角色，然后直到回合结束，"..
   "该角色不能使用或打出与你以此法弃置的牌颜色相同的手牌。",
   ["#qianxi-discard"] = "潜袭：弃置一张牌，令一名角色本回合不能使用或打出此颜色的手牌",
+
+  ["~re__madai"] = "我怎么会死在这里……",
 }
 
 local bulianshi = General(extension, "re__bulianshi", "wu", 3, 3, General.Female)
@@ -314,6 +339,10 @@ Fk:loadTranslationTable{
   [":re__anxu"] = "出牌阶段限一次，你可以选择两名手牌数不同的其他角色，令其中手牌多的角色将一张手牌交给手牌少的角色，然后若这两名角色手牌数相等，"..
   "你摸一张牌或回复1点体力。",
   ["#anxu-give"] = "安恤：你需将一张手牌交给 %dest",
+
+  ["$re__anxu1"] = "和鸾雍雍，万福攸同。",
+  ["$re__anxu2"] = "君子乐胥，万邦之屏。",
+  ["~re__bulianshi"] = "江之永矣，不可方思。",
 }
 
 local xusheng = General(extension, "re__xusheng", "wu", 4)
@@ -356,6 +385,10 @@ Fk:loadTranslationTable{
   ["re__pojun"] = "破军",
   [":re__pojun"] = "当你于出牌阶段内使用【杀】指定一个目标后，你可以将其至多X张牌扣置于该角色的武将牌旁（X为其体力值）。"..
   "若如此做，当前回合结束后，该角色获得其武将牌旁的所有牌。",
+
+  ["$re__pojun1"] = "大军在此！汝等休想前进一步！",
+  ["$re__pojun2"] = "敬请，养精蓄锐！",
+  ["~re__xusheng"] = "盛，不能奋身出命，不亦辱乎……",
 }
 
 return extension

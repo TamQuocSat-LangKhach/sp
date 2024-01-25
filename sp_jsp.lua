@@ -69,6 +69,14 @@ Fk:loadTranslationTable{
   "失去技能〖良助〗并获得技能〖枭姬〗。",
   ["#liangzhu-invoke"] = "良助：你可以摸一张牌或令 %dest 摸两张牌",
   ["liangzhu_draw2"] = "其摸两张牌",
+
+  ["$liangzhu1"] = "吾愿携弩，征战沙场，助君一战！",
+  ["$liangzhu2"] = "两国结盟，你我都是一家人。",
+  ["$fanxiang1"] = "兄命难违，从此两别。",
+  ["$fanxiang2"] = "今夕一别，不知何日再见。",
+  ["$xiaoji_jsp__sunshangxiang1"] = "弓马何须忌红妆？",
+  ["$xiaoji_jsp__sunshangxiang2"] = "双剑夸巧，不让须眉！",
+  ["~jsp__sunshangxiang"] = "东途难归，初心难追。",
 }
 
 local machao = General(extension, "jsp__machao", "qun", 4)
@@ -208,6 +216,12 @@ Fk:loadTranslationTable{
   [":danji"] = "觉醒技，准备阶段开始时，若你的手牌数大于体力值且本局游戏的主公不是刘备，你须减1点体力上限，然后获得技能〖马术〗和〖怒斩〗。",
   ["nuzhan"] = "怒斩",
   [":nuzhan"] = "锁定技，你将锦囊牌当【杀】使用时，此【杀】不计入出牌阶段使用次数；你将装备牌当【杀】使用时，此【杀】伤害+1。",
+
+  ["$wusheng_jsp__guanyu1"] = "以义传魂，以武入圣！",
+  ["$wusheng_jsp__guanyu2"] = "义击逆流，武安黎庶！",
+  ["$danji1"] = "单骑护嫂千里，只为桃园之义！",
+  ["$danji2"] = "独身远涉，赤心归国！",
+  ["~jsp__guanyu"] = "樊城一去，死亦无惧！",
 }
 
 local jiangwei = General(extension, "jsp__jiangwei", "wei", 4)
@@ -290,6 +304,16 @@ Fk:loadTranslationTable{
   [":fengliang"] = "觉醒技，当你进入濒死状态时，你减1点体力上限并将体力值回复至2点，然后获得技能〖挑衅〗，将技能〖困奋〗改为非锁定技。",
   ["kunfenEx"] = "困奋",
   [":kunfenEx"] = "结束阶段开始时，你可以失去1点体力，然后摸两张牌。",
+
+  ["$kunfen1"] = "纵使困顿难行，亦当砥砺奋进！",
+  ["$kunfen2"] = "兴蜀需时，众将且勿惫怠！",
+  ["$kunfenEx1"] = "纵使困顿难行，亦当砥砺奋进！",
+  ["$kunfenEx2"] = "兴蜀需时，众将且勿惫怠！",
+  ["$fengliang1"] = "得遇丞相，再生之德！",
+  ["$fengliang2"] = "丞相大义，维岂有不从之理？",
+  ["$tiaoxin_jsp__jiangwei1"] = "今日天公作美，怎能不战而退？",
+  ["$tiaoxin_jsp__jiangwei2"] = "贼将无胆，何不早降！",
+  ["~jsp__jiangwei"] = "伯约已尽力而为，奈何大汉，国运衰微……",
 }
 
 local zhaoyun = General(extension, "jsp__zhaoyun", "qun", 3)
@@ -530,6 +554,12 @@ Fk:loadTranslationTable{
   [":linglong"] = "锁定技，若你的装备区没有防具牌，视为你装备着【八卦阵】；若你的装备区没有坐骑牌，你的手牌上限+1；"..
   "若你的装备区没有宝物牌，视为你拥有技能〖奇才〗。",
   ["#jiqiao-invoke"] = "机巧：你可以弃置任意张装备牌，亮出牌堆顶两倍数量的牌并获得其中的锦囊牌",
+
+  ["$jiqiao1"] = "驭巧器，以取先机。",
+  ["$jiqiao2"] = "颖悟之人，不以拙力取胜。",
+  ["$linglong1"] = "哼～书中自有玲珑心～",
+  ["$linglong2"] = "哼～自然是多多益善咯～",
+  ["~jsp__huangyueying"] = "只恨不能再助夫君了……",
 }
 
 return extension
