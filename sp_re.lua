@@ -146,8 +146,8 @@ local jieyue_trigger = fk.CreateTriggerSkill{
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    player:broadcastSkillInvoke(self.name, math.random(1,2))
-    player.room:notifySkillInvoked(player, self.name, "defensive")
+    player:broadcastSkillInvoke("jieyue", math.random(1,2))
+    player.room:notifySkillInvoked(player, "jieyue", "defensive")
     if player.phase == Player.Finish then
       room:throwCard(self.cost_data[2], "jieyue", player, player)
       if player.dead then return end
