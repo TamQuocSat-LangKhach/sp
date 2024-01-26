@@ -2296,6 +2296,8 @@ Fk:loadTranslationTable{
   ["fenxun"] = "奋迅",
   [":fenxun"] = "出牌阶段限一次，你可以弃置一张牌并选择一名其他角色，令你与其的距离视为1，直到回合结束。",
   ["#duanbing-choose"] = "短兵：你可以额外选择一名距离为1的其他角色为目标",
+
+  ["~dingfeng"] = "这风，太冷了。",
 }
 
 local zhugedan = General(extension, "zhugedan", "wei", 4)
@@ -2878,8 +2880,11 @@ Fk:loadTranslationTable{
   [":shenzhi"] = "准备阶段开始时，你可以弃置所有手牌，若你以此法弃置的手牌数不小于X，你回复1点体力(X为你当前的体力值)。",
   ["#shushen-choose"] = "淑慎：你可以令一名其他角色回复1点体力或摸两张牌",
 
+  ["$shushen1"] = "妾身无恙，相公请安心征战。",
+  ["$shushen2"] = "船到桥头自然直。",
   ["$shenzhi1"] = "子龙将军，一切都托付给你了。",
   ["$shenzhi2"] = "阿斗，相信妈妈，没事的。",
+  ["~ganfuren"] = "请替我照顾好阿斗。",
 }
 
 local huangjinleishi = General(extension, "huangjinleishi", "qun", 3, 3, General.Female)
