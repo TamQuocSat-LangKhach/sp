@@ -2426,6 +2426,8 @@ hetaihou:addSkill(qiluan)
 Fk:loadTranslationTable{
   ["hetaihou"] = "何太后",
   ["#hetaihou"] = "弄权之蛇蝎",
+  ["cv:hetaihou"] = "水原",
+  ["illustrator:hetaihou"] = "琛·美弟奇",
   ["zhendu"] = "鸩毒",
   [":zhendu"] = "其他角色的出牌阶段开始时，你可弃置一张手牌，其视为使用一张【酒】，然后你对其造成1点伤害。",
   ["qiluan"] = "戚乱",
