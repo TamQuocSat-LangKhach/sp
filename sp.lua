@@ -68,6 +68,7 @@ yangxiu:addSkill(jilei)
 Fk:loadTranslationTable{
   ["yangxiu"] = "杨修",
   ["#yangxiu"] = "恃才放旷",
+  ["cv:yangxiu"] = "彭尧",
   ["illustrator:yangxiu"] = "张可",
   ["danlao"] = "啖酪",
   [":danlao"] = "当一个锦囊指定了包括你在内的多个目标，你可以摸一张牌，若如此做，该锦囊对你无效。",
@@ -191,6 +192,7 @@ yuanshu:addSkill(weidi)
 Fk:loadTranslationTable{
   ["yuanshu"] = "袁术",
   ["#yuanshu"] = "仲家帝",
+  ["cv:yuanshu"] = "彭尧", -- or 马洋 ?
   ["illustrator:yuanshu"] = "吴昊",
   ["yongsi"] = "庸肆",
   [":yongsi"] = "锁定技，摸牌阶段，你额外摸X张牌，X为场上现存势力数。弃牌阶段，你至少须弃掉等同于场上现存势力数的牌（不足则全弃）。",
@@ -491,6 +493,7 @@ caiwenji:addSkill(mozhi)
 Fk:loadTranslationTable{
   ["sp__caiwenji"] = "蔡文姬",
   ["#sp__caiwenji"] = "金璧之才",
+  ["cv:sp__caiwenji"] = "小N",
   ["illustrator:sp__caiwenji"] = "木美人",
   ["chenqing"] = "陈情",
   [":chenqing"] = "每轮限一次，当一名角色进入濒死状态时，你可以令另一名其他角色摸四张牌，然后弃置四张牌，"..
@@ -2480,12 +2483,30 @@ local mumu = fk.CreateTriggerSkill{
   anim_type = "control",
   events = {fk.EventPhaseStart},
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self) and player.phase == Player.Finish and player:getMark("mumu-turn") == 0
+    if target == player and player:hasSkill(self) and player.phase == Player.Finish then
+      local play_ids = {}
+      player.room.logic:getEventsOfScope(GameEvent.Phase, 1, function (e)
+        if e.data[2] == Player.Play and e.end_id then
+          table.insert(play_ids, {e.id, e.end_id})
+        end
+        return false
+      end, Player.HistoryTurn)
+      if #play_ids == 0 then return true end
+      return #U.getActualDamageEvents(player.room, 1, function(e)
+        if e.data[1].from == player then
+          for _, ids in ipairs(play_ids) do
+            if e.id > ids[1] and e.id < ids[2] then
+              return true
+            end
+          end
+        end
+      end) == 0
+    end
   end,
   on_cost = function(self, event, target, player, data)
     local targets = {}
     for _, p in ipairs(player.room:getAlivePlayers()) do
-      if p:getEquipment(Card.SubtypeWeapon) ~= nil or (p:getEquipment(Card.SubtypeArmor) ~= nil and p ~= player) then
+      if p:getEquipment(Card.SubtypeWeapon) ~= nil or (p:getEquipment(Card.SubtypeArmor) ~= nil and p ~= player and #player:getAvailableEquipSlots(Card.SubtypeArmor) > 0) then
         table.insert(targets, p.id)
       end
     end
@@ -2498,63 +2519,23 @@ local mumu = fk.CreateTriggerSkill{
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    if self.cost_data == player.id then
-      room:throwCard({player:getEquipment(Card.SubtypeWeapon)}, self.name, player, player)
-      player:drawCards(1, self.name)
-      return
-    end
     local to = room:getPlayerById(self.cost_data)
     local ids = {}
     if to:getEquipment(Card.SubtypeWeapon) ~= nil then
       table.insert(ids, to:getEquipment(Card.SubtypeWeapon))
     end
-    if to:getEquipment(Card.SubtypeArmor) ~= nil then
+    if to ~= player and to:getEquipment(Card.SubtypeArmor) ~= nil and #player:getAvailableEquipSlots(Card.SubtypeArmor) > 0 then
       table.insert(ids, to:getEquipment(Card.SubtypeArmor))
     end
-    local id
-    if #ids == 1 then
-      id = ids[1]
-    else
-      room:fillAG(player, ids)
-      id = room:askForAG(player, ids, false, self.name)
-      room:closeAG(player)
-    end
+    local id = (#ids == 1) and ids[1] or room:askForCardChosen(player, player, { card_data = { { self.name, ids }  } }, self.name, "#mumu-card")
     if Fk:getCardById(id).sub_type == Card.SubtypeWeapon then
       room:throwCard({id}, self.name, to, player)
-      player:drawCards(1, self.name)
-    else
-      if player:getEquipment(Card.SubtypeArmor) ~= nil then
-        room:moveCards({
-            ids = {player:getEquipment(Card.SubtypeArmor)},
-            from = player.id,
-            toArea = Card.DiscardPile,
-            moveReason = fk.ReasonPutIntoDiscardPile,
-          },
-          {
-            ids = {id},
-            from = to.id,
-            to = player.id,
-            toArea = Card.PlayerEquip,
-            moveReason = fk.ReasonJustMove,
-          })
-      else
-        room:moveCards({
-          ids = {id},
-          from = to.id,
-          to = player.id,
-          toArea = Card.PlayerEquip,
-          moveReason = fk.ReasonJustMove,
-        })
+      if not player.dead then
+        player:drawCards(1, self.name)
       end
+    else
+      U.moveCardIntoEquip(room, player, id, self.name, true, player)
     end
-  end,
-
-  refresh_events = {fk.Damage},
-  can_refresh = function(self, event, target, player, data)
-    return target == player and player.phase == Player.Play
-  end,
-  on_refresh = function(self, event, target, player, data)
-    player.room:addPlayerMark(player, "mumu-turn", 1)
   end,
 }
 meibu:addRelatedSkill(meibu_attackrange)
@@ -2564,6 +2545,8 @@ sunluyu:addSkill(mumu)
 Fk:loadTranslationTable{
   ["sunluyu"] = "孙鲁育",
   ["#sunluyu"] = "舍身饲虎",
+  ["cv:sunluyu"] = "sakura小舞 ",
+	["illustrator:sunluyu"] = "depp",
   ["meibu"] = "魅步",
   [":meibu"] = "一名其他角色的出牌阶段开始时，若你不在其攻击范围内，你可以令该角色的锦囊牌均视为【杀】直到回合结束。若如此做，视为你在其攻击范围内直到回合结束。",
   ["mumu"] = "穆穆",
@@ -2571,7 +2554,8 @@ Fk:loadTranslationTable{
   "或将场上一张防具牌移动到你的装备区里（可替换原防具）。",
   ["#meibu-invoke"] = "魅步：你可以对 %dest 发动“魅步”，令其锦囊牌视为【杀】直到回合结束",
   ["#meibu_filter"] = "止息",
-  ["#mumu-choose"] = "穆穆：弃置场上一张武器牌并摸一张牌；或将场上一张防具牌移动到你的装备区（可替换原防具）",
+  ["#mumu-choose"] = "穆穆：弃置场上一张武器牌并摸一张牌；或将场上一张防具牌移动到你的装备区",
+  ["#mumu-card"] = "穆穆：弃置武器牌，或将防具牌移动到你的装备区",
 
   ["$meibu1"] = "萧墙之乱，宫闱之衅，实为吴国之祸啊！",
   ["$meibu2"] = "若要动手，就请先杀我吧！",
@@ -2790,6 +2774,8 @@ maliang:addSkill(yingyuan)
 Fk:loadTranslationTable{
   ["maliang"] = "马良",
   ["#maliang"] = "白眉智士",
+  ["cv:maliang"] = "马洋",
+	["illustrator:maliang"] = "LiuHeng",
   ["zishu"] = "自书",
   [":zishu"] = "锁定技，你的回合外，其他角色回合结束时，将你手牌中所有本回合获得的牌置入弃牌堆；你的回合内，当你不因此技能获得牌时，摸一张牌。",
   ["yingyuan"] = "应援",
