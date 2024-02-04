@@ -330,7 +330,7 @@ Fk:loadTranslationTable{
   ["hulao__godlvbu2"] = "神吕布",
   ["#hulao__godlvbu2"] = "修罗之道",
   ["xiuluo"] = "修罗",
-  [":xiuluo"] = "回合开始阶段，你可以弃一张手牌来弃置你判定区里的一张延时类锦囊（必须花色相同）。",
+  [":xiuluo"] = "准备阶段，你可以弃一张手牌来弃置你判定区里的一张延时类锦囊（必须花色相同）。",
   ["shenwei"] = "神威",
   [":shenwei"] = "锁定技，摸牌阶段，你额外摸两张牌；你的手牌上限+2。",
   ["shenji"] = "神戟",
@@ -762,7 +762,7 @@ Fk:loadTranslationTable{
   ["caohong"] = "曹洪",
   ["#caohong"] = "福将",
   ["yuanhu"] = "援护",
-  [":yuanhu"] = "回合结束阶段开始时，你可以将一张装备牌置于一名角色的装备区里，然后根据此装备牌的种类执行以下效果：<br>"..
+  [":yuanhu"] = "结束阶段开始时，你可以将一张装备牌置于一名角色的装备区里，然后根据此装备牌的种类执行以下效果：<br>"..
   "武器牌：弃置与该角色距离为1的一名角色区域中的一张牌；<br>防具牌：该角色摸一张牌；<br>坐骑牌：该角色回复1点体力。",
   ["yuanhu_active"] = "援护",
   ["#yuanhu-invoke"] = "援护：你可以将一张装备牌置入一名角色的装备区",
@@ -1318,7 +1318,7 @@ Fk:loadTranslationTable{
   ["chenlin"] = "陈琳",
   ["#chenlin"] = "破竹之咒",
   ["bifa"] = "笔伐",
-  [":bifa"] = "回合结束阶段开始时，你可以将一张手牌移出游戏并指定一名其他角色。该角色的回合开始时，其观看你移出游戏的牌并选择一项："..
+  [":bifa"] = "结束阶段开始时，你可以将一张手牌移出游戏并指定一名其他角色。该角色的回合开始时，其观看你移出游戏的牌并选择一项："..
   "交给你一张与此牌同类型的手牌并获得此牌；或将此牌置入弃牌堆，然后失去1点体力。",
   ["songci"] = "颂词",
   [":songci"] = "出牌阶段，你可以选择一项：令一名手牌数小于其体力值的角色摸两张牌；或令一名手牌数大于其体力值的角色弃置两张牌。此技能对每名角色只能用一次。",
@@ -1336,6 +1336,7 @@ local daqiaoxiaoqiao = General(extension, "daqiaoxiaoqiao", "wu", 3, 3, General.
 local xingwu = fk.CreateTriggerSkill{
   name = "xingwu",
   anim_type = "offensive",
+  derived_piles = "xingwu",
   events = {fk.EventPhaseStart},
   can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(self) and player.phase == Player.Discard and not player:isKongcheng()
@@ -1626,11 +1627,12 @@ xiahoushi:addSkill(xiaode)
 Fk:loadTranslationTable{
   ["sp__xiahoushi"] = "夏侯氏",
   ["#sp__xiahoushi"] = "疾冲之恋",
+  ["cv:sp__xiahoushi"] = "橘枍shii吖（新月杀原创）",
   ["sp__yanyu"] = "燕语",
-  [":sp__yanyu"] = "任意一名角色的出牌阶段开始时，你可以弃置一张牌，若如此做，则本回合的出牌阶段，每当有与你弃置牌类别相同的其他牌进入弃牌堆时，"..
+  [":sp__yanyu"] = "任意一名角色的出牌阶段开始时，你可以弃置一张牌，若如此做，则本回合的出牌阶段，当有与你弃置牌类别相同的其他牌进入弃牌堆时，"..
   "你可令任意一名角色获得此牌。每回合以此法获得的牌不能超过三张。",
   ["xiaode"] = "孝德",
-  [":xiaode"] = "每当有其他角色阵亡后，你可以声明该武将牌的一项技能，若如此做，你获得此技能并失去技能〖孝德〗直到你的回合结束。（你不能声明觉醒技或主公技）",
+  [":xiaode"] = "当有其他角色阵亡后，你可以声明该武将牌的一项技能，若如此做，你获得此技能并失去技能〖孝德〗直到你的回合结束。（你不能声明觉醒技或主公技）",
   ["@yanyu-phase"] = "燕语",
   ["#yanyu_give"] = "燕语",
   ["#yanyu-cost"] = "燕语：你可以弃置一张牌，然后此出牌阶段限三次，可令任意角色获得相同类别进入弃牌堆的牌",
@@ -1812,7 +1814,7 @@ Fk:loadTranslationTable{
   ["caoang"] = "曹昂",
   ["#caoang"] = "取义成仁",
   ["kangkai"] = "慷忾",
-  [":kangkai"] = "每当一名角色成为【杀】的目标后，若你与其的距离不大于1，你可以摸一张牌，若如此做，你先将一张牌交给该角色再令其展示之，"..
+  [":kangkai"] = "当一名角色成为【杀】的目标后，若你与其的距离不大于1，你可以摸一张牌，若如此做，你先将一张牌交给该角色再令其展示之，"..
   "若此牌为装备牌，其可以使用之。",
   ["#kangkai-invoke"] = "慷忾：你可以摸一张牌，再交给 %dest 一张牌",
   ["#kangkai-self"] = "慷忾：你可以摸一张牌",
@@ -1961,11 +1963,11 @@ Fk:loadTranslationTable{
   ["zhugejin"] = "诸葛瑾",
   ["#zhugejin"] = "联盟的维系者",
   ["huanshi"] = "缓释",
-  [":huanshi"] = "每当一名角色的判定牌生效前，你可以令该角色观看你的手牌并选择你的一张牌，你打出此牌代替之。",
+  [":huanshi"] = "当一名角色的判定牌生效前，你可以令该角色观看你的手牌并选择你的一张牌，你打出此牌代替之。",
   ["hongyuan"] = "弘援",
   [":hongyuan"] = "摸牌阶段，你可以少摸一张牌，令至多两名其他角色各摸一张牌。",
   ["mingzhe"] = "明哲",
-  [":mingzhe"] = "每当你于回合外使用、打出或因弃置而失去一张红色牌时，你可以摸一张牌。",
+  [":mingzhe"] = "当你于回合外使用、打出或因弃置而失去一张红色牌时，你可以摸一张牌。",
   ["#huanshi-invoke"] = "缓释：你可以令 %dest 观看你的手牌并打出其中一张牌修改其判定",
   ["#hongyuan-cost"] = "弘援：你可以少摸一张牌，令至多两名其他角色各摸一张牌",
   ["#hongyuan_delay"] = "弘援",
@@ -2054,7 +2056,7 @@ Fk:loadTranslationTable{
   ["#xingcai"] = "敬哀皇后",
   ["illustrator:xingcai"] = "depp",
   ["shenxian"] = "甚贤",
-  [":shenxian"] = "你的回合外，每当有其他角色因弃置而失去牌时，若其中有基本牌，你可以摸一张牌。",
+  [":shenxian"] = "你的回合外，当有其他角色因弃置而失去牌时，若其中有基本牌，你可以摸一张牌。",
   ["qiangwu"] = "枪舞",
   [":qiangwu"] = "出牌阶段限一次，你可以进行一次判定，若如此做，则直到回合结束，你使用点数小于判定牌的【杀】时不受距离限制，且你使用点数大于判定牌的【杀】时不计入出牌阶段的使用次数。",
   ["@qiangwu-turn"] = "枪舞",
@@ -2095,7 +2097,7 @@ Fk:loadTranslationTable{
   ["panfeng"] = "潘凤",
   ["#panfeng"] = "联军上将",
   ["kuangfu"] = "狂斧",
-  [":kuangfu"] = "每当你使用【杀】对目标角色造成一次伤害后，你可以选择一项: 将其装备区里的一张牌置入你的装备区；或弃置其装备区里的一张牌。",
+  [":kuangfu"] = "当你使用【杀】对目标角色造成一次伤害后，你可以选择一项: 将其装备区里的一张牌置入你的装备区；或弃置其装备区里的一张牌。",
   ["kuangfu_move"] = "将其一张装备置入你的装备区",
   ["kuangfu_discard"] = "弃置其一张装备",
 
@@ -2107,6 +2109,7 @@ local yinbing = fk.CreateTriggerSkill{
   name = "yinbing",
   anim_type = "control",
   expand_pile = "yinbing",
+  derived_piles = "yinbing",
   events = {fk.EventPhaseStart, fk.Damaged},
   can_trigger = function(self, event, target, player, data)
     if player:hasSkill(self) then
@@ -2364,11 +2367,11 @@ Fk:loadTranslationTable{
   ["zhugedan"] = "诸葛诞",
   ["#zhugedan"] = "薤露蒿里",
   ["gongao"] = "功獒",
-  [":gongao"] = "锁定技，每当一名角色死亡后，你增加1点体力上限，回复1点体力。",
+  [":gongao"] = "锁定技，当一名角色死亡后，你增加1点体力上限，回复1点体力。",
   ["juyi"] = "举义",
   [":juyi"] = "觉醒技，准备阶段开始时，若你已受伤且体力上限大于存活角色数，你须将手牌摸至体力上限，然后获得技能“崩坏”和“威重”。",
   ["weizhong"] = "威重",
-  [":weizhong"] = "锁定技，每当你的体力上限增加或减少时，你摸一张牌。",
+  [":weizhong"] = "锁定技，当你的体力上限增加或减少时，你摸一张牌。",
 
   ["$gongao1"] = "攻城拔寨，建功立业。",
   ["$gongao2"] = "恪尽职守，忠心事主。",
@@ -2545,7 +2548,7 @@ sunluyu:addSkill(mumu)
 Fk:loadTranslationTable{
   ["sunluyu"] = "孙鲁育",
   ["#sunluyu"] = "舍身饲虎",
-  ["cv:sunluyu"] = "sakura小舞 ",
+  ["cv:sunluyu"] = "sakula小舞",
 	["illustrator:sunluyu"] = "depp",
   ["meibu"] = "魅步",
   [":meibu"] = "一名其他角色的出牌阶段开始时，若你不在其攻击范围内，你可以令该角色的锦囊牌均视为【杀】直到回合结束。若如此做，视为你在其攻击范围内直到回合结束。",
@@ -2642,7 +2645,7 @@ Fk:loadTranslationTable{
   [":xiemu"] = "出牌阶段限一次，你可以弃置一张【杀】并选择一个势力，然后直到你的下回合开始，该势力的其他角色使用的黑色牌指定目标后，若你是此牌的目标，"..
   "你可以摸两张牌。",
   ["naman"] = "纳蛮",
-  [":naman"] = "每当其他角色打出的【杀】进入弃牌堆时，你可以获得之。",
+  [":naman"] = "当其他角色打出的【杀】进入弃牌堆时，你可以获得之。",
   ["@xiemu"] = "协穆",
   ["#xiemu_record"] = "协穆",
 
@@ -2936,6 +2939,7 @@ huangjinleishi:addSkill(zhuji)
 Fk:loadTranslationTable{
   ["huangjinleishi"] = "黄巾雷使",
   ["#huangjinleishi"] = "雷祭之姝",
+  ["cv:huangjinleishi"] = "穆小橘v（新月杀原创）",
   ["illustrator:huangjinleishi"] = "depp",
   ["fulu"] = "符箓",
   [":fulu"] = "你可以将【杀】当雷【杀】使用。",
@@ -3025,7 +3029,7 @@ Fk:loadTranslationTable{
   ["wenpin"] = "文聘",
   ["#wenpin"] = "坚城宿将",
   ["zhenwei"] = "镇卫",
-  [":zhenwei"] = "每当一名其他角色成为【杀】或黑色锦囊牌的唯一目标时，若该角色的体力值小于你，你可以弃置一张牌并选择一项："..
+  [":zhenwei"] = "当一名其他角色成为【杀】或黑色锦囊牌的唯一目标时，若该角色的体力值小于你，你可以弃置一张牌并选择一项："..
   "摸一张牌，然后你成为此牌的目标；或令此牌失效并将之移出游戏，该回合结束时令此牌的使用者收回此牌。",
   ["#zhenwei-invoke"] = "%src对%dest使用%arg，是否弃置一张牌来发动 镇卫",
   ["zhenwei_transfer"] = "摸一张牌并将此牌转移给你",
