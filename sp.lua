@@ -1766,7 +1766,7 @@ local kangkai = fk.CreateTriggerSkill{
   anim_type = "support",
   events = {fk.TargetConfirmed},
   can_trigger = function(self, event, target, player, data)
-    return player:hasSkill(self) and data.card.trueName == "slash" and player:distanceTo(player.room:getPlayerById(data.to)) <= 1
+    return player:hasSkill(self) and data.card.trueName == "slash" and (target == player or player:distanceTo(target) == 1)
   end,
   on_cost = function (self, event, target, player, data)
     local prompt = (player.id == data.to) and "#kangkai-self" or "#kangkai-invoke::"..data.to
@@ -1779,10 +1779,11 @@ local kangkai = fk.CreateTriggerSkill{
     if player == to or player:isNude() or to.dead then return end
     local cards = room:askForCard(player, 1, 1, true, self.name, false, ".", "#kangkai-give::"..to.id)
     if #cards > 0 then
+      room:moveCardTo(cards, Card.PlayerHand, to, fk.ReasonGive, self.name, nil, true, player.id)
+      to:showCards(cards)
       local card = Fk:getCardById(cards[1])
-      room:moveCardTo(card, Card.PlayerHand, to, fk.ReasonGive, self.name, nil, true, player.id)
       if card.type == Card.TypeEquip and not to.dead and not to:isProhibited(to, card) and not to:prohibitUse(card) and
-        table.contains(to:getCardIds("h"), card.id) and
+        table.contains(to:getCardIds("h"), cards[1]) and
         room:askForSkillInvoke(to, self.name, data, "#kangkai-use:::"..card:toLogString()) then
         room:useCard({
           from = to.id,
@@ -1797,6 +1798,9 @@ caoang:addSkill(kangkai)
 Fk:loadTranslationTable{
   ["caoang"] = "曹昂",
   ["#caoang"] = "取义成仁",
+  ["designer:caoang"] = "韩旭",
+  ["illustrator:caoang"] = "Zero",
+
   ["kangkai"] = "慷忾",
   [":kangkai"] = "当一名角色成为【杀】的目标后，若你与其的距离不大于1，你可以摸一张牌，若如此做，你先将一张牌交给该角色再令其展示之，"..
   "若此牌为装备牌，其可以使用之。",
