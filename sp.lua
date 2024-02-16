@@ -193,7 +193,9 @@ Fk:loadTranslationTable{
   ["yuanshu"] = "袁术",
   ["#yuanshu"] = "仲家帝",
   ["cv:yuanshu"] = "彭尧", -- or 马洋 ?
+  ["designer:yuanshu"] = "韩旭",
   ["illustrator:yuanshu"] = "吴昊",
+
   ["yongsi"] = "庸肆",
   [":yongsi"] = "锁定技，摸牌阶段，你额外摸X张牌，X为场上现存势力数。弃牌阶段，你至少须弃掉等同于场上现存势力数的牌（不足则全弃）。",
   ["weidi"] = "伪帝",
@@ -494,7 +496,9 @@ Fk:loadTranslationTable{
   ["sp__caiwenji"] = "蔡文姬",
   ["#sp__caiwenji"] = "金璧之才",
   ["cv:sp__caiwenji"] = "小N",
+  ["designer:sp__caiwenji"] = "韩旭",
   ["illustrator:sp__caiwenji"] = "木美人",
+
   ["chenqing"] = "陈情",
   [":chenqing"] = "每轮限一次，当一名角色进入濒死状态时，你可以令另一名其他角色摸四张牌，然后弃置四张牌，"..
   "若其以此法弃置的四张牌的花色各不相同，则其视为对濒死状态的角色使用一张【桃】。",
@@ -1074,6 +1078,8 @@ lingju:addSkill(fenxin)
 Fk:loadTranslationTable{
   ["lingju"] = "灵雎",
   ["#lingju"] = "情随梦逝",
+  ["designer:lingju"] = "韩旭",
+	["illustrator:lingju"] = "木美人",
   ["jieyuan"] = "竭缘",
   [":jieyuan"] = "当你对一名其他角色造成伤害时，若其体力值大于或等于你的体力值，你可弃置一张黑色手牌令此伤害+1；"..
   "当你受到一名其他角色造成的伤害时，若其体力值大于或等于你的体力值，你可弃置一张红色手牌令此伤害-1。",
@@ -1437,6 +1443,9 @@ daqiaoxiaoqiao:addRelatedSkill("liuli")
 Fk:loadTranslationTable{
   ["daqiaoxiaoqiao"] = "大乔小乔",
   ["#daqiaoxiaoqiao"] = "江东之花",
+  ["designer:daqiaoxiaoqiao"] = "韩旭",
+	["illustrator:daqiaoxiaoqiao"] = "木美人",
+
   ["xingwu"] = "星舞",
   [":xingwu"] = "弃牌阶段开始时，你可以将一张与你本回合使用的牌颜色均不同的手牌置于武将牌上。"..
   "若此时你武将牌上的牌达到三张，则弃置这些牌，然后对一名男性角色造成2点伤害并弃置其装备区中的所有牌。",
@@ -1745,6 +1754,9 @@ zhangbao:addSkill(yingbing)
 Fk:loadTranslationTable{
   ["zhangbao"] = "张宝",
   ["#zhangbao"] = "地公将军",
+  ["designer:zhangbao"] = "韩旭",
+	["illustrator:zhangbao"] = "大佬荣",
+
   ["zhoufu"] = "咒缚",
   [":zhoufu"] = "出牌阶段限一次，你可以指定一名其他角色并将一张手牌移出游戏（将此牌置于该角色的武将牌旁），"..
   "若如此做，该角色进行判定时，改为将此牌作为判定牌。该角色的回合结束时，若此牌仍在该角色旁，你将此牌收入手牌。",
@@ -2042,7 +2054,9 @@ xingcai:addSkill(qiangwu)
 Fk:loadTranslationTable{
   ["xingcai"] = "星彩",
   ["#xingcai"] = "敬哀皇后",
+  ["designer:xingcai"] = "韩旭",
   ["illustrator:xingcai"] = "depp",
+
   ["shenxian"] = "甚贤",
   [":shenxian"] = "你的回合外，当有其他角色因弃置而失去牌时，若其中有基本牌，你可以摸一张牌。",
   ["qiangwu"] = "枪舞",
@@ -2205,6 +2219,9 @@ zumao:addSkill(juedi)
 Fk:loadTranslationTable{
   ["zumao"] = "祖茂",
   ["#zumao"] = "碧血染赤帻",
+  ["designer:zumao"] = "韩旭",
+	["illustrator:zumao"] = "DH",
+
   ["yinbing"] = "引兵",
   [":yinbing"] = "结束阶段，你可以将任意张非基本牌置于你的武将牌上，当你受到【杀】或【决斗】造成的伤害后，你移去你武将牌上的一张牌。",
   ["juedi"] = "绝地",
@@ -2832,13 +2849,14 @@ local shenzhi = fk.CreateTriggerSkill{
   anim_type = "support",
   events = {fk.EventPhaseStart},
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self) and player.phase == Player.Start and not player:isKongcheng()
+    return target == player and player:hasSkill(self) and player.phase == Player.Start and
+    table.find(player.player_cards[Player.Hand], function(id) return not player:prohibitDiscard(Fk:getCardById(id)) end)
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    local n = player:getHandcardNum()
-    room:throwCard(player.player_cards[Player.Hand], self.name, player, player)
-    if player:isWounded() and n >= player.hp then
+    local cards = table.filter(player.player_cards[Player.Hand], function(id) return not player:prohibitDiscard(Fk:getCardById(id)) end)
+    room:throwCard(cards, self.name, player, player)
+    if player:isWounded() and not player.dead and #cards >= player.hp then
       room:recover({
         who = player,
         num = 1,
