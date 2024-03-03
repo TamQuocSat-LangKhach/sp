@@ -555,6 +555,7 @@ machao:addSkill(shichou)
 Fk:loadTranslationTable{
   ["sp__machao"] = "马超",
   ["#sp__machao"] = "西凉的猛狮",
+  ["illustrator:sp__machao"] = "天空之城",
   ["sp__zhuiji"] = "追击",
   [":sp__zhuiji"] = "锁定技，你计算体力值比你少的角色的距离始终为1。",
   ["shichou"] = "誓仇",
@@ -677,6 +678,7 @@ jiaxu:addSkill(yongdi)
 Fk:loadTranslationTable{
   ["sp__jiaxu"] = "贾诩",
   ["#sp__jiaxu"] = "算无遗策",
+  ["illustrator:sp__jiaxu"] = "雪君S",
   ["zhenlue"] = "缜略",
   [":zhenlue"] = "锁定技，你使用的非延时锦囊牌不能被【无懈可击】响应，你不能被选择为延时锦囊牌的目标。",
   ["jianshu"] = "间书",
@@ -765,6 +767,7 @@ caohong:addSkill(yuanhu)
 Fk:loadTranslationTable{
   ["caohong"] = "曹洪",
   ["#caohong"] = "福将",
+  ["illustrator:caohong"] = "LiuHeng",
   ["yuanhu"] = "援护",
   [":yuanhu"] = "结束阶段开始时，你可以将一张装备牌置于一名角色的装备区里，然后根据此装备牌的种类执行以下效果：<br>"..
   "武器牌：弃置与该角色距离为1的一名角色区域中的一张牌；<br>防具牌：该角色摸一张牌；<br>坐骑牌：该角色回复1点体力。",
@@ -876,6 +879,7 @@ guanyinping:addSkill(wuji)
 Fk:loadTranslationTable{
   ["guanyinping"] = "关银屏",
   ["#guanyinping"] = "武姬",
+  ["illustrator:guanyinping"] = "木美人",
   ["xueji"] = "血祭",
   [":xueji"] = "出牌阶段限一次，你可弃置一张红色牌，并对你攻击范围内的至多X名其他角色各造成1点伤害（X为你损失的体力值），然后这些角色各摸一张牌。",
   ["huxiao"] = "虎啸",
@@ -997,6 +1001,7 @@ liuxie:addSkill(mizhao)
 Fk:loadTranslationTable{
   ["liuxie"] = "刘协",
   ["#liuxie"] = "受困天子",
+  ["illustrator:liuxie"] = "LiuHeng",
   ["tianming"] = "天命",
   [":tianming"] = "当你成为【杀】的目标时，你可以弃置两张牌（不足则全弃，无牌则不弃），然后摸两张牌；然后若场上体力唯一最多的角色不为你，"..
   "该角色也可以如此做。",
@@ -1149,6 +1154,7 @@ fuwan:addSkill(moukui)
 Fk:loadTranslationTable{
   ["fuwan"] = "伏完",
   ["#fuwan"] = "沉毅的国丈",
+  ["illustrator:fuwan"] = "LiuHeng",
   ["moukui"] = "谋溃",
   [":moukui"] = "当你使用【杀】指定一名角色为目标后，你可以选择一项：摸一张牌，或弃置其一张牌。若如此做，此【杀】被【闪】抵消时，该角色弃置你的一张牌。",
   ["#moukui-invoke"] = "谋溃：你可以发动“谋溃”，对 %dest 执行一项",
@@ -1199,6 +1205,7 @@ xiahouba:addRelatedSkill("ol_ex__shensu")
 Fk:loadTranslationTable{
   ["xiahouba"] = "夏侯霸",
   ["#xiahouba"] = "棘途壮志",
+  ["illustrator:xiahouba"] = "熊猫探员",
   ["baobian"] = "豹变",
   [":baobian"] = "锁定技，若你的体力值为3或更少，你视为拥有技能〖挑衅〗；若你的体力值为2或更少，你视为拥有技能〖咆哮〗；"..
   "若你的体力值为1，你视为拥有技能〖神速〗。",
@@ -1323,6 +1330,7 @@ chenlin:addSkill(songci)
 Fk:loadTranslationTable{
   ["chenlin"] = "陈琳",
   ["#chenlin"] = "破竹之咒",
+  ["illustrator:chenlin"] = "木美人",
   ["bifa"] = "笔伐",
   [":bifa"] = "结束阶段开始时，你可以将一张手牌移出游戏并指定一名其他角色。该角色的回合开始时，其观看你移出游戏的牌并选择一项："..
   "交给你一张与此牌同类型的手牌并获得此牌；或将此牌置入弃牌堆，然后失去1点体力。",
@@ -1677,6 +1685,7 @@ yuejin:addSkill(xiaoguo)
 Fk:loadTranslationTable{
   ["yuejin"] = "乐进",
   ["#yuejin"] = "奋强突固",
+  ["illustrator:yuejin"] = "巴萨小马",
   ["xiaoguo"] = "骁果",
   [":xiaoguo"] = "其他角色的结束阶段开始时，你可以弃置一张基本牌。若如此做，该角色需弃置一张装备牌并令你摸一张牌，否则受到你对其造成的1点伤害。",
   ["#xiaoguo-invoke"] = "骁果：你可以弃置一张基本牌，%dest 需弃置一张装备牌并令你摸一张牌，否则你对其造成1点伤害",
@@ -1962,6 +1971,7 @@ zhugejin:addSkill(mingzhe)
 Fk:loadTranslationTable{
   ["zhugejin"] = "诸葛瑾",
   ["#zhugejin"] = "联盟的维系者",
+  ["illustrator:zhugejin"] = "G.G.G.",
   ["huanshi"] = "缓释",
   [":huanshi"] = "当一名角色的判定牌生效前，你可以令该角色观看你的手牌并选择你的一张牌，你打出此牌代替之。",
   ["hongyuan"] = "弘援",
@@ -2098,6 +2108,7 @@ panfeng:addSkill(kuangfu)
 Fk:loadTranslationTable{
   ["panfeng"] = "潘凤",
   ["#panfeng"] = "联军上将",
+  ["illustrator:panfeng"] = "G.G.G.",
   ["kuangfu"] = "狂斧",
   [":kuangfu"] = "当你使用【杀】对目标角色造成一次伤害后，你可以选择一项: 将其装备区里的一张牌置入你的装备区；或弃置其装备区里的一张牌。",
   ["kuangfu_move"] = "将其一张装备置入你的装备区",
@@ -2302,6 +2313,7 @@ dingfeng:addSkill(fenxun)
 Fk:loadTranslationTable{
   ["dingfeng"] = "丁奉",
   ["#dingfeng"] = "清侧重臣",
+  ["illustrator:dingfeng"] = "G.G.G.",
   ["duanbing"] = "短兵",
   [":duanbing"] = "你使用【杀】时可以额外选择一名距离为1的其他角色为目标。",
   ["fenxun"] = "奋迅",
@@ -2371,6 +2383,7 @@ zhugedan:addRelatedSkill(weizhong)
 Fk:loadTranslationTable{
   ["zhugedan"] = "诸葛诞",
   ["#zhugedan"] = "薤露蒿里",
+  ["illustrator:zhugedan"] = "雪君S",
   ["gongao"] = "功獒",
   [":gongao"] = "锁定技，当一名角色死亡后，你增加1点体力上限，回复1点体力。",
   ["juyi"] = "举义",
@@ -3034,6 +3047,7 @@ wenpin:addSkill(zhenwei)
 Fk:loadTranslationTable{
   ["wenpin"] = "文聘",
   ["#wenpin"] = "坚城宿将",
+  ["illustrator:wenpin"] = "G.G.G.",
   ["zhenwei"] = "镇卫",
   [":zhenwei"] = "当一名其他角色成为【杀】或黑色锦囊牌的唯一目标时，若该角色的体力值小于你，你可以弃置一张牌并选择一项："..
   "摸一张牌，然后你成为此牌的目标；或令此牌失效并将之移出游戏，该回合结束时令此牌的使用者收回此牌。",
@@ -3121,6 +3135,7 @@ simalang:addSkill(quji)
 Fk:loadTranslationTable{
   ["simalang"] = "司马朗",
   ["#simalang"] = "再世神农",
+  ["illustrator:simalang"] = "Sky",
   ["junbing"] = "郡兵",
   [":junbing"] = "每名角色的结束阶段，若其手牌数小于或等于1，该角色可以摸一张牌，若该角色不是你，则其将所有手牌交给你，然后你将等量的手牌交给其。",
   ["quji"] = "去疾",

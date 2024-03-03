@@ -80,9 +80,10 @@ local lihun = fk.CreateActiveSkill{
   card_filter = function(self, to_select, selected)
     return #selected == 0 and not Self:prohibitDiscard(Fk:getCardById(to_select))
   end,
-  target_filter = function(self, to_select, selected)
+  target_filter = function(self, to_select, selected, cards)
     local target = Fk:currentRoom():getPlayerById(to_select)
-    return #selected == 0 and target.gender == General.Male and not target:isKongcheng()
+    return #selected == 0 and #cards == 1 and
+    not target:isKongcheng() and (target.gender == General.Male or target.gender == General.Bigender)
   end,
   on_use = function(self, room, effect)
     local player = room:getPlayerById(effect.from)
@@ -94,11 +95,11 @@ local lihun = fk.CreateActiveSkill{
     table.insertIfNeed(mark, target.id)
     room:setPlayerMark(player, "lihun-phase", mark)
     room:throwCard(effect.cards, self.name, player, player)
+    player:turnOver()
     if player.dead or target.dead or target:isKongcheng() then return end
     local dummy = Fk:cloneCard("dilu")
     dummy:addSubcards(target:getCardIds("h"))
     room:moveCardTo(dummy, Card.PlayerHand, player, fk.ReasonPrey, self.name, nil, false, player.id)
-    player:turnOver()
   end,
 }
 local lihun_record = fk.CreateTriggerSkill{
@@ -106,7 +107,7 @@ local lihun_record = fk.CreateTriggerSkill{
   mute = true,
   events = {fk.EventPhaseEnd},
   can_trigger = function(self, event, target, player, data)
-    return target == player and player.phase == Player.Play and player:usedSkillTimes("lihun", Player.HistoryPhase) > 0
+    return target == player and player.phase == Player.Play and player:getMark("lihun-phase") ~= 0
   end,
   on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
@@ -115,17 +116,16 @@ local lihun_record = fk.CreateTriggerSkill{
     room:notifySkillInvoked(player, "lihun", "control")
     local mark = player:getMark("lihun-phase")
     for _, id in ipairs(mark) do
+      if player.dead or player:isNude() then return end
       local to = room:getPlayerById(id)
-      if player.dead or to.dead or player:isNude() then return end
-      local n = math.min(to.hp, #player:getCardIds("he"))
-      local dummy = Fk:cloneCard("dilu")
-      if n >= #player:getCardIds("he") then
-        dummy:addSubcards(player:getCardIds("he"))
-      else
-        local cards = room:askForCard(player, n, n, true, "lihun", false, ".", "#lihun-give::"..to.id..":"..n)
-        dummy:addSubcards(cards)
+      if not to.dead then
+        local cards = player:getCardIds("he")
+        local n = to.hp
+        if n < #cards then
+          cards = room:askForCard(player, n, n, true, "lihun", false, ".", "#lihun-give::"..to.id..":"..n)
+        end
+        room:moveCardTo(cards, Card.PlayerHand, to, fk.ReasonGive, "lihun", nil, false, player.id)
       end
-      room:moveCardTo(dummy, Card.PlayerHand, to, fk.ReasonGive, "lihun", nil, false, player.id)
     end
   end,
 }
