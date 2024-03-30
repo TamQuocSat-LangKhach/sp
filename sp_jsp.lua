@@ -157,6 +157,7 @@ machao:addSkill(cihuai)
 Fk:loadTranslationTable{
   ["jsp__machao"] = "马超",
   ["#jsp__machao"] = "西凉的猛狮",
+  ["designer:jsp__machao"] = "伴剑一生",
   ["zhuiji"] = "追击",
   [":zhuiji"] = "锁定技，你计算体力值比你少的角色的距离始终为1。",
   ["cihuai"] = "刺槐",

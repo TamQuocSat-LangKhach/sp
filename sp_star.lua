@@ -58,6 +58,7 @@ Fk:loadTranslationTable{
   ["starsp__zhaoyun"] = "赵云",
   ["#starsp__zhaoyun"] = "白马先锋",
   ["cv:starsp__zhaoyun"] = "彭尧",
+  ["designer:starsp__zhaoyun"] = "danny",
   ["illustrator:starsp__zhaoyun"] = "Vincent",
   ["chongzhen"] = "冲阵",
   [":chongzhen"] = "每当你发动〖龙胆〗使用或打出一张手牌时，你可以立即获得对方的一张手牌。",
@@ -136,6 +137,7 @@ Fk:loadTranslationTable{
   ["starsp__diaochan"] = "貂蝉",
   ["#starsp__diaochan"] = "暗黑的傀儡师",
   ["cv:starsp__diaochan"] = "林簌",
+  ["designer:starsp__diaochan"] = "danny",
   ["illustrator:starsp__diaochan"] = "木美人",
   ["lihun"] = "离魂",
   [":lihun"] = "出牌阶段，你可以弃置一张牌并将你的武将牌翻面，若如此做，指定一名男性角色，获得其所有手牌。"..
@@ -215,6 +217,7 @@ caoren:addSkill(yanzheng)
 Fk:loadTranslationTable{
   ["starsp__caoren"] = "曹仁",
   ["#starsp__caoren"] = "险不辞难",
+  ["designer:starsp__caoren"] = "danny",
   ["illustrator:starsp__caoren"] = "张帅",
   ["kuiwei"] = "溃围",
   [":kuiwei"] = "结束阶段开始时，你可以摸2+X张牌，然后将你的武将牌翻面。若如此做，在你的下个摸牌阶段开始时，你须弃置X张牌。"..
@@ -421,6 +424,7 @@ pangtong:addSkill(zuixiang)
 Fk:loadTranslationTable{
   ["starsp__pangtong"] = "庞统",
   ["#starsp__pangtong"] = "荆楚之高俊",
+  ["designer:starsp__pangtong"] = "danny",
   ["illustrator:starsp__pangtong"] = "LiuHeng",
   ["manjuan"] = "漫卷",
   [":manjuan"] = "每当你将获得任何一张牌，将之置于弃牌堆。若此情况处于你的回合中，你可依次将与该牌点数相同的一张牌从弃牌堆置于你手上。",
@@ -509,6 +513,7 @@ zhangfei:addSkill(dahe)
 Fk:loadTranslationTable{
   ["starsp__zhangfei"] = "张飞",
   ["#starsp__zhangfei"] = "横矛立马",
+  ["designer:starsp__zhangfei"] = "serenddlplly",
   ["illustrator:starsp__zhangfei"] = "绿豆粥",
   ["jyie"] = "嫉恶",
   [":jyie"] = "锁定技，你使用的红色【杀】造成的伤害+1。",
@@ -641,6 +646,7 @@ lvmeng:addRelatedSkill("keji")
 Fk:loadTranslationTable{
   ["starsp__lvmeng"] = "吕蒙",
   ["#starsp__lvmeng"] = "国士之风",
+  ["designer:starsp__lvmeng"] = "老萌",
   ["illustrator:starsp__lvmeng"] = "YellowKiss",
   ["tanhu"] = "探虎",
   [":tanhu"] = "出牌阶段，你可与一名其他角色拼点。若你赢，你获得以下技能直到回合结束：你与该角色的距离视为1，"..
@@ -824,6 +830,7 @@ liubei:addSkill(shichoul)
 Fk:loadTranslationTable{
   ["starsp__liubei"] = "刘备",
   ["#starsp__liubei"] = "汉昭烈帝",
+  ["designer:starsp__liubei"] = "妄想线条",
   ["illustrator:starsp__liubei"] = "Fool头",
   ["zhaolie"] = "昭烈",
   [":zhaolie"] = "摸牌阶段摸牌时，你可以少摸一张，指定你攻击范围内的一名角色亮出牌堆顶上3张牌，将其中的非基本牌和【桃】置于弃牌堆，该角色进行二选一："..
@@ -926,6 +933,7 @@ daqiao:addSkill(anxian)
 Fk:loadTranslationTable{
   ["starsp__daqiao"] = "大乔",
   ["#starsp__daqiao"] = "韶光易逝",
+  ["designer:starsp__daqiao"] = "Ecauchy",
   ["illustrator:starsp__daqiao"] = "木美人",
   ["yanxiao"] = "言笑",
   [":yanxiao"] = "出牌阶段，你可以将一张<font color='red'>♦</font>牌置于一名角色的判定区内，判定区内有“言笑”牌的角色下个判定阶段开始时，"..
@@ -1065,6 +1073,7 @@ ganning:addSkill(junwei)
 Fk:loadTranslationTable{
   ["starsp__ganning"] = "甘宁",
   ["#starsp__ganning"] = "怀铃的乌羽",
+  ["designer:starsp__ganning"] = "飞雪",
   ["illustrator:starsp__ganning"] = "张帅",
   ["yinling"] = "银铃",
   [":yinling"] = "出牌阶段，你可以弃置一张黑色牌并指定一名其他角色，若如此做，你获得其一张牌并置于你的武将牌上，称为“锦”。（数量最多为四）",
@@ -1171,6 +1180,7 @@ xiahoudun:addSkill(xuehen)
 Fk:loadTranslationTable{
   ["starsp__xiahoudun"] = "夏侯惇",
   ["#starsp__xiahoudun"] = "啖睛的苍狼",
+  ["designer:starsp__xiahoudun"] = "舟亢",
   ["illustrator:starsp__xiahoudun"] = "XXX",
   ["fenyong"] = "愤勇",
   [":fenyong"] = "每当你受到一次伤害后，你可以竖置你的体力牌；当你的体力牌为竖置状态时，防止你受到的所有伤害。",

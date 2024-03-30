@@ -555,6 +555,7 @@ machao:addSkill(shichou)
 Fk:loadTranslationTable{
   ["sp__machao"] = "马超",
   ["#sp__machao"] = "西凉的猛狮",
+  ["designer:sp__machao"] = "凌天翼",
   ["illustrator:sp__machao"] = "天空之城",
   ["sp__zhuiji"] = "追击",
   [":sp__zhuiji"] = "锁定技，你计算体力值比你少的角色的距离始终为1。",
@@ -767,6 +768,7 @@ caohong:addSkill(yuanhu)
 Fk:loadTranslationTable{
   ["caohong"] = "曹洪",
   ["#caohong"] = "福将",
+  ["designer:caohong"] = "韩旭",
   ["illustrator:caohong"] = "LiuHeng",
   ["yuanhu"] = "援护",
   [":yuanhu"] = "结束阶段开始时，你可以将一张装备牌置于一名角色的装备区里，然后根据此装备牌的种类执行以下效果：<br>"..
@@ -879,6 +881,7 @@ guanyinping:addSkill(wuji)
 Fk:loadTranslationTable{
   ["guanyinping"] = "关银屏",
   ["#guanyinping"] = "武姬",
+  ["designer:guanyinping"] = "韩旭",
   ["illustrator:guanyinping"] = "木美人",
   ["xueji"] = "血祭",
   [":xueji"] = "出牌阶段限一次，你可弃置一张红色牌，并对你攻击范围内的至多X名其他角色各造成1点伤害（X为你损失的体力值），然后这些角色各摸一张牌。",
@@ -1001,6 +1004,7 @@ liuxie:addSkill(mizhao)
 Fk:loadTranslationTable{
   ["liuxie"] = "刘协",
   ["#liuxie"] = "受困天子",
+  ["designer:liuxie"] = "韩旭",
   ["illustrator:liuxie"] = "LiuHeng",
   ["tianming"] = "天命",
   [":tianming"] = "当你成为【杀】的目标时，你可以弃置两张牌（不足则全弃，无牌则不弃），然后摸两张牌；然后若场上体力唯一最多的角色不为你，"..
@@ -1330,6 +1334,7 @@ chenlin:addSkill(songci)
 Fk:loadTranslationTable{
   ["chenlin"] = "陈琳",
   ["#chenlin"] = "破竹之咒",
+  ["designer:chenlin"] = "韩旭",
   ["illustrator:chenlin"] = "木美人",
   ["bifa"] = "笔伐",
   [":bifa"] = "结束阶段开始时，你可以将一张手牌移出游戏并指定一名其他角色。该角色的回合开始时，其观看你移出游戏的牌并选择一项："..
@@ -2959,6 +2964,7 @@ Fk:loadTranslationTable{
   ["huangjinleishi"] = "黄巾雷使",
   ["#huangjinleishi"] = "雷祭之姝",
   ["cv:huangjinleishi"] = "穆小橘v（新月杀原创）",
+  ["designer:huangjinleishi"] = "韩旭",
   ["illustrator:huangjinleishi"] = "depp",
   ["fulu"] = "符箓",
   [":fulu"] = "你可以将【杀】当雷【杀】使用。",
@@ -3075,16 +3081,13 @@ local junbing = fk.CreateTriggerSkill{
     local room = player.room
     room:drawCards(target, 1, self.name)
     if target == player or target.dead or player.dead or target:isKongcheng() then return false end
-    local dummy1 = Fk:cloneCard("dilu")
-    dummy1:addSubcards(target.player_cards[Player.Hand])
-    room:obtainCard(player.id, dummy1, false, fk.ReasonGive)
+    local dummy = target:getCardIds("h")
+    room:moveCardTo(dummy, Player.Hand, player, fk.ReasonGive, self.name, nil, false, target.id)
     if target.dead or player.dead or player:isKongcheng() then return end
-    local n = #dummy1.subcards
+    local n = #dummy
     local cards = room:askForCard(player, math.min(n, player:getHandcardNum()), n, false, self.name, false, ".",
       "#junbing-give::"..target.id..":"..n)
-    local dummy2 = Fk:cloneCard("dilu")
-    dummy2:addSubcards(cards)
-    room:obtainCard(target.id, dummy2, false, fk.ReasonGive)
+    room:moveCardTo(cards, Player.Hand, target, fk.ReasonGive, self.name, nil, false, player.id)
   end,
 }
 local quji = fk.CreateActiveSkill{
@@ -3097,25 +3100,21 @@ local quji = fk.CreateActiveSkill{
   can_use = function(self, player)
     return player:isWounded() and player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
   end,
-  card_filter = function(self, to_select, selected, targets)
+  card_filter = function(self, to_select, selected)
     return #selected < Self:getLostHp()
   end,
   target_filter = function(self, to_select, selected, cards)
     return #selected < Self:getLostHp() and Fk:currentRoom():getPlayerById(to_select):isWounded()
+    and #cards == Self:getLostHp()
   end,
   on_use = function(self, room, effect)
     local player = room:getPlayerById(effect.from)
-    local loseHp = false
-    for _, id in ipairs(effect.cards) do
-      if Fk:getCardById(id).color == Card.Black then
-        loseHp = true
-        break
-      end
-    end
+    local loseHp = table.find(effect.cards, function(id) return Fk:getCardById(id).color == Card.Black end)
     room:throwCard(effect.cards, self.name, player, player)
-    local to
-    for i = 1, #effect.tos, 1 do
-      to = room:getPlayerById(effect.tos[i])
+    local tos = effect.tos
+    room:sortPlayersByAction(tos)
+    for _, pid in ipairs(tos) do
+      local to = room:getPlayerById(pid)
       if not to.dead and to:isWounded() then
         room:recover({
           who = to,
@@ -3135,6 +3134,7 @@ simalang:addSkill(quji)
 Fk:loadTranslationTable{
   ["simalang"] = "司马朗",
   ["#simalang"] = "再世神农",
+  ["designer:simalang"] = "韩旭",
   ["illustrator:simalang"] = "Sky",
   ["junbing"] = "郡兵",
   [":junbing"] = "每名角色的结束阶段，若其手牌数小于或等于1，该角色可以摸一张牌，若该角色不是你，则其将所有手牌交给你，然后你将等量的手牌交给其。",
