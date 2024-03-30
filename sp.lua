@@ -1976,6 +1976,7 @@ zhugejin:addSkill(mingzhe)
 Fk:loadTranslationTable{
   ["zhugejin"] = "诸葛瑾",
   ["#zhugejin"] = "联盟的维系者",
+  ["designer:zhugejin"] = "韩旭",
   ["illustrator:zhugejin"] = "G.G.G.",
   ["huanshi"] = "缓释",
   [":huanshi"] = "当一名角色的判定牌生效前，你可以令该角色观看你的手牌并选择你的一张牌，你打出此牌代替之。",
@@ -2388,6 +2389,7 @@ zhugedan:addRelatedSkill(weizhong)
 Fk:loadTranslationTable{
   ["zhugedan"] = "诸葛诞",
   ["#zhugedan"] = "薤露蒿里",
+  ["designer:zhugedan"] = "韩旭",
   ["illustrator:zhugedan"] = "雪君S",
   ["gongao"] = "功獒",
   [":gongao"] = "锁定技，当一名角色死亡后，你增加1点体力上限，回复1点体力。",
@@ -2414,7 +2416,7 @@ local zhendu = fk.CreateTriggerSkill{
     return target ~= player and target.phase == Player.Play and player:hasSkill(self) and not player:isKongcheng() and not target.dead
   end,
   on_cost = function(self, event, target, player, data)
-    local card = player.room:askForDiscard(player, 1, 1, false, self.name, true, ".|.|.|hand|.|.", "#zhendu-invoke::"..target.id, true)
+    local card = player.room:askForDiscard(player, 1, 1, false, self.name, true, ".|.|.|hand", "#zhendu-invoke::"..target.id, true)
     if #card > 0 then
       self.cost_data = card
       return true
@@ -2424,7 +2426,9 @@ local zhendu = fk.CreateTriggerSkill{
     local room = player.room
     room:doIndicate(player.id, {target.id})
     room:throwCard(self.cost_data, self.name, player, player)
-    if not target.dead and room:useVirtualCard("analeptic", nil, target, target, self.name, false) and not target.dead then
+    if not target.dead and target:canUseTo(Fk:cloneCard("analeptic"), target) then
+      room:useVirtualCard("analeptic", nil, target, target, self.name, false)
+      if target.dead then return end
       room:damage{
         from = player,
         to = target,
