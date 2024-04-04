@@ -160,9 +160,16 @@ local weidi = fk.CreateTriggerSkill{
   events = {fk.GameStart, fk.EventAcquireSkill},
   frequency = Skill.Compulsory,
   can_trigger = function(self, event, target, player, data)
-    if player:hasSkill(self) and target ~= player then
-      if event == fk.GameStart then
-        return true
+    if not player:hasSkill(self) then return false end
+    local lordCheck = table.find(player.room.alive_players, function (p)
+      return p ~= player and p.role == "lord" and
+      table.find(p.player_skills, function(s) return s.lordSkill and not player:hasSkill(s, true) end)
+    end)
+    if event == fk.GameStart then
+      return lordCheck
+    else
+      if target == player then
+        return data == self and player.room:getTag("RoundCount") and lordCheck
       else
         return data.lordSkill and not player:hasSkill(data, true) and target.role == "lord"
       end
@@ -171,12 +178,13 @@ local weidi = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local room = player.room
     local skills = {}
-    if event == fk.GameStart then
-      local lord = room:getLord()
-      if lord and lord ~= player then
-        for _, s in ipairs(lord.player_skills) do
-          if s.lordSkill then
-            table.insert(skills, s.name)
+    if event == fk.GameStart or target == player then
+      for _, p in ipairs(room.alive_players) do
+        if p ~= player and p.role == "lord" then
+          for _, s in ipairs(p.player_skills) do
+            if s.lordSkill and not player:hasSkill(s, true)  then
+              table.insert(skills, s.name)
+            end
           end
         end
       end
