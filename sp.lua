@@ -1419,7 +1419,7 @@ local xingwu = fk.CreateTriggerSkill{
 
   refresh_events = {fk.CardUsing},
   can_refresh = function(self, event, target, player, data)
-    return player:hasSkill(self.name, true) and target == player and player.phase ~= Player.NotActive
+    return player:hasSkill(self, true) and target == player and player.phase ~= Player.NotActive
   end,
   on_refresh = function(self, event, target, player, data)
     local colors = player:getMark("xingwu-turn")
@@ -1439,7 +1439,7 @@ local luoyan = fk.CreateTriggerSkill{
 
   refresh_events = {fk.AfterCardsMove},
   can_refresh = function(self, event, target, player, data)
-    if player:hasSkill(self.name, true) and player.phase == Player.Discard then
+    if player:hasSkill(self, true) and player.phase == Player.Discard then
       for _, move in ipairs(data) do
         if move.skillName == "xingwu" then
           return true
@@ -2699,16 +2699,14 @@ local zishu = fk.CreateTriggerSkill{
   events = {fk.TurnEnd, fk.AfterCardsMove},
   can_trigger = function(self, event, target, player, data)
     if player:hasSkill(self) then
-      if event == fk.TurnEnd and target ~= player then
-        for _, id in ipairs(player:getCardIds(Player.Hand)) do
-          if Fk:getCardById(id):getMark("@@zishu-inhand") > 0 then
+      if event == fk.TurnEnd then
+        return target ~= player and table.find(player.player_cards[Player.Hand], function (id)
+          return Fk:getCardById(id):getMark("@@zishu-inhand") > 0
+        end)
+      elseif player.phase ~= Player.NotActive then
+        for _, move in ipairs(data) do
+          if move.to == player.id and move.toArea == Player.Hand and move.skillName ~= self.name then
             return true
-          end
-        end
-      else
-        if player.phase ~= Player.NotActive then
-          for _, move in ipairs(data) do
-            return move.to == player.id and move.toArea == Player.Hand and move.skillName ~= self.name
           end
         end
       end
@@ -2745,9 +2743,12 @@ local zishu = fk.CreateTriggerSkill{
   refresh_events = {fk.AfterCardsMove, fk.AfterTurnEnd},
   can_refresh = function(self, event, target, player, data)
     if event == fk.AfterCardsMove then
-      return player:hasSkill(self.name, true) and player.phase == Player.NotActive
+      return player:hasSkill(self, true) and player.phase == Player.NotActive
+    else
+      table.find(player.player_cards[Player.Hand], function (id)
+        return Fk:getCardById(id):getMark("@@zishu-inhand") > 0
+      end)
     end
-    return true
   end,
   on_refresh = function(self, event, target, player, data)
     local room = player.room
