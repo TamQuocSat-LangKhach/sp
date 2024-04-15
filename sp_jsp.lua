@@ -6,6 +6,8 @@ Fk:loadTranslationTable{
   ["jsp"] = "JSP",
 }
 
+local U = require "packages/utility/utility"
+
 local sunshangxiang = General(extension, "jsp__sunshangxiang", "shu", 3, 3, General.Female)
 local liangzhu = fk.CreateTriggerSkill{
   name = "liangzhu",
@@ -22,11 +24,12 @@ local liangzhu = fk.CreateTriggerSkill{
     local choice = room:askForChoice(player, {"draw1", "liangzhu_draw2"}, self.name)
     if choice == "draw1" then
       player:drawCards(1, self.name)
-      room:setPlayerMark(player, self.name, 1)
     else
       room:doIndicate(player.id, {target.id})
       target:drawCards(2, self.name)
-      room:setPlayerMark(target, self.name, 1)
+      local mark = U.getMark(player, "liangzhu_target")
+      table.insertIfNeed(mark, target.id)
+      room:setPlayerMark(target, "liangzhu_target", mark)
     end
   end,
 }
@@ -40,12 +43,14 @@ local fanxiang = fk.CreateTriggerSkill{
       player:usedSkillTimes(self.name, Player.HistoryGame) == 0
   end,
   can_wake = function(self, event, target, player, data)
-    return table.find(player.room.alive_players, function(p) return p:isWounded() and p:getMark("liangzhu") > 0 end)
+    return table.find(player.room.alive_players, function(p) 
+      return p:isWounded() and table.contains(U.getMark(player, "liangzhu_target"), p.id)
+    end)
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
     room:changeMaxHp(player, 1)
-    if player:isWounded() then
+    if not player.dead and player:isWounded() then
       room:recover({
         who = player,
         num = 1,
@@ -62,11 +67,11 @@ sunshangxiang:addRelatedSkill("xiaoji")
 Fk:loadTranslationTable{
   ["jsp__sunshangxiang"] = "孙尚香",
   ["#jsp__sunshangxiang"] = "梦醉良缘",
+  ["designer:jsp__sunshangxiang"] = "韩旭",
   ["liangzhu"] = "良助",
-  [":liangzhu"] = "当一名角色于其出牌阶段内回复体力时，你可以选择一项：摸一张牌，或令该角色摸两张牌。",
+  [":liangzhu"] = "当一名角色于其出牌阶段内回复体力时，你可以选择一项：1.摸一张牌；2.令该角色摸两张牌。",
   ["fanxiang"] = "返乡",
-  [":fanxiang"] = "觉醒技，准备阶段开始时，若全场有至少一名已受伤的角色，且你曾发动〖良助〗令其摸牌，则你回复1点体力和体力上限，"..
-  "失去技能〖良助〗并获得技能〖枭姬〗。",
+  [":fanxiang"] = "觉醒技，准备阶段开始时，若全场有至少一名已受伤的角色，且你令其执行过〖良助〗选项2的效果，则你加1点体力上限并回复1点体力，失去技能〖良助〗并获得技能〖枭姬〗。",
   ["#liangzhu-invoke"] = "良助：你可以摸一张牌或令 %dest 摸两张牌",
   ["liangzhu_draw2"] = "其摸两张牌",
 
