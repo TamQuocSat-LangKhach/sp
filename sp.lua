@@ -588,7 +588,7 @@ local zhenlue = fk.CreateTriggerSkill{
       data.card.type == Card.TypeTrick and data.card.sub_type ~= Card.SubtypeDelayedTrick
   end,
   on_use = function(self, event, target, player, data)
-    data.prohibitedCardNames = {"nullification"}
+    data.unoffsetableList = table.map(player.room.alive_players, Util.IdMapper)
   end,
 }
 local zhenlue_prohibit = fk.CreateProhibitSkill{
@@ -687,9 +687,10 @@ jiaxu:addSkill(yongdi)
 Fk:loadTranslationTable{
   ["sp__jiaxu"] = "贾诩",
   ["#sp__jiaxu"] = "算无遗策",
+  ["designer:sp__jiaxu"] = "千幻",
   ["illustrator:sp__jiaxu"] = "雪君S",
   ["zhenlue"] = "缜略",
-  [":zhenlue"] = "锁定技，你使用的非延时锦囊牌不能被【无懈可击】响应，你不能被选择为延时锦囊牌的目标。",
+  [":zhenlue"] = "锁定技，你使用的非延时锦囊牌不能被抵消，你不能被选择为延时锦囊牌的目标。",
   ["jianshu"] = "间书",
   [":jianshu"] = "限定技，出牌阶段，你可以将一张黑色手牌交给一名其他角色，并选择一名攻击范围内含有其的另一名角色。"..
   "然后令这两名角色拼点：赢的角色弃置两张牌，没赢的角色失去1点体力。",

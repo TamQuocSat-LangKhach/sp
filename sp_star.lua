@@ -575,7 +575,7 @@ local tanhu_trigger = fk.CreateTriggerSkill{
     return true
   end,
   on_use = function(self, event, target, player, data)
-    data.prohibitedCardNames = {"nullification"}
+    data.unoffsetableList = table.map(player.room.alive_players, Util.IdMapper)
   end,
 }
 local mouduan = fk.CreateTriggerSkill{
@@ -650,7 +650,7 @@ Fk:loadTranslationTable{
   ["illustrator:starsp__lvmeng"] = "YellowKiss",
   ["tanhu"] = "探虎",
   [":tanhu"] = "出牌阶段，你可与一名其他角色拼点。若你赢，你获得以下技能直到回合结束：你与该角色的距离视为1，"..
-  "你对该角色使用的非延时类锦囊牌不能被【无懈可击】抵消。每阶段限一次。",
+  "你对该角色使用的非延时类锦囊牌不能被抵消。每阶段限一次。",
   ["mouduan"] = "谋断",
   [":mouduan"] = "转化技，通常状态下，你拥有标记“武”并拥有技能〖激昂〗和〖谦逊〗。当你的手牌数为2张或以下时，你须将你的标记翻面为“文”，"..
   "将该两项技能转化为〖英姿〗和〖克己〗。任一角色的回合开始前，你可弃一张牌将标记翻回。<br>"..
