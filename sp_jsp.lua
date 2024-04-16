@@ -29,7 +29,7 @@ local liangzhu = fk.CreateTriggerSkill{
       target:drawCards(2, self.name)
       local mark = U.getMark(player, "liangzhu_target")
       table.insertIfNeed(mark, target.id)
-      room:setPlayerMark(target, "liangzhu_target", mark)
+      room:setPlayerMark(player, "liangzhu_target", mark)
     end
   end,
 }
@@ -88,15 +88,10 @@ local machao = General(extension, "jsp__machao", "qun", 4)
 local zhuiji = fk.CreateDistanceSkill{
   name = "zhuiji",
   frequency = Skill.Compulsory,
-  correct_func = function(self, from, to)
-    if from:hasSkill(self) then
-      if from.hp > to.hp then
-        from:setFixedDistance(to, 1)
-      else
-        from:removeFixedDistance(to)
-      end
+  fixed_func = function(self, from, to)
+    if from:hasSkill(self) and from.hp > to.hp then
+      return 1
     end
-    return 0
   end,
 }
 local cihuai = fk.CreateViewAsSkill{
@@ -460,6 +455,7 @@ local jiqiao = fk.CreateTriggerSkill{
       toArea = Card.Processing,
       moveReason = fk.ReasonJustMove,
       skillName = self.name,
+      proposer = player.id,
     }
     local get = {}
     for i = #cards, 1, -1 do

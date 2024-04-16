@@ -686,6 +686,8 @@ local zhaolie = fk.CreateTriggerSkill{
       ids = cards,
       toArea = Card.Processing,
       moveReason = fk.ReasonJustMove,
+      skillName = self.name,
+      proposer = player.id,
     })
     local get = {}
     local throw = {}
