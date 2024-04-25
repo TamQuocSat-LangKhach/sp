@@ -1246,7 +1246,7 @@ local bifa = fk.CreateTriggerSkill{
   on_cost = function(self, event, target, player, data)
     local targets = table.map(table.filter(player.room:getOtherPlayers(player), function(p)
       return #p:getPile(self.name) == 0 end), Util.IdMapper)
-    local tos, id = player.room:askForChooseCardAndPlayers(player, targets, 1, 1, ".|.|.|hand|.|.", "#bifa-cost", self.name, true)
+    local tos, id = player.room:askForChooseCardAndPlayers(player, targets, 1, 1, ".|.|.|hand", "#bifa-cost", self.name, true)
     if #tos > 0 then
       self.cost_data = {tos[1], id}
       return true
@@ -1256,7 +1256,7 @@ local bifa = fk.CreateTriggerSkill{
     local room = player.room
     local to = room:getPlayerById(self.cost_data[1])
     room:setPlayerMark(player, "bifa_to", to.id)
-    to:addToPile(self.name, self.cost_data[2], false, self.name)
+    to:addToPile(self.name, self.cost_data[2], false, self.name, player.id, {})
   end,
 }
 local bifa_trigger = fk.CreateTriggerSkill{
@@ -1269,13 +1269,9 @@ local bifa_trigger = fk.CreateTriggerSkill{
   on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    local src = nil
-    for _, p in ipairs(room.alive_players) do
-      if p:getMark("bifa_to") == player.id then
-        src = p
-        break
-      end
-    end
+    local src = table.find(room.alive_players, function (p)
+      return p:getMark("bifa_to") == player.id
+    end)
     if src == nil or player:isKongcheng() then
       room:loseHp(player, 1, "bifa")
       room:moveCards({
@@ -1291,15 +1287,16 @@ local bifa_trigger = fk.CreateTriggerSkill{
     room:notifySkillInvoked(src, "bifa", "control")
     room:doIndicate(src.id, {player.id})
     room:setPlayerMark(src, "bifa_to", 0)
-    local type = Fk:getCardById(player:getPile("bifa")[1]):getTypeString()
-    local card = room:askForCard(player, 1, 1, false, "bifa", true, ".|.|.|hand|.|"..type, "#bifa-invoke:"..src.id.."::"..type)
-    if #card > 0 then
-      room:moveCardTo(Fk:getCardById(card[1]), Card.PlayerHand, src, fk.ReasonGive, "bifa", nil, false, player.id)
+    local card = Fk:getCardById(player:getPile("bifa")[1])
+    local type = card:getTypeString()
+    local give = room:askForCard(player, 1, 1, false, "bifa", true, ".|.|.|hand|.|"..type,
+    "#bifa-invoke:"..src.id.."::"..type..":"..card:toLogString())
+    if #give > 0 then
+      room:moveCardTo(give, Card.PlayerHand, src, fk.ReasonGive, "bifa", nil, false, player.id)
       if not player.dead and #player:getPile("bifa") > 0 then
-        room:moveCardTo(Fk:getCardById(player:getPile("bifa")[1]), Card.PlayerHand, player, fk.ReasonJustMove, "bifa", nil, false, player.id)
+        room:moveCardTo(player:getPile("bifa"), Card.PlayerHand, player, fk.ReasonPrey, "bifa", nil, false, player.id)
       end
     else
-      room:loseHp(player, 1, "bifa")
       room:moveCards({
         from = player.id,
         ids = player:getPile("bifa"),
@@ -1307,6 +1304,9 @@ local bifa_trigger = fk.CreateTriggerSkill{
         moveReason = fk.ReasonPutIntoDiscardPile,
         skillName = "bifa",
       })
+      if not player.dead then
+        room:loseHp(player, 1, "bifa")
+      end
     end
   end,
 }
@@ -1351,7 +1351,7 @@ Fk:loadTranslationTable{
   ["songci"] = "颂词",
   [":songci"] = "出牌阶段，你可以选择一项：令一名手牌数小于其体力值的角色摸两张牌；或令一名手牌数大于其体力值的角色弃置两张牌。此技能对每名角色只能用一次。",
   ["#bifa-cost"] = "笔伐：将一张手牌移出游戏并指定一名其他角色",
-  ["#bifa-invoke"] = "笔伐：交给 %src 一张%arg并获得此牌；或点“取消”将此牌置入弃牌堆并失去1点体力",
+  ["#bifa-invoke"] = "笔伐：交给 %src 一张 %arg 并获得%arg2；或点“取消”将此牌置入弃牌堆并失去1点体力",
 
   ["$bifa1"] = "笔墨纸砚，皆兵器也！",
   ["$bifa2"] = "汝德行败坏，人所不齿也！",
