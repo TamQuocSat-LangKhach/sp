@@ -268,6 +268,7 @@ lvbu:addSkill("mashu")
 lvbu:addSkill("wushuang")
 Fk:loadTranslationTable{
   ["hulao__godlvbu1"] = "神吕布",
+  ["#hulao__godlvbu1"] = "最强神话",
 }
 
 local lvbu2 = General(extension, "hulao__godlvbu2", "god", 4)
@@ -296,14 +297,66 @@ local xiuluo = fk.CreateTriggerSkill{
     local cards = table.filter(player:getCardIds(Player.Judge), function(id)
       return Fk:getCardById(id, true).suit == suit end)
     if #cards == 0 then return false end
-    local id = room:askForCardChosen(player, player, {
+    local cid = room:askForCardChosen(player, player, {
       card_data = {
         { "$Judge", cards }
       }
     }, self.name)
-    room:throwCard(id, self.name, player, player)
+    room:throwCard(cid, self.name, player, player)
+    while #player:getCardIds(Player.Judge) > 0 and not player:isKongcheng() and not player.dead do
+      local pattern = ".|.|"..table.concat(table.map(player:getCardIds(Player.Judge), function(id)
+        return Fk:getCardById(id, true):getSuitString() end), ",")
+      local card = room:askForDiscard(player, 1, 1, false, self.name, true, pattern, "#xiuluo-invoke")
+      if #card == 0 then break end
+      suit = Fk:getCardById(card[1], true).suit
+      cards = table.filter(player:getCardIds(Player.Judge), function(id)
+        return Fk:getCardById(id, true).suit == suit end)
+      if #cards > 0 then
+        cid = room:askForCardChosen(player, player, { card_data = { { "$Judge", cards } } }, self.name)
+        room:throwCard(cid, self.name, player, player)
+      end
+    end
   end
 }
+local hulao__shenwei = fk.CreateTriggerSkill{
+  name = "hulao__shenwei",
+  anim_type = "drawcard",
+  frequency = Skill.Compulsory,
+  events = {fk.DrawNCards},
+  on_use = function(self, event, target, player, data)
+    data.n = data.n + math.min(3, #player.room:getOtherPlayers(player))
+  end,
+}
+local hulao__shenwei_maxcards = fk.CreateMaxCardsSkill{
+  name = "#hulao__shenwei_maxcards",
+  correct_func = function(self, player)
+    if player:hasSkill(hulao__shenwei) then
+      return math.min(3, #table.filter(Fk:currentRoom().alive_players, function (p)
+        return p ~= player
+      end))
+    end
+  end,
+}
+local shenji = fk.CreateTargetModSkill{
+  name = "shenji",
+  anim_type = "offensive",
+  residue_func = function(self, player, skill, scope)
+    if player:hasSkill(self) and skill.trueName == "slash_skill" and scope == Player.HistoryPhase then
+      return 1
+    end
+  end,
+  extra_target_func = function(self, player, skill)
+    if player:hasSkill(self) and skill.trueName == "slash_skill" then
+      return 2
+    end
+  end,
+}
+hulao__shenwei:addRelatedSkill(hulao__shenwei_maxcards)
+lvbu2:addSkill("mashu")
+lvbu2:addSkill("wushuang")
+lvbu2:addSkill(xiuluo)
+lvbu2:addSkill(hulao__shenwei)
+lvbu2:addSkill(shenji)
 local shenwei = fk.CreateTriggerSkill{
   name = "shenwei",
   anim_type = "drawcard",
@@ -316,41 +369,30 @@ local shenwei = fk.CreateTriggerSkill{
 local shenwei_maxcards = fk.CreateMaxCardsSkill{
   name = "#shenwei_maxcards",
   correct_func = function(self, player)
-    if player:hasSkill(self) then
-      return 2
-    end
-  end,
-}
-local shenji = fk.CreateTargetModSkill{
-  name = "shenji",
-  anim_type = "offensive",
-  extra_target_func = function(self, player, skill)
-    if player:hasSkill(self) and player:getEquipment(Card.SubtypeWeapon) == nil and skill.trueName == "slash_skill" then
+    if player:hasSkill(shenwei) then
       return 2
     end
   end,
 }
 shenwei:addRelatedSkill(shenwei_maxcards)
-lvbu2:addSkill("mashu")
-lvbu2:addSkill("wushuang")
-lvbu2:addSkill(xiuluo)
-lvbu2:addSkill(shenwei)
-lvbu2:addSkill(shenji)
+Fk:addSkill(shenwei)
 Fk:loadTranslationTable{
   ["hulao__godlvbu2"] = "神吕布",
-  ["#hulao__godlvbu2"] = "修罗之道",
+  ["#hulao__godlvbu2"] = "暴怒的战神",
   ["xiuluo"] = "修罗",
-  [":xiuluo"] = "准备阶段，你可以弃一张手牌来弃置你判定区里的一张延时类锦囊（必须花色相同）。",
+  [":xiuluo"] = "准备阶段，你可以弃置与你判定区内一张牌花色相同的一张手牌，弃置你判定区内的此牌且你可以重复此流程。",
+  ["hulao__shenwei"] = "神威",
+  [":hulao__shenwei"] = "锁定技，摸牌阶段，你额外摸X张牌；你的手牌上限+X（X为其他存活角色数且至多为3）。",
   ["shenwei"] = "神威",
   [":shenwei"] = "锁定技，摸牌阶段，你额外摸两张牌；你的手牌上限+2。",
   ["shenji"] = "神戟",
-  [":shenji"] = "没装备武器牌时，你使用的【杀】可指定至多三名角色为目标。",
+  [":shenji"] = "你使用【杀】的次数上限+1，额定目标数上限+2。",
   ["#xiuluo-invoke"] = "修罗：你可以弃一张花色相同的手牌，以弃置你判定区里的一张延时锦囊",
 
   ["$xiuluo1"] = "准备受死吧！",
   ["$xiuluo2"] = "鼠辈，螳臂当车！",
-  ["$shenwei1"] = "荧烛之火，也敢与日月争辉！",
-  ["$shenwei2"] = "我不会输给任何人！",
+  ["$hulao__shenwei1"] = "荧烛之火，也敢与日月争辉！",
+  ["$hulao__shenwei2"] = "我不会输给任何人！",
   ["$shenji1"] = "杂鱼们，都去死吧！",
   ["$shenji2"] = "竟想赢我，痴人说梦！",
   ["~hulao__godlvbu2"] = "虎牢关……失守了……",
