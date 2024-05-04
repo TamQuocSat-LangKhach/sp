@@ -466,9 +466,7 @@ local jiqiao = fk.CreateTriggerSkill{
     end
     if #get > 0 then
       room:delay(1000)
-      local dummy = Fk:cloneCard("dilu")
-      dummy:addSubcards(get)
-      room:obtainCard(player.id, dummy, true, fk.ReasonJustMove)
+      room:obtainCard(player.id, get, true, fk.ReasonJustMove)
     end
     if #cards > 0 then
       room:delay(1000)

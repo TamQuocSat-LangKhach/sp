@@ -371,9 +371,7 @@ local pojun = fk.CreateTriggerSkill{
     local room = player.room
     for _, p in ipairs(room:getAlivePlayers()) do
       if #p:getPile(self.name) > 0 then
-        local dummy = Fk:cloneCard("dilu")
-        dummy:addSubcards(p:getPile(self.name))
-        room:obtainCard(p.id, dummy, false, fk.ReasonJustMove)
+        room:obtainCard(p.id, p:getPile(self.name), false, fk.ReasonJustMove)
       end
     end
   end,

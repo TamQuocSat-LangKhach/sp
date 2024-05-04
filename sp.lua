@@ -1091,9 +1091,7 @@ local mizhao = fk.CreateActiveSkill{
   on_use = function(self, room, effect)
     local player = room:getPlayerById(effect.from)
     local target = room:getPlayerById(effect.tos[1])
-    local dummy = Fk:cloneCard("dilu")
-    dummy:addSubcards(player:getCardIds("h"))
-    room:obtainCard(target.id, dummy, false, fk.ReasonGive)
+    room:obtainCard(target.id, player:getCardIds(Player.Hand), false, fk.ReasonGive, player.id)
     if player.dead or target.dead or target:isKongcheng() then return end
     local targets = table.filter(room:getOtherPlayers(player), function(p)
       return target:canPindian(p) and p ~= target
@@ -3206,11 +3204,11 @@ local junbing = fk.CreateTriggerSkill{
     local room = player.room
     room:drawCards(target, 1, self.name)
     if target == player or target.dead or player.dead or target:isKongcheng() then return false end
-    local dummy = target:getCardIds("h")
-    room:moveCardTo(dummy, Player.Hand, player, fk.ReasonGive, self.name, nil, false, target.id)
+    local cards = target:getCardIds(Player.Hand)
+    room:moveCardTo(cards, Player.Hand, player, fk.ReasonGive, self.name, nil, false, target.id)
     if target.dead or player.dead or player:isKongcheng() then return end
-    local n = #dummy
-    local cards = room:askForCard(player, math.min(n, player:getHandcardNum()), n, false, self.name, false, ".",
+    local n = math.min(#cards, player:getHandcardNum())
+    cards = room:askForCard(player, n, n, false, self.name, false, ".",
       "#junbing-give::"..target.id..":"..n)
     room:moveCardTo(cards, Player.Hand, target, fk.ReasonGive, self.name, nil, false, player.id)
   end,

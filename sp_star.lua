@@ -98,9 +98,7 @@ local lihun = fk.CreateActiveSkill{
     room:throwCard(effect.cards, self.name, player, player)
     player:turnOver()
     if player.dead or target.dead or target:isKongcheng() then return end
-    local dummy = Fk:cloneCard("dilu")
-    dummy:addSubcards(target:getCardIds("h"))
-    room:moveCardTo(dummy, Card.PlayerHand, player, fk.ReasonPrey, self.name, nil, false, player.id)
+    room:moveCardTo(target:getCardIds(Player.Hand), Card.PlayerHand, player, fk.ReasonPrey, self.name, nil, false, player.id)
   end,
 }
 local lihun_record = fk.CreateTriggerSkill{
@@ -321,9 +319,7 @@ local zuixiang = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local room = player.room
     local cards = room:getNCards(3)
-    local dummy = Fk:cloneCard("dilu")
-    dummy:addSubcards(cards)
-    player:addToPile(self.name, dummy, true, self.name)
+    player:addToPile(self.name, cards, true, self.name)
     local number = {}
     for i = 1, #player:getPile(self.name), 1 do
       table.insertIfNeed(number, Fk:getCardById(player:getPile(self.name)[i], true).number)
@@ -708,8 +704,6 @@ local zhaolie = fk.CreateTriggerSkill{
       })
     end
     if #get > 0 then
-      local dummy = Fk:cloneCard("dilu")
-      dummy:addSubcards(get)
       if to:isNude() or #to:getCardIds{Player.Hand, Player.Equip} < #get then
         room:damage{
           from = player,
@@ -718,7 +712,7 @@ local zhaolie = fk.CreateTriggerSkill{
           skillName = self.name,
         }
         if not to.dead then
-          room:obtainCard(to.id, dummy, true, fk.ReasonJustMove)
+          room:obtainCard(to.id, get, true, fk.ReasonJustMove)
         end
       else
         if #room:askForDiscard(to, 1, 1, true, self.name, true, ".",
@@ -726,7 +720,7 @@ local zhaolie = fk.CreateTriggerSkill{
           for i = 1, #get - 1, 1 do
             room:askForDiscard(to, 1, 1, true, self.name, false)
           end
-          room:obtainCard(player.id, dummy, true, fk.ReasonJustMove)
+          room:obtainCard(player.id, get, true, fk.ReasonJustMove)
         else
           room:damage{
             from = player,
@@ -735,7 +729,7 @@ local zhaolie = fk.CreateTriggerSkill{
             skillName = self.name,
           }
           if not to.dead then
-            room:obtainCard(to.id, dummy, true, fk.ReasonJustMove)
+            room:obtainCard(to.id, get, true, fk.ReasonJustMove)
           end
         end
       end
@@ -744,28 +738,32 @@ local zhaolie = fk.CreateTriggerSkill{
 }
 local shichoul = fk.CreateTriggerSkill{
   name = "shichoul$",
-  -- anim_type = "control",
-  -- frequency = Skill.Limited,
+  anim_type = "control",
+  frequency = Skill.Limited,
   mute = true,
-  events = {fk.EventPhaseStart, fk.DamageInflicted},
+  events = {fk.TurnStart, fk.DamageInflicted},
   can_trigger = function(self, event, target, player, data)
     if target == player then
-      if event == fk.EventPhaseStart then
+      if event == fk.TurnStart then
         return player:hasSkill(self) and player:usedSkillTimes(self.name, Player.HistoryGame) == 0 and
-          #player:getCardIds{Player.Hand, Player.Equip} > 1
+        #player:getCardIds{Player.Hand, Player.Equip} > 1 and table.find(player.room.alive_players, function(p)
+          return p ~= player and p.kingdom == "shu"
+        end)
       else
         return player:getMark("shichoul") ~= 0 and not player.room:getPlayerById(player:getMark("shichoul")).dead
       end
     end
   end,
   on_cost = function(self, event, target, player, data)
-    if event == fk.EventPhaseStart then
+    if event == fk.TurnStart then
       local room = player.room
-      local targets = table.map(table.filter(room:getOtherPlayers(player),
-        function(p) return p.kingdom == "shu" end), function(p) return p.id end)
+      local targets = table.map(table.filter(room.alive_players,
+        function(p) return p ~= player and p.kingdom == "shu" end), Util.IdMapper)
       if #targets == 0 then return end
-      room:setPlayerMark(player, "shichoul-phase", targets)
-      if room:askForUseActiveSkill(player, "shichoul_active", "#shichoul-invoke", true) then
+      local tos, cards = U.askForChooseCardsAndPlayers(room, player, 2, 2, targets, 1, 1, ".",
+      "#shichoul-invoke", self.name, true, false)
+      if #tos == 1 and #cards == 2 then
+        self.cost_data = {tos, cards}
         return true
       end
     else
@@ -773,13 +771,33 @@ local shichoul = fk.CreateTriggerSkill{
     end
   end,
   on_use = function(self, event, target, player, data)
-    if event == fk.DamageInflicted then
-      local room = player.room
-      local new_data = table.simpleClone(data)
-      new_data.to = room:getPlayerById(player:getMark("shichoul"))
-      room:damage(new_data)
-      if not new_data.to.dead then
-        new_data.to:drawCards(data.damage, self.name)
+    local room = player.room
+    if event == fk.TurnStart then
+      room:notifySkillInvoked(player, self.name)
+      player:broadcastSkillInvoke(self.name)
+      local ret = self.cost_data
+      local to = room:getPlayerById(ret[1][1])
+      room:obtainCard(to, ret[2], false, fk.ReasonGive, player.id)
+      room:setPlayerMark(player, "shichoul", to.id)
+      local mark = to:getMark("@@shichoul")
+      if mark == 0 then mark = {} end
+      table.insert(mark, player.id)
+      room:setPlayerMark(to, "@@shichoul", mark)  --小心伪帝！
+    elseif event == fk.DamageInflicted then
+      room:notifySkillInvoked(player, self.name, "defensive")
+      player:broadcastSkillInvoke(self.name)
+      local to = room:getPlayerById(player:getMark("shichoul"))
+      room:damage{
+        from = data.from,
+        to = to,
+        damage = data.damage,
+        damageType = data.damageType,
+        skillName = data.skillName,
+        chain = data.chain,
+        card = data.card,
+      }
+      if not to.dead then
+        to:drawCards(data.damage, self.name)
       end
       return true
     end
@@ -802,31 +820,7 @@ local shichoul = fk.CreateTriggerSkill{
     room:setPlayerMark(player, "shichoul", 0)
   end,
 }
-local shichoul_active = fk.CreateActiveSkill{
-  name = "shichoul_active",
-  mute = true,
-  card_num = 2,
-  target_num = 1,
-  card_filter = function(self, to_select, selected, targets)
-    return #selected < 2
-  end,
-  target_filter = function(self, to_select, selected, selected_cards)
-    return #selected == 0 and table.contains(Self:getMark("shichoul-phase"), to_select)
-  end,
-  on_use = function(self, room, effect)
-    local player = room:getPlayerById(effect.from)
-    local target = room:getPlayerById(effect.tos[1])
-    local dummy = Fk:cloneCard("dilu")
-    dummy:addSubcards(effect.cards)
-    room:obtainCard(target.id, dummy, false, fk.ReasonGive)
-    room:setPlayerMark(player, "shichoul", target.id)
-    local mark = target:getMark("@@shichoul")
-    if mark == 0 then mark = {} end
-    table.insert(mark, player.id)
-    room:setPlayerMark(target, "@@shichoul", mark)  --小心伪帝！
-  end,
-}
-Fk:addSkill(shichoul_active)
+
 liubei:addSkill(zhaolie)
 liubei:addSkill(shichoul)
 Fk:loadTranslationTable{
@@ -842,7 +836,7 @@ Fk:loadTranslationTable{
   "然后摸等量的牌，直到该角色第一次进入濒死状态。",
   ["#zhaolie-choose"] = "昭烈：你可以少摸一张牌，亮出牌堆顶三张牌，令一名角色根据其中基本牌数受到伤害或弃牌",
   ["#zhaolie-discard"] = "昭烈：你需依次弃置%arg张牌，否则 %src 对你造成%arg2点伤害",
-  ["#shichoul-choose"] = "誓仇：你可以将两张牌交给一名蜀势力角色，你受到的伤害均转移给其直到其进入濒死状态",
+  ["#shichoul-invoke"] = "誓仇：你可以将两张牌交给一名蜀势力角色，你受到的伤害均转移给其直到其进入濒死状态",
   ["@@shichoul"] = "誓仇",
 }
 
@@ -876,13 +870,9 @@ local yanxiao_trigger = fk.CreateTriggerSkill{
   can_trigger = function(self, event, target, player, data)
     return target == player and player.phase == Player.Judge and player:hasDelayedTrick("yanxiao_trick")
   end,
-  on_cost = function(self, event, target, player, data)
-    return true
-  end,
+  on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
-    local dummy = Fk:cloneCard("dilu")
-    dummy:addSubcards(player.player_cards[Player.Judge])
-    player.room:obtainCard(player.id, dummy, true, fk.ReasonPrey)
+    player.room:obtainCard(player.id, player:getCardIds(Player.Judge), true, fk.ReasonPrey)
   end,
 }
 local anxian = fk.CreateTriggerSkill{
