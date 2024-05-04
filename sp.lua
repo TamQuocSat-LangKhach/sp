@@ -1159,52 +1159,54 @@ local fuwan = General(extension, "fuwan", "qun", 4)
 local moukui = fk.CreateTriggerSkill{
   name = "moukui",
   anim_type = "offensive",
-  events = {fk.TargetSpecified, fk.CardUseFinished},
+  events = {fk.TargetSpecified},
   can_trigger = function(self, event, target, player, data)
-    if event == fk.TargetSpecified then
-      return target == player and player:hasSkill(self) and data.firstTarget and data.card.trueName == "slash"
-    else
-      return data.card.name == "jink" and data.responseToEvent.from == player.id and
-      data.responseToEvent.extra_data and data.responseToEvent.extra_data.moukui and data.responseToEvent.extra_data.moukui == target.id and
-      not player.dead and not player:isNude() and not target.dead
-    end
+    return target == player and player:hasSkill(self) and data.card.trueName == "slash"
   end,
   on_cost = function(self, event, target, player, data)
-    if event == fk.TargetSpecified then
-      local room = player.room
-      local to = room:getPlayerById(data.to)
-      local choices = {"Cancel", "draw1"}
-      if not to:isNude() then
-        table.insert(choices, "moukui_discard")
-      end
-      local choice = room:askForChoice(player, choices, self.name, "#moukui-invoke::"..data.to)
-      if choice ~= "Cancel" then
-        self.cost_data = choice
-        return true
-      end
-    else
+    local room = player.room
+    local to = room:getPlayerById(data.to)
+    local choices = {"Cancel", "draw1"}
+    if not to:isNude() then
+      table.insert(choices, "moukui_discard")
+    end
+    local choice = room:askForChoice(player, choices, self.name, "#moukui-invoke::"..data.to)
+    if choice ~= "Cancel" then
+      self.cost_data = choice
       return true
     end
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    if event == fk.TargetSpecified then
-      local to = room:getPlayerById(data.to)
-      if self.cost_data == "draw1" then
-        player:drawCards(1, self.name)
-      else
-        local id = room:askForCardChosen(player, to, "he", self.name)
-        room:throwCard({id}, self.name, to, player)
-      end
-      data.extra_data = data.extra_data or {}
-      data.extra_data.moukui = data.to
+    local to = room:getPlayerById(data.to)
+    if self.cost_data == "draw1" then
+      player:drawCards(1, self.name)
     else
-      room:doIndicate(target.id, {player.id})
-      local id = room:askForCardChosen(target, player, "he", self.name)
-      room:throwCard({id}, self.name, player, target)
+      local id = room:askForCardChosen(player, to, "he", self.name)
+      room:throwCard({id}, self.name, to, player)
     end
+    data.extra_data = data.extra_data or {}
+    data.extra_data.moukui = data.to
   end,
 }
+local moukui_delay = fk.CreateTriggerSkill{
+  name = "#moukui_delay",
+  events = {fk.CardUseFinished},
+  mute = true,
+  can_trigger = function(self, event, target, player, data)
+    return data.card.name == "jink" and data.responseToEvent.from == player.id and
+    data.responseToEvent.extra_data and data.responseToEvent.extra_data.moukui and data.responseToEvent.extra_data.moukui == target.id and
+    not player.dead and not player:isNude() and not target.dead
+  end,
+  on_cost = Util.TrueFunc,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    room:doIndicate(target.id, {player.id})
+    local id = room:askForCardChosen(target, player, "he", self.name)
+    room:throwCard({id}, self.name, player, target)
+  end,
+}
+moukui:addRelatedSkill(moukui_delay)
 fuwan:addSkill(moukui)
 Fk:loadTranslationTable{
   ["fuwan"] = "伏完",
@@ -1214,6 +1216,7 @@ Fk:loadTranslationTable{
   [":moukui"] = "当你使用【杀】指定一名角色为目标后，你可以选择一项：摸一张牌，或弃置其一张牌。若如此做，此【杀】被【闪】抵消时，该角色弃置你的一张牌。",
   ["#moukui-invoke"] = "谋溃：你可以发动“谋溃”，对 %dest 执行一项",
   ["moukui_discard"] = "弃置其一张牌",
+  ["#moukui_delay"] = "谋溃",
 
   ["$moukui1"] = "你的死期到了。",
   ["$moukui2"] = "同归于尽吧！",
@@ -1362,7 +1365,7 @@ local songci = fk.CreateActiveSkill{
   card_filter = Util.FalseFunc,
   target_filter = function(self, to_select, selected)
     local target = Fk:currentRoom():getPlayerById(to_select)
-    return #selected == 0 and not table.contains(U.getMark(Self, self.name), target.id) and target:getHandcardNum() ~= target.hp
+    return #selected == 0 and not table.contains(U.getMark(Self, self.name), to_select) and target:getHandcardNum() ~= target.hp
   end,
   on_use = function(self, room, effect)
     local player = room:getPlayerById(effect.from)
@@ -2123,6 +2126,7 @@ Fk:loadTranslationTable{
   ["#xingcai"] = "敬哀皇后",
   ["designer:xingcai"] = "韩旭",
   ["illustrator:xingcai"] = "depp",
+  ["cv:xingcai"] = "shourei小N",
 
   ["shenxian"] = "甚贤",
   [":shenxian"] = "你的回合外，当有其他角色因弃置而失去牌时，若其中有基本牌，你可以摸一张牌。",
@@ -2881,9 +2885,6 @@ local shushen = fk.CreateTriggerSkill{
   name = "shushen",
   anim_type = "support",
   events = {fk.HpRecover},
-  can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self)
-  end,
   on_trigger = function(self, event, target, player, data)
     self.cancel_cost = false
     for i = 1, data.num do
@@ -3010,7 +3011,7 @@ local zhuji_delay = fk.CreateTriggerSkill{
     return target == player and not player.dead and data.card.color == Card.Red and data.reason == zhuji.name
       and player.room:getCardArea(data.card.id) == Card.Processing
   end,
-  on_cost = function() return true end,
+  on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
     player.room:obtainCard(player.id, data.card)
   end,
