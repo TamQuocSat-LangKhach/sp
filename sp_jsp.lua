@@ -551,7 +551,7 @@ Fk:loadTranslationTable{
   ["jsp__huangyueying"] = "黄月英",
   ["#jsp__huangyueying"] = "闺中璞玉",
   ["designer:jsp__huangyueying"] = "韩旭",
-	["illustrator:jsp__huangyueying"] = "木美人",
+  ["illustrator:jsp__huangyueying"] = "木美人",
 
   ["jiqiao"] = "机巧",
   [":jiqiao"] = "出牌阶段开始时，你可以弃置任意张装备牌，然后亮出牌堆顶两倍数量的牌，你获得其中的锦囊牌，将其余的牌置入弃牌堆。",
