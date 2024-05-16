@@ -266,9 +266,75 @@ local lvbu = General(extension, "hulao__godlvbu1", "god", 8)
 lvbu.hidden = true
 lvbu:addSkill("mashu")
 lvbu:addSkill("wushuang")
+
+local hulao__jingjia = fk.CreateTriggerSkill{
+  name = "hulao__jingjia",
+  events = {fk.GameStart},
+  can_trigger = function(self, event, target, player, data)
+    return player:hasSkill(self)
+  end,
+  on_cost = Util.TrueFunc,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local laobu_equip = {{"py_halberd", Card.Diamond, 12},{"py_hat", Card.Diamond, 1}}
+    local laobu_armors = {{"py_robe", Card.Club, 1},{"py_belt", Card.Spade, 2}}
+    table.insert(laobu_equip, table.random(laobu_armors))
+    local cards = table.filter(U.prepareDeriveCards(room, laobu_equip, "laobu_equip"), function (id)
+      return room:getCardArea(id) == Card.Void
+    end)
+    if #cards > 0 then
+      U.moveCardIntoEquip(room, player, cards, self.name, false, player)
+    end
+  end,
+}
+
+local hulao__aozhan = fk.CreateTriggerSkill{
+  name = "hulao__aozhan",
+  anim_type = "offensive",
+  frequency = Skill.Compulsory,
+  events = { fk.DrawNCards, fk.DamageInflicted, fk.EventPhaseChanging},
+  can_trigger = function(self, event, target, player, data)
+    if not player:hasSkill(self) or target ~= player then return false end
+    if event == fk.DrawNCards then
+      return player:getEquipment(Card.SubtypeOffensiveRide) ~= nil or player:getEquipment(Card.SubtypeDefensiveRide) ~= nil
+    elseif event == fk.EventPhaseChanging then
+      return data.to == Player.Judge and player:getEquipment(Card.SubtypeTreasure) ~= nil
+    elseif event == fk.DamageInflicted then
+      return player:getEquipment(Card.SubtypeArmor) ~= nil and data.damage > 1
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+   if event == fk.EventPhaseChanging then
+      return true
+    elseif event == fk.DrawNCards then
+      data.n = data.n + 1
+    elseif event == fk.DamageInflicted then
+      data.damage = 1
+    end
+  end,
+}
+
+local hulao__aozhan__targetmod = fk.CreateTargetModSkill{
+  name = "#hulao__aozhan__targetmod",
+  anim_type = "offensive",
+  residue_func = function(self, player, skill, scope)
+    if player:hasSkill("hulao__aozhan") and player:getEquipment(Card.SubtypeWeapon) ~= nil and skill.trueName == "slash_skill" and scope == Player.HistoryPhase then
+      return 1
+    end
+  end,
+}
+
+hulao__aozhan:addRelatedSkill(hulao__aozhan__targetmod)
+lvbu:addSkill(hulao__jingjia)
+lvbu:addSkill(hulao__aozhan)
 Fk:loadTranslationTable{
   ["hulao__godlvbu1"] = "神吕布",
   ["#hulao__godlvbu1"] = "最强神话",
+  ["hulao__jingjia"] = "精甲",
+  [":hulao__jingjia"] = "游戏开始时，你将本局游戏中加入的装备置入你的装备区。",
+  ["hulao__aozhan"] = "鏖战",
+  [":hulao__aozhan"] = "锁定技，若你装备区里有：武器牌，你可以多使用一张【杀】；防具牌，防止你受到的超过1点的伤害"..
+  "；坐骑牌，摸牌阶段多摸一张牌；宝物牌，跳过你的判定阶段。",
 }
 
 local lvbu2 = General(extension, "hulao__godlvbu2", "god", 4)
@@ -1025,9 +1091,7 @@ local mizhao = fk.CreateActiveSkill{
   on_use = function(self, room, effect)
     local player = room:getPlayerById(effect.from)
     local target = room:getPlayerById(effect.tos[1])
-    local dummy = Fk:cloneCard("dilu")
-    dummy:addSubcards(player:getCardIds("h"))
-    room:obtainCard(target.id, dummy, false, fk.ReasonGive)
+    room:obtainCard(target.id, player:getCardIds(Player.Hand), false, fk.ReasonGive, player.id)
     if player.dead or target.dead or target:isKongcheng() then return end
     local targets = table.filter(room:getOtherPlayers(player), function(p)
       return target:canPindian(p) and p ~= target
@@ -3140,11 +3204,11 @@ local junbing = fk.CreateTriggerSkill{
     local room = player.room
     room:drawCards(target, 1, self.name)
     if target == player or target.dead or player.dead or target:isKongcheng() then return false end
-    local dummy = target:getCardIds("h")
-    room:moveCardTo(dummy, Player.Hand, player, fk.ReasonGive, self.name, nil, false, target.id)
+    local cards = target:getCardIds(Player.Hand)
+    room:moveCardTo(cards, Player.Hand, player, fk.ReasonGive, self.name, nil, false, target.id)
     if target.dead or player.dead or player:isKongcheng() then return end
-    local n = #dummy
-    local cards = room:askForCard(player, math.min(n, player:getHandcardNum()), n, false, self.name, false, ".",
+    local n = math.min(#cards, player:getHandcardNum())
+    cards = room:askForCard(player, n, n, false, self.name, false, ".",
       "#junbing-give::"..target.id..":"..n)
     room:moveCardTo(cards, Player.Hand, target, fk.ReasonGive, self.name, nil, false, player.id)
   end,
