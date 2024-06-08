@@ -212,7 +212,7 @@ Fk:loadTranslationTable{
 
   ["$yongsi1"] = "大汉天下，已半入我手！",
   ["$yongsi2"] = "玉玺在手，天下我有！",
-  ["$weidi1"] = "你们都得听我的号令！",
+  ["$weidi1"] = "你们都得听我的号令！  ,
   ["$weidi2"] = "我才是皇帝！",
   ["~yuanshu"] = "可恶！就差……一步了……",
 }
@@ -1203,7 +1203,7 @@ Fk:loadTranslationTable{
   ["lingju"] = "灵雎",
   ["#lingju"] = "情随梦逝",
   ["designer:lingju"] = "韩旭",
-  ["illustrator:lingju"] = "木美人",
+   ["illustrator:lingju"] = "木美人",
   ["jieyuan"] = "竭缘",
   [":jieyuan"] = "当你对一名其他角色造成伤害时，若其体力值大于或等于你的体力值，你可弃置一张黑色手牌令此伤害+1；"..
   "当你受到一名其他角色造成的伤害时，若其体力值大于或等于你的体力值，你可弃置一张红色手牌令此伤害-1。",
@@ -1290,21 +1290,21 @@ Fk:loadTranslationTable{
 local xiahouba = General(extension, "xiahouba", "shu", 4)
 local function BaobianChange(player, hp, skill_name)
   local room = player.room
-	local skills = player.tag["baobian"]
+  local skills = player.tag["baobian"]
   if type(skills) ~= "table" then skills = {} end
-	if player.hp <= hp then
-		if not table.contains(skills, skill_name) then
-			player:broadcastSkillInvoke("baobian")
+  if player.hp <= hp then
+    if not table.contains(skills, skill_name) then
+      player:broadcastSkillInvoke("baobian")
       room:handleAddLoseSkills(player, skill_name, "baobian")
-			table.insert(skills, skill_name)
-		end
-	else
-		if table.contains(skills, skill_name) then
+      table.insert(skills, skill_name)
+    end
+  else
+    if table.contains(skills, skill_name) then
       room:handleAddLoseSkills(player, "-"..skill_name, nil)
-			table.removeOne(skills, skill_name)
-		end
-	end
-	player.tag["baobian"] = skills
+      table.removeOne(skills, skill_name)
+    end
+  end
+  player.tag["baobian"] = skills
 end
 local baobian = fk.CreateTriggerSkill{
   name = "baobian",
@@ -1575,7 +1575,7 @@ Fk:loadTranslationTable{
   ["daqiaoxiaoqiao"] = "大乔小乔",
   ["#daqiaoxiaoqiao"] = "江东之花",
   ["designer:daqiaoxiaoqiao"] = "韩旭",
-  ["illustrator:daqiaoxiaoqiao"] = "木美人",
+   ["illustrator:daqiaoxiaoqiao"] = "木美人",
 
   ["xingwu"] = "星舞",
   [":xingwu"] = "弃牌阶段开始时，你可以将一张与你本回合使用的牌颜色均不同的手牌置于武将牌上。"..
@@ -1887,7 +1887,7 @@ Fk:loadTranslationTable{
   ["zhangbao"] = "张宝",
   ["#zhangbao"] = "地公将军",
   ["designer:zhangbao"] = "韩旭",
-  ["illustrator:zhangbao"] = "大佬荣",
+   ["illustrator:zhangbao"] = "大佬荣",
 
   ["zhoufu"] = "咒缚",
   [":zhoufu"] = "出牌阶段限一次，你可以指定一名其他角色并将一张手牌移出游戏（将此牌置于该角色的武将牌旁），"..
@@ -2239,7 +2239,7 @@ Fk:loadTranslationTable{
   ["kuangfu_move"] = "将其一张装备置入你的装备区",
   ["kuangfu_discard"] = "弃置其一张装备",
 
-  ["~panfeng"] = "来者……可是魔将……",	
+  ["~panfeng"] = "来者……可是魔将……",  
 }
 
 local zumao = General(extension, "zumao", "wu", 4)
@@ -2356,7 +2356,7 @@ Fk:loadTranslationTable{
   ["zumao"] = "祖茂",
   ["#zumao"] = "碧血染赤帻",
   ["designer:zumao"] = "韩旭",
-  ["illustrator:zumao"] = "DH",
+   ["illustrator:zumao"] = "DH",
 
   ["yinbing"] = "引兵",
   [":yinbing"] = "结束阶段，你可以将任意张非基本牌置于你的武将牌上，当你受到【杀】或【决斗】造成的伤害后，你移去你武将牌上的一张牌。",
@@ -2697,7 +2697,7 @@ Fk:loadTranslationTable{
   ["#sunluyu"] = "舍身饲虎",
   ["cv:sunluyu"] = "sakula小舞",
   ["designer:sunluyu"] = "桃花僧",
-  ["illustrator:sunluyu"] = "depp",
+   ["illustrator:sunluyu"] = "depp",
   ["meibu"] = "魅步",
   [":meibu"] = "一名其他角色的出牌阶段开始时，若你不在其攻击范围内，你可以令该角色的锦囊牌均视为【杀】直到回合结束。若如此做，视为你在其攻击范围内直到回合结束。",
   ["mumu"] = "穆穆",
@@ -2927,7 +2927,7 @@ Fk:loadTranslationTable{
   ["maliang"] = "马良",
   ["#maliang"] = "白眉智士",
   ["cv:maliang"] = "马洋",
-  ["illustrator:maliang"] = "LiuHeng",
+   ["illustrator:maliang"] = "LiuHeng",
   ["zishu"] = "自书",
   [":zishu"] = "锁定技，你的回合外，其他角色回合结束时，将你手牌中所有本回合获得的牌置入弃牌堆；你的回合内，当你不因此技能获得牌时，摸一张牌。",
   ["yingyuan"] = "应援",
