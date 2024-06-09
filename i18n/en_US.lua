@@ -25,9 +25,9 @@ return {
   [":juesi"] = "In your action phase, can discard a Slash and choose a hero who has cards & is in your range. He must discard a card, if this card isn't Slash & your HP ≤ his HP, this is viewed as using a Duel on him.",
   ["#juesi-discard"] = "Daredevil: you must discard a card, if this card isn't Slash & %src's HP ≤ your HP, this is viewed as him using a Duel on you",
 
-  ["hulao__godlvbu1"] = "Lv Bu",
+  ["hulao__godlvbu1"] = "Lü Bu",
 
-  ["hulao__godlvbu2"] = "Lv Bu",
+  ["hulao__godlvbu2"] = "Lü Bu",
   ["xiuluo"] = "Asura",
   [":xiuluo"] = "At the Beginning Phase, can discard 1 hand card to discard a card with the same suit in your Judgment Area.",
   ["shenwei"] = "Divine Aura",

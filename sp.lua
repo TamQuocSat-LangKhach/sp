@@ -1232,7 +1232,7 @@ local moukui = fk.CreateTriggerSkill{
     local to = room:getPlayerById(data.to)
     local choices = {"Cancel", "draw1"}
     if not to:isNude() then
-      table.insert(choices, "moukui_discard")
+      table.insert(choices, "moukui_discard::" .. to.id)
     end
     local choice = room:askForChoice(player, choices, self.name, "#moukui-invoke::"..data.to)
     if choice ~= "Cancel" then
@@ -1250,7 +1250,8 @@ local moukui = fk.CreateTriggerSkill{
       room:throwCard({id}, self.name, to, player)
     end
     data.extra_data = data.extra_data or {}
-    data.extra_data.moukui = data.to
+    data.extra_data.moukui = data.extra_data.moukui or {}
+    table.insert(data.extra_data.moukui, data.to)
   end,
 }
 local moukui_delay = fk.CreateTriggerSkill{
@@ -1259,7 +1260,7 @@ local moukui_delay = fk.CreateTriggerSkill{
   mute = true,
   can_trigger = function(self, event, target, player, data)
     return data.card.name == "jink" and data.responseToEvent.from == player.id and
-    data.responseToEvent.extra_data and data.responseToEvent.extra_data.moukui and data.responseToEvent.extra_data.moukui == target.id and
+    data.responseToEvent.extra_data and data.responseToEvent.extra_data.moukui and table.contains(data.responseToEvent.extra_data.moukui, target.id) and
     not player.dead and not player:isNude() and not target.dead
   end,
   on_cost = Util.TrueFunc,
@@ -1279,7 +1280,7 @@ Fk:loadTranslationTable{
   ["moukui"] = "谋溃",
   [":moukui"] = "当你使用【杀】指定一名角色为目标后，你可以选择一项：摸一张牌，或弃置其一张牌。若如此做，此【杀】被【闪】抵消时，该角色弃置你的一张牌。",
   ["#moukui-invoke"] = "谋溃：你可以发动“谋溃”，对 %dest 执行一项",
-  ["moukui_discard"] = "弃置其一张牌",
+  ["moukui_discard"] = "弃置%dest一张牌",
   ["#moukui_delay"] = "谋溃",
 
   ["$moukui1"] = "你的死期到了。",
