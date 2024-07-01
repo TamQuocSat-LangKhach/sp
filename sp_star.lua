@@ -760,7 +760,7 @@ local shichoul = fk.CreateTriggerSkill{
       local targets = table.map(table.filter(room.alive_players,
         function(p) return p ~= player and p.kingdom == "shu" end), Util.IdMapper)
       if #targets == 0 then return end
-      local tos, cards = U.askForChooseCardsAndPlayers(room, player, 2, 2, targets, 1, 1, ".",
+      local tos, cards = room:askForChooseCardsAndPlayers(player, 2, 2, targets, 1, 1, ".",
       "#shichoul-invoke", self.name, true, false)
       if #tos == 1 and #cards == 2 then
         self.cost_data = {tos, cards}
