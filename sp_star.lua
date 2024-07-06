@@ -458,27 +458,26 @@ local dahe = fk.CreateActiveSkill{
   anim_type = "offensive",
   card_num = 0,
   target_num = 1,
+  prompt = "#dahe-prompt",
   can_use = function(self, player)
     return not player:isKongcheng() and player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
   end,
-  card_filter = function(self, to_select, selected)
-    return false
-  end,
-  target_filter = function(self, to_select, selected, selected_cards)
-    return #selected == 0 and to_select ~= Self.id and not Fk:currentRoom():getPlayerById(to_select):isKongcheng()
+  card_filter = Util.FalseFunc,
+  target_filter = function(self, to_select, selected)
+    return #selected == 0 and Self:canPindian(Fk:currentRoom():getPlayerById(to_select))
   end,
   on_use = function(self, room, effect)
     local player = room:getPlayerById(effect.from)
     local target = room:getPlayerById(effect.tos[1])
     local pindian = player:pindian({target}, self.name)
     if pindian.results[target.id].winner == player then
-      room:addPlayerMark(target, "dahe-turn", 1)
+      room:setPlayerMark(target, "@@dahe-turn", 1)
       local card = pindian.results[target.id].toCard
-      if room:getCardArea(card.id) == Card.DiscardPile then
-        local to = room:askForChoosePlayers(player, table.map(table.filter(room:getAlivePlayers(), function(p)
-          return player.hp >= p.hp end), function(p) return p.id end), 1, 1, "#dahe-choose:::"..card:toLogString(), self.name, true)
+      if room:getCardArea(card) == Card.DiscardPile then
+        local to = room:askForChoosePlayers(player, table.map(table.filter(room.alive_players, function(p)
+          return player.hp >= p.hp end), Util.IdMapper), 1, 1, "#dahe-choose:::"..card:toLogString(), self.name, true)
         if #to > 0 then
-          room:obtainCard(to[1], card, true, fk.ReasonJustMove)
+          room:obtainCard(to[1], card, true, fk.ReasonGive, player.id, self.name)
         end
       end
     else
@@ -494,11 +493,9 @@ local dahe_trigger = fk.CreateTriggerSkill{
   mute = true,
   events = {fk.PreCardEffect},
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:getMark("dahe-turn") > 0 and data.card.name == "jink" and data.card.suit ~= Card.Heart
+    return target == player and player:getMark("@@dahe-turn") > 0 and data.card.name == "jink" and data.card.suit ~= Card.Heart
   end,
-  on_cost = function(self, event, target, player, data)
-    return true
-  end,
+  on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
     return true
   end,
@@ -517,6 +514,9 @@ Fk:loadTranslationTable{
   [":dahe"] = "出牌阶段，你可以与一名其他角色拼点；若你赢，该角色的非<font color='red'>♥</font>【闪】无效直到回合结束，"..
   "你可以将该角色拼点的牌交给场上一名体力不多于你的角色。若你没赢，你须展示手牌并选择一张弃置。每阶段限一次。",
   ["#dahe-choose"] = "大喝：你可以将%arg交给一名角色",
+  ["@@dahe-turn"] = "被大喝",
+  ["#dahe_trigger"] = "大喝",
+  ["#dahe-prompt"] = "大喝：你可以拼点，若你赢，其本回合非<font color='red'>♥</font>【闪】无效，若没赢你须弃牌",
 }
 
 local lvmeng = General(extension, "starsp__lvmeng", "wu", 3)
