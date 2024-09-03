@@ -2670,28 +2670,29 @@ local mumu = fk.CreateTriggerSkill{
     if #targets == 0 then return end
     local to = player.room:askForChoosePlayers(player, targets, 1, 1, "#mumu-choose", self.name, true)
     if #to > 0 then
-      self.cost_data = to[1]
+      self.cost_data = {tos = to}
       return true
     end
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    local to = room:getPlayerById(self.cost_data)
-    local ids = {}
-    if to:getEquipment(Card.SubtypeWeapon) ~= nil then
-      table.insert(ids, to:getEquipments(Card.SubtypeWeapon))
+    local to = room:getPlayerById(self.cost_data.tos[1])
+    local card_data = {}
+    if #to:getEquipments(Card.SubtypeWeapon) > 0 then
+      table.insert(card_data, {"weapon", to:getEquipments(Card.SubtypeWeapon)})
     end
     if to ~= player and #to:getEquipments(Card.SubtypeArmor) > 0 and #player:getAvailableEquipSlots(Card.SubtypeArmor) > 0 then
-      table.insert(ids, to:getEquipments(Card.SubtypeArmor))
+      table.insert(card_data, {"armor", to:getEquipments(Card.SubtypeArmor)})
     end
-    local id = (#ids == 1) and ids[1] or room:askForCardChosen(player, player, { card_data = { { self.name, ids }  } }, self.name, "#mumu-card")
+    if #card_data == 0 then return end
+    local id = room:askForCardChosen(player, player, { card_data = card_data }, self.name, "#mumu-card")
     if Fk:getCardById(id).sub_type == Card.SubtypeWeapon then
       room:throwCard({id}, self.name, to, player)
       if not player.dead then
         player:drawCards(1, self.name)
       end
     else
-      U.moveCardIntoEquip(room, player, id, self.name, true, player)
+      room:moveCardIntoEquip(player, id, self.name, true, player)
     end
   end,
 }
@@ -2712,7 +2713,7 @@ Fk:loadTranslationTable{
   "或将场上一张防具牌移动到你的装备区里（可替换原防具）。",
   ["#meibu-invoke"] = "魅步：你可以对 %dest 发动“魅步”，令其锦囊牌视为【杀】直到回合结束",
   ["#meibu_filter"] = "止息",
-  ["#mumu-choose"] = "穆穆：弃置场上一张武器牌并摸一张牌；或将场上一张防具牌移动到你的装备区",
+  ["#mumu-choose"] = "穆穆：选择一名角色，弃置其武器牌并摸一张牌；或将其的防具牌移动到你的装备区",
   ["#mumu-card"] = "穆穆：弃置武器牌，或将防具牌移动到你的装备区",
 
   ["$meibu1"] = "萧墙之乱，宫闱之衅，实为吴国之祸啊！",
