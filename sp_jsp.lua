@@ -67,7 +67,9 @@ sunshangxiang:addRelatedSkill("xiaoji")
 Fk:loadTranslationTable{
   ["jsp__sunshangxiang"] = "孙尚香",
   ["#jsp__sunshangxiang"] = "梦醉良缘",
+  ["illustrator:jsp__sunshangxiang"] = "木美人",
   ["designer:jsp__sunshangxiang"] = "韩旭",
+
   ["liangzhu"] = "良助",
   [":liangzhu"] = "当一名角色于其出牌阶段内回复体力时，你可以选择一项：1.摸一张牌；2.令该角色摸两张牌。",
   ["fanxiang"] = "返乡",
@@ -157,7 +159,9 @@ machao:addSkill(cihuai)
 Fk:loadTranslationTable{
   ["jsp__machao"] = "马超",
   ["#jsp__machao"] = "西凉的猛狮",
+  ["illustrator:jsp__machao"] = "depp",
   ["designer:jsp__machao"] = "伴剑一生",
+
   ["zhuiji"] = "追击",
   [":zhuiji"] = "锁定技，你计算体力值比你少的角色的距离始终为1。",
   ["cihuai"] = "刺槐",
@@ -213,6 +217,8 @@ guanyu:addRelatedSkill(nuzhan)
 Fk:loadTranslationTable{
   ["jsp__guanyu"] = "关羽",
   ["#jsp__guanyu"] = "汉寿亭侯",
+  ["illustrator:jsp__guanyu"] = "Zero",
+
   ["danji"] = "单骑",
   [":danji"] = "觉醒技，准备阶段开始时，若你的手牌数大于体力值且本局游戏的主公不是刘备，你须减1点体力上限，然后获得技能〖马术〗和〖怒斩〗。",
   ["nuzhan"] = "怒斩",
@@ -299,6 +305,8 @@ jiangwei:addRelatedSkill("tiaoxin")
 Fk:loadTranslationTable{
   ["jsp__jiangwei"] = "姜维",
   ["#jsp__jiangwei"] = "幼麒",
+  ["illustrator:jsp__jiangwei"] = "depp",
+
   ["kunfen"] = "困奋",
   [":kunfen"] = "锁定技，结束阶段开始时，你失去1点体力，然后摸两张牌。",
   ["fengliang"] = "逢亮",
@@ -423,6 +431,8 @@ zhaoyun:addSkill(suiren)
 Fk:loadTranslationTable{
   ["jsp__zhaoyun"] = "赵云",
   ["#jsp__zhaoyun"] = "常山的游龙",
+  ["illustrator:jsp__zhaoyun"] = "天空之城",
+
   ["chixin"] = "赤心",
   [":chixin"] = "你可以将<font color='red'>♦</font>牌当【杀】或【闪】使用或打出。出牌阶段，你对你攻击范围内的每名角色均可使用一张【杀】。",
   ["suiren"] = "随仁",

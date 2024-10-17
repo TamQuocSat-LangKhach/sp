@@ -64,6 +64,8 @@ masu:addSkill(zhiman)
 Fk:loadTranslationTable{
   ["re__masu"] = "马谡",
   ["#re__masu"] = "傲才自负",
+  ["illustrator:re__masu"] = "XXX",
+
   ["sanyao"] = "散谣",
   [":sanyao"] = "出牌阶段限一次，你可以弃置一张牌并选择一名体力值最大的角色，你对其造成1点伤害。",
   ["zhiman"] = "制蛮",
@@ -176,7 +178,9 @@ jieyue:addRelatedSkill(jieyue_trigger)
 yujin:addSkill(jieyue)
 Fk:loadTranslationTable{
   ["re__yujin"] = "于禁",
-  ["#re__yujin"] = "魏武之刚",
+  ["#re__yujin"] = "讨暴坚垒",
+  ["illustrator:re__yujin"] = "depp",
+
   ["jieyue"] = "节钺",
   [":jieyue"] = "结束阶段开始时，你可以弃置一张手牌并选择一名其他角色，若如此做，除非该角色将一张牌置于你的武将牌上，否则你弃置其一张牌。"..
   "若你的武将牌上有牌，则你可以将红色手牌当【闪】、黑色手牌当【无懈可击】使用或打出，准备阶段开始时，你获得你武将牌上的牌。",
@@ -221,6 +225,8 @@ liubiao:addSkill("zongshi")
 Fk:loadTranslationTable{
   ["re__liubiao"] = "刘表",
   ["#re__liubiao"] = "跨蹈汉南",
+  ["illustrator:re__liubiao"] = "歌路",
+
   ["re__zishou"] = "自守",
   [":re__zishou"] = "摸牌阶段，你可以额外摸X张牌（X为全场势力数）。若如此做，直到回合结束，其他角色不能被选择为你使用牌的目标。",
 
@@ -267,6 +273,8 @@ madai:addSkill(re__qianxi)
 Fk:loadTranslationTable{
   ["re__madai"] = "马岱",
   ["#re__madai"] = "临危受命",
+  ["illustrator:re__madai"] = "歌路",
+
   ["re__qianxi"] = "潜袭",
   [":re__qianxi"] = "准备阶段开始时，你可以摸一张牌然后弃置一张牌。若如此做，你选择距离为1的一名角色，然后直到回合结束，"..
   "该角色不能使用或打出与你以此法弃置的牌颜色相同的手牌。",
@@ -335,6 +343,8 @@ bulianshi:addSkill("zhuiyi")
 Fk:loadTranslationTable{
   ["re__bulianshi"] = "步练师",
   ["#re__bulianshi"] = "无冕之后",
+  ["illustrator:re__bulianshi"] = "depp",
+
   ["re__anxu"] = "安恤",
   [":re__anxu"] = "出牌阶段限一次，你可以选择两名手牌数不同的其他角色，令其中手牌多的角色将一张手牌交给手牌少的角色，然后若这两名角色手牌数相等，"..
   "你摸一张牌或回复1点体力。",
@@ -380,6 +390,8 @@ xusheng:addSkill(pojun)
 Fk:loadTranslationTable{
   ["re__xusheng"] = "徐盛",
   ["#re__xusheng"] = "江东的铁壁",
+  ["illustrator:re__xusheng"] = "L",
+
   ["re__pojun"] = "破军",
   [":re__pojun"] = "当你于出牌阶段内使用【杀】指定一个目标后，你可以将其至多X张牌扣置于该角色的武将牌旁（X为其体力值）。"..
   "若如此做，当前回合结束后，该角色获得其武将牌旁的所有牌。",

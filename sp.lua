@@ -298,11 +298,11 @@ local hulao__aozhan = fk.CreateTriggerSkill{
   can_trigger = function(self, event, target, player, data)
     if not player:hasSkill(self) or target ~= player then return false end
     if event == fk.DrawNCards then
-      return player:getEquipment(Card.SubtypeOffensiveRide) ~= nil or player:getEquipment(Card.SubtypeDefensiveRide) ~= nil
+      return #player:getEquipments(Card.SubtypeOffensiveRide) > 0 or #player:getEquipments(Card.SubtypeDefensiveRide) > 0
     elseif event == fk.EventPhaseChanging then
-      return data.to == Player.Judge and player:getEquipment(Card.SubtypeTreasure) ~= nil
+      return data.to == Player.Judge and #player:getEquipments(Card.SubtypeTreasure) > 0
     elseif event == fk.DamageInflicted then
-      return player:getEquipment(Card.SubtypeArmor) ~= nil and data.damage > 1
+      return #player:getEquipments(Card.SubtypeArmor) > 0 and data.damage > 1
     end
   end,
   on_use = function(self, event, target, player, data)
@@ -319,7 +319,8 @@ local hulao__aozhan__targetmod = fk.CreateTargetModSkill{
   name = "#hulao__aozhan__targetmod",
   anim_type = "offensive",
   residue_func = function(self, player, skill, scope)
-    if player:hasSkill("hulao__aozhan") and player:getEquipment(Card.SubtypeWeapon) ~= nil and skill.trueName == "slash_skill" and scope == Player.HistoryPhase then
+    if player:hasSkill("hulao__aozhan") and #player:getEquipments(Card.SubtypeWeapon) > 0 and
+      skill.trueName == "slash_skill" and scope == Player.HistoryPhase then
       return 1
     end
   end,
@@ -332,6 +333,8 @@ lvbu:addSkill(hulao__aozhan)
 Fk:loadTranslationTable{
   ["hulao1__godlvbu"] = "神吕布",
   ["#hulao1__godlvbu"] = "最强神话",
+  ["illustrator:hulao1__godlvbu"] = "LiuHeng",
+
   ["hulao__jingjia"] = "精甲",
   [":hulao__jingjia"] = "游戏开始时，你将本局游戏中加入的装备置入你的装备区。",
   ["hulao__aozhan"] = "鏖战",
@@ -448,6 +451,8 @@ Fk:addSkill(shenwei)
 Fk:loadTranslationTable{
   ["hulao2__godlvbu"] = "神吕布",
   ["#hulao2__godlvbu"] = "暴怒的战神",
+  ["illustrator:hulao2__godlvbu"] = "LiuHeng",
+
   ["xiuluo"] = "修罗",
   [":xiuluo"] = "准备阶段，你可以弃置与你判定区内一张牌花色相同的一张手牌，弃置你判定区内的此牌且你可以重复此流程。",
   ["hulao__shenwei"] = "神威",
@@ -655,11 +660,11 @@ local shichou = fk.CreateTriggerSkill{
   events = {fk.AfterCardTargetDeclared},
   can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(self) and player:isWounded() and data.card.trueName == "slash" and
-      #U.getUseExtraTargets(player.room, data, false) > 0
+      #player.room:getUseExtraTargets(data) > 0
   end,
   on_cost = function(self, event, target, player, data)
     local n = player:getLostHp()
-    local tos = player.room:askForChoosePlayers(player, U.getUseExtraTargets(player.room, data, false), 1, n,
+    local tos = player.room:askForChoosePlayers(player, player.room:getUseExtraTargets(data), 1, n,
     "#shichou-choose:::"..data.card:toLogString()..":"..tostring(n), self.name, true)
     if #tos > 0 then
       self.cost_data = tos
@@ -980,7 +985,7 @@ local wuji = fk.CreateTriggerSkill{
   end,
   can_wake = function(self, event, target, player, data)
     local n = 0
-    U.getActualDamageEvents(player.room, 1, function(e)
+    player.room.logic:getActualDamageEvents(1, function(e)
       local damage = e.data[1]
       if damage.from == player then
         n = n + damage.damage
@@ -1776,7 +1781,10 @@ xiahoushi:addSkill(xiaode)
 Fk:loadTranslationTable{
   ["sp__xiahoushi"] = "夏侯氏",
   ["#sp__xiahoushi"] = "疾冲之恋",
+  ["illustrator:sp__xiahoushi"] = "牧童的短笛",
+  ["designer:sp__xiahoushi"] = "桃花僧",
   ["cv:sp__xiahoushi"] = "橘枍shii吖（新月杀原创）",
+
   ["sp__yanyu"] = "燕语",
   [":sp__yanyu"] = "任意一名角色的出牌阶段开始时，你可以弃置一张牌，若如此做，则本回合的出牌阶段，当有与你弃置牌类别相同的其他牌进入弃牌堆时，"..
   "你可令任意一名角色获得此牌。每回合以此法获得的牌不能超过三张。",
@@ -2271,6 +2279,8 @@ Fk:loadTranslationTable{
   ["kuangfu_move"] = "将其一张装备置入你的装备区",
   ["kuangfu_discard"] = "弃置其一张装备",
 
+  ["$kuangfu1"] = "吾乃上将潘凤，可斩华雄！",
+  ["$kuangfu2"] = "这家伙，还是给我用吧！",
   ["~panfeng"] = "来者……可是魔将……",
 }
 
@@ -2385,13 +2395,13 @@ local duanbing = fk.CreateTriggerSkill{
   events = {fk.AfterCardTargetDeclared},
   can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(self) and data.card.trueName == "slash" and
-      table.find(U.getUseExtraTargets(player.room, data, false), function(id)
+      table.find(player.room:getUseExtraTargets(data), function(id)
         return player:distanceTo(player.room:getPlayerById(id)) == 1
       end)
   end,
   on_cost = function(self, event, target, player, data)
     local room = player.room
-    local targets = table.filter(U.getUseExtraTargets(room, data, false), function(id)
+    local targets = table.filter(room:getUseExtraTargets(data), function(id)
       return player:distanceTo(room:getPlayerById(id)) == 1
     end)
     local tos = room:askForChoosePlayers(player, targets, 1, 1, "#duanbing-choose", self.name, true)
@@ -2422,18 +2432,14 @@ local fenxun = fk.CreateActiveSkill{
   end,
   on_use = function(self, room, effect)
     local player = room:getPlayerById(effect.from)
+    room:addTableMark(player, "fenxun-turn", effect.tos[1])
     room:throwCard(effect.cards, self.name, player, player)
-    local mark = U.getMark(player, "fenxun-turn")
-    table.insert(mark, effect.tos[1])
-    room:setPlayerMark(player, "fenxun-turn", mark)
   end,
 }
 local fenxun_distance = fk.CreateDistanceSkill{
   name = "#fenxun_distance",
-  correct_func = function(self, from, to) return 0 end,
   fixed_func = function(self, from, to)
-    local mark = U.getMark(from, "fenxun-turn")
-    if table.contains(mark, to.id) then
+    if table.contains(from:getTableMark("fenxun-turn"), to.id) then
       return 1
     end
   end,
@@ -2648,7 +2654,7 @@ local mumu = fk.CreateTriggerSkill{
         return false
       end, Player.HistoryTurn)
       if #play_ids == 0 then return true end
-      return #U.getActualDamageEvents(player.room, 1, function(e)
+      return #player.room.logic:getActualDamageEvents(1, function(e)
         if e.data[1].from == player then
           for _, ids in ipairs(play_ids) do
             if e.id > ids[1] and e.id < ids[2] then
@@ -3020,6 +3026,8 @@ ganfuren:addSkill(shenzhi)
 Fk:loadTranslationTable{
   ["ganfuren"] = "甘夫人",
   ["#ganfuren"] = "昭烈皇后",
+  ["illustrator:ganfuren"] = "琛·美弟奇",
+
   ["shushen"] = "淑慎",
   [":shushen"] = "当你回复1点体力时，你可以令一名其他角色回复1点体力或摸两张牌。",
   ["shenzhi"] = "神智",
