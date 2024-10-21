@@ -85,14 +85,14 @@ local lihun = fk.CreateActiveSkill{
   target_filter = function(self, to_select, selected, cards)
     local target = Fk:currentRoom():getPlayerById(to_select)
     return #selected == 0 and #cards == 1 and
-    not target:isKongcheng() and (target.gender == General.Male or target.gender == General.Bigender)
+    not target:isKongcheng() and (target:isMale())
   end,
   on_use = function(self, room, effect)
     local player = room:getPlayerById(effect.from)
     local target = room:getPlayerById(effect.tos[1])
     player:broadcastSkillInvoke(self.name, 1)
     room:notifySkillInvoked(player, self.name, "control")
-    local mark = U.getMark(player, "lihun-phase")
+    local mark = player:getTableMark("lihun-phase")
     table.insertIfNeed(mark, target.id)
     room:setPlayerMark(player, "lihun-phase", mark)
     room:throwCard(effect.cards, self.name, player, player)
@@ -541,7 +541,7 @@ local tanhu = fk.CreateActiveSkill{
     local target = room:getPlayerById(effect.tos[1])
     local pindian = player:pindian({target}, self.name)
     if pindian.results[target.id].winner == player then
-      local mark = U.getMark(player, "tanhu-turn")
+      local mark = player:getTableMark("tanhu-turn")
       table.insertIfNeed(mark, target.id)
       room:setPlayerMark(player, "tanhu-turn", mark)
     end
@@ -551,7 +551,7 @@ local tanhu_distance = fk.CreateDistanceSkill{
   name = "#tanhu_distance",
   correct_func = function(self, from, to) return 0 end,
   fixed_func = function(self, from, to)
-    local mark = U.getMark(from, "tanhu-turn")
+    local mark = from:getTableMark("tanhu-turn")
     if table.contains(mark, to.id) then
       return 1
     end
@@ -663,7 +663,7 @@ local zhaolie = fk.CreateTriggerSkill{
   end,
   on_cost = function(self, event, target, player, data)
     local targets = table.map(table.filter(player.room:getOtherPlayers(player),
-      function(p) return player:inMyAttackRange(p) end), function(p) return p.id end)
+      function(p) return player:inMyAttackRange(p) end), Util.IdMapper)
     if #targets == 0 then return end
     local to = player.room:askForChoosePlayers(player, targets, 1, 1, "#zhaolie-choose", self.name, true)
     if #to > 0 then
@@ -811,7 +811,7 @@ local shichoul = fk.CreateTriggerSkill{
     local room = player.room
     room:setPlayerMark(target, "@@shichoul", 0)
     local to = room:getPlayerById(player:getMark("shichoul"))
-    local mark = U.getMark(to, "@@shichoul")
+    local mark = to:getTableMark("@@shichoul")
     table.removeOne(mark, player.id)
     if #mark == 0 then mark = 0 end
     room:setPlayerMark(to, "@@shichoul", mark)
@@ -980,7 +980,7 @@ local junwei = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local room = player.room
     room:moveCardTo(self.cost_data, Card.DiscardPile, nil, fk.ReasonPutIntoDiscardPile, self.name, nil, true, player.id)
-    local targets = table.map(room:getAlivePlayers(), function(p) return p.id end)
+    local targets = table.map(room:getAlivePlayers(), Util.IdMapper)
     local to = room:askForChoosePlayers(player, targets, 1, 1, "#junwei-choose", self.name, false)
     to = room:getPlayerById(to[1])
     local card = {}
@@ -989,7 +989,7 @@ local junwei = fk.CreateTriggerSkill{
     end
     if #card > 0 then
       to:showCards(card)
-      local p = room:askForChoosePlayers(player, table.map(room:getAlivePlayers(), function(p) return p.id end), 1, 1,
+      local p = room:askForChoosePlayers(player, table.map(room:getAlivePlayers(), Util.IdMapper), 1, 1,
         "#junwei-give:::"..Fk:getCardById(card[1]):toLogString(), self.name, false)
       if p ~= to.id then
         p = room:getPlayerById(p[1])

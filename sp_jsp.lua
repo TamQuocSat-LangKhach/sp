@@ -27,7 +27,7 @@ local liangzhu = fk.CreateTriggerSkill{
     else
       room:doIndicate(player.id, {target.id})
       target:drawCards(2, self.name)
-      local mark = U.getMark(player, "liangzhu_target")
+      local mark = player:getTableMark("liangzhu_target")
       table.insertIfNeed(mark, target.id)
       room:setPlayerMark(player, "liangzhu_target", mark)
     end
@@ -44,7 +44,7 @@ local fanxiang = fk.CreateTriggerSkill{
   end,
   can_wake = function(self, event, target, player, data)
     return table.find(player.room.alive_players, function(p) 
-      return p:isWounded() and table.contains(U.getMark(player, "liangzhu_target"), p.id)
+      return p:isWounded() and table.contains(player:getTableMark("liangzhu_target"), p.id)
     end)
   end,
   on_use = function(self, event, target, player, data)

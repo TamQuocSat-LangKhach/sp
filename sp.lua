@@ -770,11 +770,11 @@ local yongdi = fk.CreateTriggerSkill{
   events = {fk.Damaged},
   can_trigger = function(self, event, target, player, data)
     return target == player and target:hasSkill(self) and player:usedSkillTimes(self.name, Player.HistoryGame) == 0 and
-      table.find(player.room:getOtherPlayers(player), function (p) return U.isMale(p) end)
+      table.find(player.room:getOtherPlayers(player), function (p) return p:isMale() end)
   end,
   on_cost = function(self, event, target, player, data)
     local to = player.room:askForChoosePlayers(player, table.map(table.filter(player.room:getOtherPlayers(player), function(p)
-      return U.isMale(p) end), Util.IdMapper), 1, 1, "#yongdi-choose", self.name, true)
+      return p:isMale() end), Util.IdMapper), 1, 1, "#yongdi-choose", self.name, true)
     if #to > 0 then
       self.cost_data = to[1]
       return true
@@ -1459,12 +1459,12 @@ local songci = fk.CreateActiveSkill{
   card_filter = Util.FalseFunc,
   target_filter = function(self, to_select, selected)
     local target = Fk:currentRoom():getPlayerById(to_select)
-    return #selected == 0 and not table.contains(U.getMark(Self, self.name), to_select) and target:getHandcardNum() ~= target.hp
+    return #selected == 0 and not table.contains(Self:getTableMark(self.name), to_select) and target:getHandcardNum() ~= target.hp
   end,
   on_use = function(self, room, effect)
     local player = room:getPlayerById(effect.from)
     local target = room:getPlayerById(effect.tos[1])
-    local mark = U.getMark(player, self.name)
+    local mark = player:getTableMark(self.name)
     table.insert(mark, target.id)
     room:setPlayerMark(player, self.name, mark)
     if target:getHandcardNum() < target.hp then
@@ -1542,7 +1542,7 @@ local xingwu = fk.CreateTriggerSkill{
         skillName = self.name,
       })
       local targets = table.filter(room:getOtherPlayers(player), function(p)
-        return p.gender == General.Male or p.gender == General.Bigender
+        return p:isMale()
       end)
       if #targets > 0 then
         local to = room:askForChoosePlayers(player, table.map(targets, Util.IdMapper), 1, 1, "#xingwu-choose", self.name, false)
@@ -1653,12 +1653,12 @@ local sp__yanyu = fk.CreateTriggerSkill{
 local yanyu_active = fk.CreateActiveSkill{
   name = "yanyu_active",
   expand_pile = function(self)
-    return U.getMark(Self, "yanyu_cards")
+    return Self:getTableMark("yanyu_cards")
   end,
   card_num = 1,
   target_num = 1,
   card_filter = function(self, to_select, selected, targets)
-    return #selected == 0 and table.contains(U.getMark(Self, "yanyu_cards"), to_select)
+    return #selected == 0 and table.contains(Self:getTableMark("yanyu_cards"), to_select)
   end,
   target_filter = function(self, to_select, selected, selected_cards)
     return #selected == 0
@@ -2929,7 +2929,7 @@ local yingyuan = fk.CreateTriggerSkill{
     local to = room:getPlayerById(self.cost_data)
     room:moveCardTo(cards, Card.PlayerHand, to, fk.ReasonGive, self.name, nil, true, player.id)
     if player.dead then return end
-    local mark = U.getMark(player, "yingyuan-turn")
+    local mark = player:getTableMark("yingyuan-turn")
     table.insert(mark, data.card.trueName)
     room:setPlayerMark(player, "yingyuan-turn", mark)
   end,
