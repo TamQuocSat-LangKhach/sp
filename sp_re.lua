@@ -85,7 +85,6 @@ local jieyue = fk.CreateViewAsSkill{
   pattern = "jink,nullification",
   mute = true,
   card_filter = function(self, to_select, selected)
-    if #Self:getPile(self.name) == 0 then return end
     return #selected == 0 and Fk:currentRoom():getCardArea(to_select) ~= Player.Equip
   end,
   before_use = function(self, player, use)
@@ -110,7 +109,7 @@ local jieyue = fk.CreateViewAsSkill{
     return card
   end,
   enabled_at_response = function(self, player)
-    return #player:getPile(self.name) > 0
+    return #player:getPile("$jieyue") > 0
   end,
 }
 local jieyue_trigger = fk.CreateTriggerSkill{
@@ -123,7 +122,7 @@ local jieyue_trigger = fk.CreateTriggerSkill{
       if player.phase == Player.Finish then
         return player:hasSkill("jieyue") and not player:isKongcheng()
       elseif player.phase == Player.Start then
-        return #player:getPile("jieyue") > 0
+        return #player:getPile("$jieyue") > 0
       end
     end
   end,
@@ -156,7 +155,7 @@ local jieyue_trigger = fk.CreateTriggerSkill{
       local to = room:getPlayerById(self.cost_data[1])
       local card = room:askForCard(to, 1, 1, true, "jieyue", true, ".", "#jieyue-give:"..player.id)
       if #card > 0 then
-        player:addToPile("jieyue", card, false, "jieyue")
+        player:addToPile("$jieyue", card, false, "jieyue")
       else
         local id = room:askForCardChosen(player, to, "he", "jieyue")
         room:throwCard({id}, "jieyue", to, player)
@@ -165,7 +164,7 @@ local jieyue_trigger = fk.CreateTriggerSkill{
       if player.dead then return end
       room:moveCards({
         from = player.id,
-        ids = player:getPile("jieyue"),
+        ids = player:getPile("$jieyue"),
         to = player.id,
         toArea = Card.PlayerHand,
         moveReason = fk.ReasonJustMove,
@@ -185,6 +184,7 @@ Fk:loadTranslationTable{
   [":jieyue"] = "结束阶段开始时，你可以弃置一张手牌并选择一名其他角色，若如此做，除非该角色将一张牌置于你的武将牌上，否则你弃置其一张牌。"..
   "若你的武将牌上有牌，则你可以将红色手牌当【闪】、黑色手牌当【无懈可击】使用或打出，准备阶段开始时，你获得你武将牌上的牌。",
   ["#jieyue_trigger"] = "节钺",
+  ["$jieyue"] = "节钺",
   ["#jieyue-cost"] = "节钺：你可以弃置一张手牌，令一名其他角色执行后续效果",
   ["#jieyue-give"] = "节钺：将一张牌置为 %src 的“节钺”牌，或其弃置你一张牌",
 
@@ -369,23 +369,23 @@ local pojun = fk.CreateTriggerSkill{
     local to = room:getPlayerById(data.to)
     local cards = room:askForCardsChosen(player, to, 0, to.hp, "he", self.name)
     if #cards > 0 then
-      to:addToPile(self.name, cards, false, self.name)
-    end
-  end,
-
-  refresh_events = {fk.EventPhaseStart},
-  can_refresh = function(self, event, target, player, data)
-    return target.phase == Player.NotActive
-  end,
-  on_refresh = function(self, event, target, player, data)
-    local room = player.room
-    for _, p in ipairs(room:getAlivePlayers()) do
-      if #p:getPile(self.name) > 0 then
-        room:obtainCard(p.id, p:getPile(self.name), false, fk.ReasonJustMove)
-      end
+      to:addToPile("$re__pojun", cards, false, self.name)
     end
   end,
 }
+local pojun_delay = fk.CreateTriggerSkill{
+  name = "#re__pojun_delay",
+  mute = true,
+  events = {fk.TurnEnd},
+  can_trigger = function(self, event, target, player, data)
+    return #player:getPile("$re__pojun") > 0
+  end,
+  on_cost = Util.TrueFunc,
+  on_use = function(self, event, target, player, data)
+    player.room:moveCardTo(player:getPile("$re__pojun"), Player.Hand, player, fk.ReasonPrey, "re__pojun")
+  end,
+}
+pojun:addRelatedSkill(pojun_delay)
 xusheng:addSkill(pojun)
 Fk:loadTranslationTable{
   ["re__xusheng"] = "徐盛",
@@ -395,6 +395,8 @@ Fk:loadTranslationTable{
   ["re__pojun"] = "破军",
   [":re__pojun"] = "当你于出牌阶段内使用【杀】指定一个目标后，你可以将其至多X张牌扣置于该角色的武将牌旁（X为其体力值）。"..
   "若如此做，当前回合结束后，该角色获得其武将牌旁的所有牌。",
+  ["#re__pojun_delay"] = "破军",
+  ["$re__pojun"] = "破军",
 
   ["$re__pojun1"] = "大军在此！汝等休想前进一步！",
   ["$re__pojun2"] = "敬请，养精蓄锐！",

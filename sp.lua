@@ -1394,7 +1394,7 @@ local bifa = fk.CreateTriggerSkill{
     local room = player.room
     local to = room:getPlayerById(self.cost_data[1])
     room:setPlayerMark(player, "bifa_to", to.id)
-    to:addToPile(self.name, self.cost_data[2], false, self.name, player.id, {})
+    to:addToPile("$bifa", self.cost_data[2], false, self.name, player.id, {})
   end,
 }
 local bifa_trigger = fk.CreateTriggerSkill{
@@ -1402,7 +1402,7 @@ local bifa_trigger = fk.CreateTriggerSkill{
   mute = true,
   events = {fk.TurnStart},
   can_trigger = function(self, event, target, player, data)
-    return target == player and #player:getPile("bifa") > 0
+    return target == player and #player:getPile("$bifa") > 0
   end,
   on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
@@ -1414,7 +1414,7 @@ local bifa_trigger = fk.CreateTriggerSkill{
       room:loseHp(player, 1, "bifa")
       room:moveCards({
         from = player.id,
-        ids = player:getPile("bifa"),
+        ids = player:getPile("$bifa"),
         toArea = Card.DiscardPile,
         moveReason = fk.ReasonPutIntoDiscardPile,
         skillName = "bifa",
@@ -1425,19 +1425,19 @@ local bifa_trigger = fk.CreateTriggerSkill{
     room:notifySkillInvoked(src, "bifa", "control")
     room:doIndicate(src.id, {player.id})
     room:setPlayerMark(src, "bifa_to", 0)
-    local card = Fk:getCardById(player:getPile("bifa")[1])
+    local card = Fk:getCardById(player:getPile("$bifa")[1])
     local type = card:getTypeString()
     local give = room:askForCard(player, 1, 1, false, "bifa", true, ".|.|.|hand|.|"..type,
     "#bifa-invoke:"..src.id.."::"..type..":"..card:toLogString())
     if #give > 0 then
       room:moveCardTo(give, Card.PlayerHand, src, fk.ReasonGive, "bifa", nil, false, player.id)
-      if not player.dead and #player:getPile("bifa") > 0 then
-        room:moveCardTo(player:getPile("bifa"), Card.PlayerHand, player, fk.ReasonPrey, "bifa", nil, false, player.id)
+      if not player.dead and #player:getPile("$bifa") > 0 then
+        room:moveCardTo(player:getPile("$bifa"), Card.PlayerHand, player, fk.ReasonPrey, "bifa", nil, false, player.id)
       end
     else
       room:moveCards({
         from = player.id,
-        ids = player:getPile("bifa"),
+        ids = player:getPile("$bifa"),
         toArea = Card.DiscardPile,
         moveReason = fk.ReasonPutIntoDiscardPile,
         skillName = "bifa",
@@ -1491,6 +1491,7 @@ Fk:loadTranslationTable{
   [":songci"] = "出牌阶段，你可以选择一项：令一名手牌数小于其体力值的角色摸两张牌；或令一名手牌数大于其体力值的角色弃置两张牌。此技能对每名角色只能用一次。",
   ["#bifa-cost"] = "笔伐：将一张手牌移出游戏并指定一名其他角色",
   ["#bifa-invoke"] = "笔伐：交给 %src 一张 %arg 并获得%arg2；或点“取消”将此牌置入弃牌堆并失去1点体力",
+  ["$bifa"] = "笔伐",
   ["#songci"] = "颂词：令一名手牌数小于体力值的角色摸两张牌，或令一名手牌数大于体力值的角色弃两张牌",
 
   ["$bifa1"] = "笔墨纸砚，皆兵器也！",
@@ -1869,11 +1870,11 @@ local zhoufu = fk.CreateActiveSkill{
     return #selected == 0 and Fk:currentRoom():getCardArea(to_select) ~= Player.Equip
   end,
   target_filter = function(self, to_select, selected, cards)
-    return #selected == 0 and to_select ~= Self.id and #Fk:currentRoom():getPlayerById(to_select):getPile("zhangbao_zhou") == 0
+    return #selected == 0 and to_select ~= Self.id and #Fk:currentRoom():getPlayerById(to_select):getPile("$zhangbao_zhou") == 0
   end,
   on_use = function(self, room, effect)
     local target = room:getPlayerById(effect.tos[1])
-    target:addToPile("zhangbao_zhou", effect.cards, false, self.name)
+    target:addToPile("$zhangbao_zhou", effect.cards, false, self.name)
   end,
 }
 local zhoufu_trigger = fk.CreateTriggerSkill{
@@ -1881,7 +1882,7 @@ local zhoufu_trigger = fk.CreateTriggerSkill{
   anim_type = "control",
   events = {fk.EventPhaseStart},
   can_trigger = function(self, event, target, player, data)
-    return #target:getPile("zhangbao_zhou") > 0 and player:hasSkill(self) and target.phase == Player.NotActive
+    return #target:getPile("$zhangbao_zhou") > 0 and player:hasSkill(self) and target.phase == Player.NotActive
   end,
   on_cost = function(self, event, target, player, data)
     return true
@@ -1889,7 +1890,7 @@ local zhoufu_trigger = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     player.room:moveCards({
       from = target.id,
-      ids = target:getPile("zhangbao_zhou"),
+      ids = target:getPile("$zhangbao_zhou"),
       to = player.id,
       toArea = Card.PlayerHand,
       moveReason = fk.ReasonJustMove,
@@ -1899,10 +1900,10 @@ local zhoufu_trigger = fk.CreateTriggerSkill{
 
   refresh_events = {fk.StartJudge},
   can_refresh = function(self, event, target, player, data)
-    return #target:getPile("zhangbao_zhou") > 0
+    return #target:getPile("$zhangbao_zhou") > 0
   end,
   on_refresh = function(self, event, target, player, data)
-    data.card = Fk:getCardById(target:getPile("zhangbao_zhou")[1])
+    data.card = Fk:getCardById(target:getPile("$zhangbao_zhou")[1])
     data.card.skillName = "zhoufu"
   end,
 }
@@ -1931,7 +1932,7 @@ Fk:loadTranslationTable{
   "若如此做，该角色进行判定时，改为将此牌作为判定牌。该角色的回合结束时，若此牌仍在该角色旁，你将此牌收入手牌。",
   ["yingbing"] = "影兵",
   [":yingbing"] = "受到“咒缚”技能影响的角色进行判定时，你可以摸两张牌。",
-  ["zhangbao_zhou"] = "咒",
+  ["$zhangbao_zhou"] = "咒",
   ["#zhoufu_trigger"] = "咒缚",
   ["#zhoufu"] = "咒缚：将一张手牌置为一名角色的“咒缚”牌，其判定时改为将“咒缚”牌作为判定牌",
 
@@ -2289,14 +2290,14 @@ local yinbing = fk.CreateTriggerSkill{
   name = "yinbing",
   anim_type = "control",
   expand_pile = "yinbing",
-  derived_piles = "yinbing",
+  derived_piles = "$yinbing",
   events = {fk.EventPhaseStart, fk.Damaged},
   can_trigger = function(self, event, target, player, data)
     if player:hasSkill(self) then
       if event == fk.EventPhaseStart then
         return target == player and player.phase == Player.Finish and not player:isNude()
       else
-        return target == player and #player:getPile(self.name) > 0 and data.card and
+        return target == player and #player:getPile("$yinbing") > 0 and data.card and
           (data.card.trueName == "slash" or data.card.name == "duel")
       end
     end
@@ -2316,9 +2317,9 @@ local yinbing = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local room = player.room
     if event == fk.EventPhaseStart then
-      player:addToPile(self.name, self.cost_data, false, self.name)
+      player:addToPile("$yinbing", self.cost_data, false, self.name)
     else
-      local card = room:askForCard(player, 1, 1, false, self.name, false, ".|.|.|yinbing", "#yingbing-remove", "yinbing")
+      local card = room:askForCard(player, 1, 1, false, self.name, false, ".|.|.|$yinbing", "#yingbing-remove", "yinbing")
       room:moveCardTo(card, Card.DiscardPile, nil, fk.ReasonPutIntoDiscardPile, self.name, nil, true, player.id)
     end
   end,
@@ -2329,7 +2330,7 @@ local juedi = fk.CreateTriggerSkill{
   events = {fk.EventPhaseStart},
   frequency = Skill.Compulsory,
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self) and player.phase == Player.Start and #player:getPile("yinbing") > 0
+    return target == player and player:hasSkill(self) and player.phase == Player.Start and #player:getPile("$yinbing") > 0
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
@@ -2342,8 +2343,8 @@ local juedi = fk.CreateTriggerSkill{
     local tos = room:askForChoosePlayers(player, targets, 1, 1, "#juedi-choose", self.name, true, false)
     if #tos > 0 then
       local to = room:getPlayerById(tos[1])
-      local x = #player:getPile("yinbing")
-      room:moveCardTo(player:getPile("yinbing"), Card.DiscardPile, nil, fk.ReasonPutIntoDiscardPile, self.name, nil, true, player.id)
+      local x = #player:getPile("$yinbing")
+      room:moveCardTo(player:getPile("$yinbing"), Card.DiscardPile, nil, fk.ReasonPutIntoDiscardPile, self.name, nil, true, player.id)
       if not to.dead and to:isWounded() then
         room:recover({
           who = to,
@@ -2356,7 +2357,7 @@ local juedi = fk.CreateTriggerSkill{
         room:drawCards(to, x, self.name)
       end
     else
-      room:moveCardTo(player:getPile("yinbing"), Card.DiscardPile, nil, fk.ReasonPutIntoDiscardPile, self.name, nil, true, player.id)
+      room:moveCardTo(player:getPile("$yinbing"), Card.DiscardPile, nil, fk.ReasonPutIntoDiscardPile, self.name, nil, true, player.id)
       local x = player.maxHp - player:getHandcardNum()
       if x > 0 and not player.dead then
         room:drawCards(player, x, self.name)
@@ -2378,6 +2379,7 @@ Fk:loadTranslationTable{
   [":juedi"] = "锁定技，准备阶段，你选择一项: 1.移去“引兵”牌，然后将手牌摸至体力上限；2.令体力值小于等于你的一名其他角色获得“引兵”牌，"..
   "然后回复1点体力并摸等量的牌。",
   ["#yinbing-cost"] = "引兵：你可以将任意张非基本牌置于你的武将牌上",
+  ["$yinbing"] = "引兵",
   ["#yingbing-remove"] = "引兵：你需移去一张“引兵”牌",
   ["#juedi-choose"] = "绝地：令一名其他角色获得“引兵”牌然后回复1点体力并摸等量的牌，或点“取消”移去“引兵”牌令自己摸牌",
 
