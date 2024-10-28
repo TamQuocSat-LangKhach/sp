@@ -849,17 +849,17 @@ local yuanhu = fk.CreateTriggerSkill{
   end,
   on_cost = function(self, event, target, player, data)
     local success, dat = player.room:askForUseActiveSkill(player, "#yuanhu_active", "#yuanhu-invoke", true)
-    if success then
-      self.cost_data = dat
+    if success and dat then
+      self.cost_data = {cards = dat.cards, tos = dat.targets}
       return true
     end
   end,
   on_use = function (self, event, target, player, data)
     local room = player.room
-    room:notifySkillInvoked(player, self.name, "support")
-    local to = room:getPlayerById(self.cost_data.targets[1])
+    room:notifySkillInvoked(player, self.name, "support", self.cost_data.tos)
+    local to = room:getPlayerById(self.cost_data.tos[1])
     local card = Fk:getCardById(self.cost_data.cards[1])
-    U.moveCardIntoEquip(room, to, self.cost_data.cards[1], self.name, false, player)
+    room:moveCardIntoEquip(to, self.cost_data.cards[1], self.name, false, player)
     if to.dead then return end
     if card.sub_type == Card.SubtypeWeapon then
       player:broadcastSkillInvoke("yuanhu", 1)
@@ -901,7 +901,7 @@ Fk:loadTranslationTable{
   ["yuanhu"] = "援护",
   [":yuanhu"] = "结束阶段开始时，你可以将一张装备牌置于一名角色的装备区里，然后根据此装备牌的种类执行以下效果：<br>"..
   "武器牌：弃置与该角色距离为1的一名角色区域中的一张牌；<br>防具牌：该角色摸一张牌；<br>坐骑牌：该角色回复1点体力。",
-  ["yuanhu_active"] = "援护",
+  ["#yuanhu_active"] = "援护",
   ["#yuanhu-invoke"] = "援护：你可以将一张装备牌置入一名角色的装备区",
   ["#yuanhu-choose"] = "援护：弃置 %dest 距离1的一名角色区域中的一张牌",
 
@@ -3232,7 +3232,7 @@ local quji = fk.CreateActiveSkill{
   end,
   min_target_num = 1,
   prompt = function ()
-    return "#quji"..Self:getLostHp()
+    return "#quji:::"..Self:getLostHp()
   end,
   can_use = function(self, player)
     return player:isWounded() and player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
