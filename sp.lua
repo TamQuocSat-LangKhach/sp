@@ -286,7 +286,7 @@ local hulao__jingjia = fk.CreateTriggerSkill{
       return room:getCardArea(id) == Card.Void
     end)
     if #cards > 0 then
-      U.moveCardIntoEquip(room, player, cards, self.name, false, player)
+      room:moveCardIntoEquip(player, cards, self.name, false, player)
     end
   end,
 }

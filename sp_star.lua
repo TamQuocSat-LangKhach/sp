@@ -1016,7 +1016,7 @@ local junwei_delay = fk.CreateTriggerSkill{
     local room = player.room
     for i = #player:getPile("junwei"), 1, -1 do
       if player.dead then return end
-      U.moveCardIntoEquip(room, player, player:getPile("junwei")[i], "junwei", true, player)
+      room:moveCardIntoEquip(player, player:getPile("junwei")[i], "junwei", true, player)
     end
   end,
 }
