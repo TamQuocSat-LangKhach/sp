@@ -133,7 +133,7 @@ local cihuai_invoke = fk.CreateTriggerSkill{
 
   refresh_events = {fk.AfterCardsMove, fk.Death},
   can_refresh = function(self, event, target, player, data)
-    if player:hasSkill(self.name, true) then
+    if player:hasSkill(self, true) then
       if event == fk.AfterCardsMove then
         for _, move in ipairs(data) do
           if move.from == player.id or move.to == player.id then
@@ -194,7 +194,7 @@ local nuzhan = fk.CreateTriggerSkill{
   frequency = Skill.Compulsory,
   events = {fk.AfterCardUseDeclared, fk.PreCardUse},
   can_trigger = function(self, event, target, player, data)
-    if target == player and player:hasSkill(self.name, false, true) and data.card and data.card.trueName == "slash" and
+    if target == player and player:hasSkill(self, false, true) and data.card and data.card.trueName == "slash" and
       data.card:isVirtual() and #data.card.subcards == 1 then
       if event == fk.AfterCardUseDeclared then
         return player.phase == Player.Play and Fk:getCardById(data.card.subcards[1]).type == Card.TypeTrick
