@@ -306,7 +306,7 @@ local hulao__aozhan = fk.CreateTriggerSkill{
     end
   end,
   on_use = function(self, event, target, player, data)
-   if event == fk.EventPhaseChanging then
+    if event == fk.EventPhaseChanging then
       return true
     elseif event == fk.DrawNCards then
       data.n = data.n + 1
@@ -1340,9 +1340,6 @@ local baobian = fk.CreateTriggerSkill{
   anim_type = "offensive",
   frequency = Skill.Compulsory,
   events = {fk.HpChanged, fk.MaxHpChanged},
-  can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self)
-  end,
   on_use = function(self, event, target, player, data)
     BaobianChange(player, 1, "ol_ex__shensu")
     BaobianChange(player, 2, "ex__paoxiao")
@@ -1884,9 +1881,7 @@ local zhoufu_trigger = fk.CreateTriggerSkill{
   can_trigger = function(self, event, target, player, data)
     return #target:getPile("$zhangbao_zhou") > 0 and player:hasSkill(self) and target.phase == Player.NotActive
   end,
-  on_cost = function(self, event, target, player, data)
-    return true
-  end,
+  on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
     player.room:moveCards({
       from = target.id,
@@ -2508,9 +2503,6 @@ local weizhong = fk.CreateTriggerSkill{
   name = "weizhong",
   frequency = Skill.Compulsory,
   events = {fk.MaxHpChanged},
-  can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self)
-  end,
   on_use = function(self, event, target, player, data)
     player:drawCards(1, self.name)
   end,

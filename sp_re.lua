@@ -33,12 +33,14 @@ local sanyao = fk.CreateActiveSkill{
     local player = room:getPlayerById(effect.from)
     local target = room:getPlayerById(effect.tos[1])
     room:throwCard(effect.cards, self.name, player, player)
-    room:damage{
-      from = player,
-      to = target,
-      damage = 1,
-      skillName = self.name,
-    }
+    if not (player.dead or target.dead) then
+      room:damage{
+        from = player,
+        to = target,
+        damage = 1,
+        skillName = self.name,
+      }
+    end
   end
 }
 local zhiman = fk.CreateTriggerSkill{

@@ -356,9 +356,7 @@ local zuixiang_trigger = fk.CreateTriggerSkill{
       end
     end
   end,
-  on_cost = function(self, event, target, player, data)
-    return true
-  end,
+  on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
     player:broadcastSkillInvoke("zuixiang")
     if data.card.sub_type == Card.SubtypeDelayedTrick then  --取消延时锦囊
@@ -499,9 +497,7 @@ local dahe_trigger = fk.CreateTriggerSkill{
     return target == player and player:getMark("@@dahe-turn") > 0 and data.card.name == "jink" and data.card.suit ~= Card.Heart
   end,
   on_cost = Util.TrueFunc,
-  on_use = function(self, event, target, player, data)
-    return true
-  end,
+  on_use = Util.TrueFunc,
 }
 dahe:addRelatedSkill(dahe_trigger)
 zhangfei:addSkill(jyie)
