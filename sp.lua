@@ -1376,24 +1376,35 @@ local bifa = fk.CreateTriggerSkill{
   events = {fk.EventPhaseStart},
   can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(self) and player.phase == Player.Finish and not player:isKongcheng() and
-      table.find(player.room:getOtherPlayers(player), function(p) return #p:getPile(self.name) == 0 end)
+      table.find(player.room:getOtherPlayers(player, false), function(p) return #p:getPile("$bifa") == 0 end)
   end,
   on_cost = function(self, event, target, player, data)
-    local targets = table.map(table.filter(player.room:getOtherPlayers(player), function(p)
-      return #p:getPile(self.name) == 0 end), Util.IdMapper)
+    local targets = table.map(table.filter(player.room:getOtherPlayers(player, false), function(p)
+      return #p:getPile("$bifa") == 0 end), Util.IdMapper)
     local tos, id = player.room:askForChooseCardAndPlayers(player, targets, 1, 1, ".|.|.|hand", "#bifa-cost", self.name, true)
     if #tos > 0 then
-      self.cost_data = {tos[1], id}
+      self.cost_data = {tos = tos, cards = {id}}
       return true
     end
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    local to = room:getPlayerById(self.cost_data[1])
+    local to = room:getPlayerById(self.cost_data.tos[1])
     room:setPlayerMark(player, "bifa_to", to.id)
-    to:addToPile("$bifa", self.cost_data[2], false, self.name, player.id, {})
+    to:addToPile("$bifa", self.cost_data.cards, false, self.name, player.id, {})
   end,
 }
+
+local bifa_visible=fk.CreateVisibilitySkill{
+  name = '#bifa_visible',
+  card_visible = function(self, player, card)
+    if player:getPileNameOfId(card.id) == "$bifa" then
+      return false
+    end
+  end
+}
+bifa:addRelatedSkill(bifa_visible)
+
 local bifa_trigger = fk.CreateTriggerSkill{
   name = "#bifa_trigger",
   mute = true,
@@ -1454,6 +1465,16 @@ local songci = fk.CreateActiveSkill{
   prompt = "#songci",
   can_use = Util.TrueFunc,
   card_filter = Util.FalseFunc,
+  target_tip = function (self, to_select, selected, selected_cards, card, selectable, extra_data)
+    local target = Fk:currentRoom():getPlayerById(to_select)
+    if table.contains(Self:getTableMark(self.name), to_select) then
+      return nil
+    elseif target:getHandcardNum() < target.hp then
+      return { {content = "draw" , type = "normal"} }
+    elseif target:getHandcardNum() > target.hp then
+      return { {content = "discard", type = "warning"} }
+    end
+  end,
   target_filter = function(self, to_select, selected)
     local target = Fk:currentRoom():getPlayerById(to_select)
     return #selected == 0 and not table.contains(Self:getTableMark(self.name), to_select) and target:getHandcardNum() ~= target.hp
@@ -1461,9 +1482,7 @@ local songci = fk.CreateActiveSkill{
   on_use = function(self, room, effect)
     local player = room:getPlayerById(effect.from)
     local target = room:getPlayerById(effect.tos[1])
-    local mark = player:getTableMark(self.name)
-    table.insert(mark, target.id)
-    room:setPlayerMark(player, self.name, mark)
+    room:addTableMark(player, self.name, target.id)
     if target:getHandcardNum() < target.hp then
       player:broadcastSkillInvoke(self.name, 1)
       target:drawCards(2, self.name)
