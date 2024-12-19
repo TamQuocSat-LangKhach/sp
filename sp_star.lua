@@ -92,9 +92,7 @@ local lihun = fk.CreateActiveSkill{
     local target = room:getPlayerById(effect.tos[1])
     player:broadcastSkillInvoke(self.name, 1)
     room:notifySkillInvoked(player, self.name, "control")
-    local mark = player:getTableMark("lihun-phase")
-    table.insertIfNeed(mark, target.id)
-    room:setPlayerMark(player, "lihun-phase", mark)
+    room:addTableMarkIfNeed(player, "lihun-phase", target.id)
     room:throwCard(effect.cards, self.name, player, player)
     if player.dead then return end
     player:turnOver()
@@ -537,9 +535,7 @@ local tanhu = fk.CreateActiveSkill{
     local target = room:getPlayerById(effect.tos[1])
     local pindian = player:pindian({target}, self.name)
     if pindian.results[target.id].winner == player then
-      local mark = player:getTableMark("tanhu-turn")
-      table.insertIfNeed(mark, target.id)
-      room:setPlayerMark(player, "tanhu-turn", mark)
+      room:addTableMarkIfNeed(player, "tanhu-turn", target.id)
     end
   end,
 }

@@ -2942,9 +2942,7 @@ local yingyuan = fk.CreateTriggerSkill{
     local to = room:getPlayerById(self.cost_data)
     room:moveCardTo(cards, Card.PlayerHand, to, fk.ReasonGive, self.name, nil, true, player.id)
     if player.dead then return end
-    local mark = player:getTableMark("yingyuan-turn")
-    table.insert(mark, data.card.trueName)
-    room:setPlayerMark(player, "yingyuan-turn", mark)
+    room:addTableMark(player, "yingyuan-turn", data.card.trueName)
   end,
 }
 maliang:addSkill(zishu)

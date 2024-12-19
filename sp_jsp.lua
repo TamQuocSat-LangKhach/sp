@@ -27,9 +27,7 @@ local liangzhu = fk.CreateTriggerSkill{
     else
       room:doIndicate(player.id, {target.id})
       target:drawCards(2, self.name)
-      local mark = player:getTableMark("liangzhu_target")
-      table.insertIfNeed(mark, target.id)
-      room:setPlayerMark(player, "liangzhu_target", mark)
+      room:addTableMarkIfNeed(player, "liangzhu_target", target.id)
     end
   end,
 }
