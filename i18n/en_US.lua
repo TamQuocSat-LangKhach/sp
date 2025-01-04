@@ -90,6 +90,7 @@ return {
   [":jieyuan"] = "When you deal/suffer DMG to/by another hero whose HP ≥ your HP, you can discard a black hand card to deal +1 DMG /discard a red hand card to suffer -1 DMG.",
   ["fenxin"] = "Burning Heart",
   [":fenxin"] = "(limited) when you kill a hero, if you are not ruler, you can exchange your roles.",
+  ["#fenxin-invoke"] = "Burning Heart: you can exchange your role with %src",
   ["#jieyuan1-invoke"] = "Deplete Karma: you can discard a black hand card to deal +1 DMG to %dest",
   ["#jieyuan2-invoke"] = "Deplete Karma: you can discard a red hand card to suffer -1 DMG",
 

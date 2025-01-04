@@ -1209,9 +1209,16 @@ local fenxin = fk.CreateTriggerSkill{
       data.damage and data.damage.from and data.damage.from == player and
       player.role ~= "lord" and target.role ~= "lord"
   end,
+  on_cost = function (self, event, target, player, data)
+    if player.room:askForSkillInvoke(player, self.name, data, "#fenxin-invoke:"..target.id) then
+      self.cost_data = {tos = {target.id}}
+      return true
+    end
+  end,
   on_use = function(self, event, target, player, data)
     player.role, target.role = target.role, player.role
-    player.room:notifyProperty(player, player, "role")
+    player.room:broadcastProperty(player, "role")
+    player.room:broadcastProperty(target, "role")
   end,
 }
 lingju:addSkill(jieyuan)
@@ -1226,6 +1233,7 @@ Fk:loadTranslationTable{
   "当你受到一名其他角色造成的伤害时，若其体力值大于或等于你的体力值，你可弃置一张红色手牌令此伤害-1。",
   ["fenxin"] = "焚心",
   [":fenxin"] = "限定技，当你杀死一名非主公角色时，在其翻开身份牌之前，你可以与该角色交换身份牌。（你的身份为主公时不能发动此技能。）",
+  ["#fenxin-invoke"] = "焚心：你可以与 %src 交换身份牌",
   ["#jieyuan1-invoke"] = "竭缘：你可以弃置一张黑色手牌令对 %dest 造成的伤害+1",
   ["#jieyuan2-invoke"] = "竭缘：你可以弃置一张红色手牌令此伤害-1",
 
