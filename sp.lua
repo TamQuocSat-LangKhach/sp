@@ -165,13 +165,13 @@ local weidi = fk.CreateTriggerSkill{
     if not player:hasSkill(self) then return false end
     local lordCheck = table.find(player.room.alive_players, function (p)
       return p ~= player and p.role == "lord" and
-      table.find(p.player_skills, function(s) return s.lordSkill and not player:hasSkill(s, true) end)
+      table.find(p.player_skills, function(s) return s.lordSkill and not player:hasSkill(s, true) end) ~= nil
     end)
     if event == fk.GameStart then
       return lordCheck
     else
       if target == player then
-        return data == self and player.room:getTag("RoundCount") and lordCheck
+        return data == self and player.room:getBanner("RoundCount") and lordCheck
       else
         return data.lordSkill and not player:hasSkill(data, true) and target.role == "lord"
       end
