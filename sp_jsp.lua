@@ -304,6 +304,8 @@ Fk:loadTranslationTable{
   ["jsp__jiangwei"] = "姜维",
   ["#jsp__jiangwei"] = "幼麒",
   ["illustrator:jsp__jiangwei"] = "depp",
+  ["cv:jsp__jiangwei"] = "绯川陵彦",
+  ["designer:jsp__jiangwei"] = "梦三",
 
   ["kunfen"] = "困奋",
   [":kunfen"] = "锁定技，结束阶段开始时，你失去1点体力，然后摸两张牌。",
@@ -355,7 +357,7 @@ local chixin = fk.CreateViewAsSkill{
 local chixin_targetmod = fk.CreateTargetModSkill{
   name = "#chixin_targetmod",
   bypass_times = function(self, player, skill, scope, card, to)
-    return player:hasSkill(self) and skill.trueName == "slash_skill"
+    return player:hasSkill(self) and skill.trueName == "slash_skill" and to
     and scope == Player.HistoryPhase and player:inMyAttackRange(to) and to:getMark("chixin_slashed-phase") == 0
   end
 }
