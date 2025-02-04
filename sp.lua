@@ -2341,7 +2341,7 @@ local yinbing = fk.CreateTriggerSkill{
     if event == fk.EventPhaseStart then
       player:addToPile("$yinbing", self.cost_data, false, self.name)
     else
-      local card = room:askForCard(player, 1, 1, false, self.name, false, ".|.|.|$yinbing", "#yingbing-remove", "yinbing")
+      local card = room:askForCard(player, 1, 1, false, self.name, false, ".|.|.|$yinbing", "#yingbing-remove", "$yinbing")
       room:moveCardTo(card, Card.DiscardPile, nil, fk.ReasonPutIntoDiscardPile, self.name, nil, true, player.id)
     end
   end,
