@@ -10,14 +10,14 @@ Fk:loadTranslationTable{
 shenwei:addEffect(fk.DrawNCards, {
   anim_type = "drawcard",
   frequency = Skill.Compulsory,
-  on_use = function(skill, event, target, player, data)
+  on_use = function(self, event, target, player, data)
     data.n = data.n + 2
   end,
 })
 
 shenwei:addEffect('maxcards', {
   name = "#shenwei_maxcards",
-  correct_func = function(skill, player)
+  correct_func = function(self, player)
     if player:hasSkill(shenwei.name) then
       return 2
     end

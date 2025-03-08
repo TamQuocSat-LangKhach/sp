@@ -23,17 +23,17 @@ quji:addEffect('active', {
   min_card_num = min_card_num,
   min_target_num = 1,
   prompt = prompt,
-  can_use = function(skill, player)
+  can_use = function(self, player)
     return player:isWounded() and player:usedSkillTimes(skill.name, Player.HistoryPhase) == 0
   end,
-  card_filter = function(skill, player, to_select, selected)
+  card_filter = function(self, player, to_select, selected)
     return #selected < min_card_num(player)
   end,
-  target_filter = function(skill, player, to_select, selected, cards)
+  target_filter = function(self, player, to_select, selected, cards)
     return #selected < min_card_num(player) and Fk:currentRoom():getPlayerById(to_select):isWounded()
     and #cards == min_card_num(player)
   end,
-  on_use = function(skill, room, effect)
+  on_use = function(self, room, effect)
     local player = room:getPlayerById(effect.from)
     local loseHp = table.find(effect.cards, function(id) return Fk:getCardById(id).color == Card.Black end)
     room:throwCard(effect.cards, skill.name, player, player)

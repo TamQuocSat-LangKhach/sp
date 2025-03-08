@@ -10,41 +10,41 @@ Fk:loadTranslationTable{
 }
 
 mingzhe:addEffect(fk.CardUsing, {
-  can_trigger = function(skill, event, target, player, data)
+  can_trigger = function(self, event, target, player, data)
     if player:hasSkill(mingzhe) and player.phase == Player.NotActive then
     return player == target and data.card.color == Card.Red
     end
   end,
-  on_cost = function(skill, event, target, player, data)
+  on_cost = function(self, event, target, player, data)
     if player.room:askToSkillInvoke(player, { skill_name = mingzhe.name }) then
     return true
     end
     skill.cancel_cost = true
   end,
-  on_use = function(skill, event, target, player, data)
+  on_use = function(self, event, target, player, data)
     player:drawCards(1, mingzhe.name)
   end,
 })
 
 mingzhe:addEffect(fk.CardResponding, {
-  can_trigger = function(skill, event, target, player, data)
+  can_trigger = function(self, event, target, player, data)
     if player:hasSkill(mingzhe) and player.phase == Player.NotActive then
     return player == target and data.card.color == Card.Red
     end
   end,
-  on_cost = function(skill, event, target, player, data)
+  on_cost = function(self, event, target, player, data)
     if player.room:askToSkillInvoke(player, { skill_name = mingzhe.name }) then
     return true
     end
     skill.cancel_cost = true
   end,
-  on_use = function(skill, event, target, player, data)
+  on_use = function(self, event, target, player, data)
     player:drawCards(1, mingzhe.name)
   end,
 })
 
 mingzhe:addEffect(fk.AfterCardsMove, {
-  can_trigger = function(skill, event, target, player, data)
+  can_trigger = function(self, event, target, player, data)
     if player:hasSkill(mingzhe) and player.phase == Player.NotActive then
     for _, move in ipairs(data) do
       if move.from == player.id and move.moveReason == fk.ReasonDiscard then
@@ -58,7 +58,7 @@ mingzhe:addEffect(fk.AfterCardsMove, {
     end
     end
   end,
-  on_trigger = function(skill, event, target, player, data)
+  on_trigger = function(self, event, target, player, data)
     local x = 1
     for _, move in ipairs(data) do
     if move.from == player.id and move.moveReason == fk.ReasonDiscard then
@@ -81,13 +81,13 @@ mingzhe:addEffect(fk.AfterCardsMove, {
     if ret then return ret end
     end
   end,
-  on_cost = function(skill, event, target, player, data)
+  on_cost = function(self, event, target, player, data)
     if player.room:askToSkillInvoke(player, { skill_name = mingzhe.name }) then
     return true
     end
     skill.cancel_cost = true
   end,
-  on_use = function(skill, event, target, player, data)
+  on_use = function(self, event, target, player, data)
     player:drawCards(1, mingzhe.name)
   end,
 })

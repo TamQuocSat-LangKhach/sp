@@ -11,10 +11,10 @@ Fk:loadTranslationTable{
 
 zhaolie:addEffect(fk.DrawNCards, {
   anim_type = "offensive",
-  can_trigger = function(skill, event, target, player, data)
+  can_trigger = function(self, event, target, player, data)
   return target == player and player:hasSkill(zhaolie.name) and data.n > 0
   end,
-  on_cost = function(skill, event, target, player, data)
+  on_cost = function(self, event, target, player, data)
   local targets = table.map(table.filter(player.room:getOtherPlayers(player),
     function(p) return player:inMyAttackRange(p) end), Util.IdMapper)
   if #targets == 0 then return end
@@ -31,7 +31,7 @@ zhaolie:addEffect(fk.DrawNCards, {
     return true
   end
   end,
-  on_use = function(skill, event, target, player, data)
+  on_use = function(self, event, target, player, data)
   local room = player.room
   data.n = data.n - 1
   local to = room:getPlayerById(event:getCostData(skill))

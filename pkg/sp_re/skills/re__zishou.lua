@@ -11,10 +11,10 @@ Fk:loadTranslationTable{
 
 re__zishou:addEffect(fk.DrawNCards, {
   anim_type = "drawcard",
-  can_trigger = function(skill, event, target, player, data)
+  can_trigger = function(self, event, target, player, data)
     return player:hasSkill(re__zishou.name) and player.phase == Player.Draw
   end,
-  on_use = function(skill, event, target, player, data)
+  on_use = function(self, event, target, player, data)
     local kingdoms = {}
     for _, p in ipairs(player.room.alive_players) do
       table.insertIfNeed(kingdoms, p.kingdom)
@@ -24,7 +24,7 @@ re__zishou:addEffect(fk.DrawNCards, {
 })
 
 re__zishou:addEffect('prohibit', {
-  is_prohibited = function(skill, from, to, card)
+  is_prohibited = function(self, from, to, card)
   if from:hasSkill(re__zishou.name) then
     return from:usedSkillTimes("re__zishou") > 0 and from ~= to
   end

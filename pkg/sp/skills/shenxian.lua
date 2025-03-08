@@ -12,7 +12,7 @@ Fk:loadTranslationTable{
 
 shenxian:addEffect(fk.AfterCardsMove, {
   anim_type = "drawcard",
-  can_trigger = function(skill, event, target, player, data)
+  can_trigger = function(self, event, target, player, data)
     if player:hasSkill(shenxian.name) and player.phase == Player.NotActive then
     for _, move in ipairs(data) do
       if move.toArea == Card.DiscardPile and move.moveReason == fk.ReasonDiscard and move.from ~= player.id then
@@ -25,7 +25,7 @@ shenxian:addEffect(fk.AfterCardsMove, {
     end
     end
   end,
-  on_use = function(skill, event, target, player, data)
+  on_use = function(self, event, target, player, data)
     player:drawCards(1, shenxian.name)
   end,
 })

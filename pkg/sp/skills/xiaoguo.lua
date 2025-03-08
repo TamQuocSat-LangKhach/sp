@@ -2,7 +2,7 @@ local xiaoguo = fk.CreateSkill {
   name = "xiaoguo"
 }
 
-Fk:loadTranslationTable{
+Fk:loadTranslationTable {
   ['xiaoguo'] = '骁果',
   ['#xiaoguo-invoke'] = '骁果：你可以弃置一张基本牌，%dest 需弃置一张装备牌并令你摸一张牌，否则你对其造成1点伤害',
   ['#xiaoguo-discard'] = '骁果：你需弃置一张装备牌并令 %src 摸一张牌，否则其对你造成1点伤害',
@@ -13,7 +13,8 @@ Fk:loadTranslationTable{
 
 xiaoguo:addEffect(fk.EventPhaseStart, {
   can_trigger = function(self, event, target, player)
-    return target ~= player and player:hasSkill(xiaoguo.name) and target.phase == Player.Finish and not player:isKongcheng()
+    return target ~= player and player:hasSkill(xiaoguo.name) and target.phase == Player.Finish and
+    not player:isKongcheng()
   end,
   on_cost = function(self, event, target, player)
     local card = player.room:askToDiscard(player, {
@@ -33,24 +34,23 @@ xiaoguo:addEffect(fk.EventPhaseStart, {
   end,
   on_use = function(self, event, target, player)
     local room = player.room
-    room:doIndicate(player.id, {target.id})
+    room:doIndicate(player, { target })
     room:throwCard(event:getCostData(self), xiaoguo.name, player, player)
     if target.dead then return end
     if #room:askToDiscard(target, {
-      min_num = 1,
-      max_num = 1,
-      include_equip = true,
-      skill_name = xiaoguo.name,
-      cancelable = true,
-      pattern = ".|.|.|.|.|equip",
-      prompt = "#xiaoguo-discard:" .. player.id,
-      skip = true
-    }) > 0 then
+          min_num = 1,
+          max_num = 1,
+          include_equip = true,
+          skill_name = xiaoguo.name,
+          cancelable = true,
+          pattern = ".|.|.|.|.|equip",
+          prompt = "#xiaoguo-discard:" .. player.id,
+        }) > 0 then
       if not player.dead then
         player:drawCards(1, xiaoguo.name)
       end
     else
-      room:damage{
+      room:damage {
         from = player,
         to = target,
         damage = 1,

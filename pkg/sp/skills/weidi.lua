@@ -1,6 +1,6 @@
-```lua
 local weidi = fk.CreateSkill {
-  name = "weidi"
+  name = "weidi",
+  frequency = Skill.Compulsory,
 }
 
 Fk:loadTranslationTable{
@@ -11,26 +11,23 @@ Fk:loadTranslationTable{
 }
 
 weidi:addEffect(fk.GameStart, {
-  frequency = Skill.Compulsory,
-  can_trigger = function(skill, event, target, player)
-    if not player:hasSkill(weidi) then return false end
+  can_trigger = function(self, event, target, player)
+    if not player:hasSkill(weidi.name) then return false end
     local lordCheck = table.find(player.room.alive_players, function (p)
       return p ~= player and p.role == "lord" and
-           table.find(p.player_skills, function(s) return s.lordSkill and not player:hasSkill(s, true) end) ~= nil
+        table.find(p.player_skills, function(s)
+          return s:hasTag(Skill.Lord) and not player:hasSkill(s, true)
+        end) ~= nil
     end)
-    if event == fk.GameStart then
-      return lordCheck
-    else
-      return false
-    end
+    return lordCheck
   end,
-  on_use = function(skill, event, target, player)
+  on_use = function(self, event, target, player)
     local room = player.room
     local skills = {}
     for _, p in ipairs(room.alive_players) do
       if p ~= player and p.role == "lord" then
         for _, s in ipairs(p.player_skills) do
-          if s.lordSkill and not player:hasSkill(s, true) then
+          if s:hasTag(Skill.Lord) and not player:hasSkill(s, true) then
             table.insert(skills, s.name)
           end
         end
@@ -43,34 +40,36 @@ weidi:addEffect(fk.GameStart, {
 })
 
 weidi:addEffect(fk.EventAcquireSkill, {
-  frequency = Skill.Compulsory,
-  can_trigger = function(skill, event, target, player, data)
-    if not player:hasSkill(weidi) then return false end
+  can_trigger = function(self, event, target, player, data)
+    if not player:hasSkill(weidi.name) then return false end
     local lordCheck = table.find(player.room.alive_players, function (p)
       return p ~= player and p.role == "lord" and
-           table.find(p.player_skills, function(s) return s.lordSkill and not player:hasSkill(s, true) end) ~= nil
+        table.find(p.player_skills, function(s)
+          return s:hasTag(Skill.Lord) and not player:hasSkill(s, true)
+        end) ~= nil
     end)
     if target == player then
-      return data == weidi and player.room:getBanner("RoundCount") and lordCheck
+      return data.skill.name == weidi.name and player.room:getBanner("RoundCount") and lordCheck
     else
-      return data.lordSkill and not player:hasSkill(data, true) and target.role == "lord"
+      return data.skill:hasTag(Skill.Lord) and not player:hasSkill(data.skill, true) and
+        target.role == "lord"
     end
   end,
-  on_use = function(skill, event, target, player)
+  on_use = function(self, event, target, player, data)
     local room = player.room
     local skills = {}
     if target == player then
       for _, p in ipairs(room.alive_players) do
         if p ~= player and p.role == "lord" then
           for _, s in ipairs(p.player_skills) do
-            if s.lordSkill and not player:hasSkill(s, true)  then
+            if s:hasTag(Skill.Lord) and not player:hasSkill(s, true)  then
               table.insert(skills, s.name)
             end
           end
         end
       end
     else
-      table.insert(skills, data.name)
+      table.insert(skills, data.skill.name)
     end
     if #skills > 0 then
       room:handleAddLoseSkills(player, table.concat(skills, "|"), nil)
@@ -79,4 +78,3 @@ weidi:addEffect(fk.EventAcquireSkill, {
 })
 
 return weidi
-```

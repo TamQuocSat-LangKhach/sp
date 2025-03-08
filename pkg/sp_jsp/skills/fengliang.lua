@@ -15,14 +15,14 @@ Fk:loadTranslationTable{
 fengliang:addEffect(fk.EnterDying, {
   anim_type = "defensive",
   frequency = Skill.Wake,
-  can_trigger = function(skill, event, target, player, data)
+  can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(skill.name) and
       player:usedSkillTimes(fengliang.name, Player.HistoryGame) == 0
   end,
-  can_wake = function(skill, event, target, player, data)
+  can_wake = function(self, event, target, player, data)
     return player.dying
   end,
-  on_use = function(skill, event, target, player, data)
+  on_use = function(self, event, target, player, data)
     local room = player.room
     room:changeMaxHp(player, -1)
     room:recover({

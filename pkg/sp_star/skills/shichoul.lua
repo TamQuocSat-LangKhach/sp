@@ -9,7 +9,7 @@ Fk:loadTranslationTable{
 }
 
 shichoul:addEffect(fk.TurnStart, {
-  can_trigger = function(skill, event, target, player)
+  can_trigger = function(self, event, target, player)
   return target == player and
        player:hasSkill(skill.name) and
        player:usedSkillTimes(skill.name, Player.HistoryGame) == 0 and
@@ -18,7 +18,7 @@ shichoul:addEffect(fk.TurnStart, {
        return p ~= player and p.kingdom == "shu"
        end)
   end,
-  on_cost = function(skill, event, target, player)
+  on_cost = function(self, event, target, player)
   local room = player.room
   local targets = table.map(table.filter(room.alive_players, function(p) 
     return p ~= player and p.kingdom == "shu" 
@@ -42,7 +42,7 @@ shichoul:addEffect(fk.TurnStart, {
 
   return false
   end,
-  on_use = function(skill, event, target, player)
+  on_use = function(self, event, target, player)
   local room = player.room
   local ret = event:getCostData(skill)
   local to = room:getPlayerById(ret[1][1])
@@ -65,12 +65,12 @@ shichoul:addEffect(fk.TurnStart, {
 })
 
 shichoul:addEffect(fk.DamageInflicted, {
-  can_trigger = function(skill, event, target, player)
+  can_trigger = function(self, event, target, player)
   return target == player and
        player:getMark("shichoul") ~= 0 and 
        not player.room:getPlayerById(player:getMark("shichoul")).dead
   end,
-  on_use = function(skill, event, target, player, data)
+  on_use = function(self, event, target, player, data)
   local room = player.room
   
   room:notifySkillInvoked(player, skill.name, "defensive")
@@ -97,11 +97,11 @@ shichoul:addEffect(fk.DamageInflicted, {
 })
 
 shichoul:addEffect(fk.EnterDying, {
-  can_trigger = function(skill, event, target, player) 
+  can_trigger = function(self, event, target, player) 
   return player:getMark("shichoul") ~= 0 and 
        (target:getMark("@@shichoul") ~= 0 or (target == player and event == fk.Death))
   end,
-  on_use = function(skill, event, target, player)
+  on_use = function(self, event, target, player)
   local room = player.room
   local to = room:getPlayerById(player:getMark("shichoul"))
   

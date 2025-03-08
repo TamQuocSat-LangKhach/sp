@@ -18,18 +18,18 @@ lihun:addEffect('active', {
   card_num = 1,
   target_num = 1,
   prompt = "#lihun",
-  can_use = function(skill, player)
+  can_use = function(self, player)
     return player:usedSkillTimes(lihun.name, Player.HistoryPhase) == 0
   end,
-  card_filter = function(skill, player, to_select, selected)
+  card_filter = function(self, player, to_select, selected)
     return #selected == 0 and not player:prohibitDiscard(Fk:getCardById(to_select))
   end,
-  target_filter = function(skill, player, to_select, selected, cards)
+  target_filter = function(self, player, to_select, selected, cards)
     local target = Fk:currentRoom():getPlayerById(to_select)
     return #selected == 0 and #cards == 1 and
       not target:isKongcheng() and (target:isMale())
   end,
-  on_use = function(skill, room, effect)
+  on_use = function(self, room, effect)
     local player = room:getPlayerById(effect.from)
     local target = room:getPlayerById(effect.tos[1])
     player:broadcastSkillInvoke(lihun.name, 1)
@@ -47,11 +47,11 @@ lihun:addEffect('active', {
 lihun:addEffect('trigger', {
   mute = true,
   events = {fk.EventPhaseEnd},
-  can_trigger = function(skill, event, target, player, data)
+  can_trigger = function(self, event, target, player, data)
     return target == player and player.phase == Player.Play and player:getMark("lihun-phase") ~= 0
   end,
   on_cost = Util.TrueFunc,
-  on_use = function(skill, event, target, player, data)
+  on_use = function(self, event, target, player, data)
     local room = player.room
     player:broadcastSkillInvoke(lihun.name, 2)
     room:notifySkillInvoked(player, lihun.name, "control")

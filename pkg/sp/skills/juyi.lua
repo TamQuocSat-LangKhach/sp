@@ -12,15 +12,15 @@ Fk:loadTranslationTable{
 
 juyi:addEffect(fk.EventPhaseStart, {
   frequency = Skill.Wake,
-  can_trigger = function(skill, event, target, player)
+  can_trigger = function(self, event, target, player)
     return target == player and player:hasSkill(skill.name) and
       player.phase == Player.Start and
       player:usedSkillTimes(juyi.name, Player.HistoryGame) == 0
   end,
-  can_wake = function(skill, event, target, player)
+  can_wake = function(self, event, target, player)
     return player:isWounded() and player.maxHp > #player.room.alive_players
   end,
-  on_use = function(skill, event, target, player)
+  on_use = function(self, event, target, player)
     local n = player.maxHp - player:getHandcardNum()
     if n > 0 then
       player:drawCards(n, juyi.name)

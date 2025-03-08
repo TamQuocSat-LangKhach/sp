@@ -1,31 +1,23 @@
-```lua
-local yanyu = fk.CreateSkill {
-  name = "yanyu"
+local yanyu_ac = fk.CreateSkill {
+  name = "yanyu_active"
 }
 
-Fk:loadTranslationTable{
+Fk:loadTranslationTable {
   ['yanyu_active'] = '燕语',
 }
 
-yanyu:addEffect('active', {
-  ask = function(skill, room)
-  local player = skill.player
-  return room:askToChooseCardsAndPlayers(player, {
-    min_card_num = 1,
-    max_card_num = 1,
-    targets = fk.AlivePlayers(),
-    min_target_num = 1,
-    max_target_num = 1,
-    expand_pile = player:getTableMark("yanyu_cards"),
-    card_filter = function(to_select, selected)
+yanyu_ac:addEffect('active', {
+  expand_pile = function(self, player)
+    return player:getTableMark("yanyu_cards")
+  end,
+  card_num = 1,
+  target_num = 1,
+  card_filter = function(self, player, to_select, selected)
     return #selected == 0 and table.contains(player:getTableMark("yanyu_cards"), to_select)
-    end,
-    target_filter = function(to_select, selected)
+  end,
+  target_filter = function(self, player, to_select, selected, selected_cards)
     return #selected == 0
-    end,
-  })
-  end
+  end,
 })
 
-return yanyu
-```
+return yanyu_ac

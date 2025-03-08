@@ -1,4 +1,3 @@
-```lua
 local bifa = fk.CreateSkill {
   name = "bifa"
 }
@@ -20,12 +19,14 @@ bifa:addEffect(fk.EventPhaseStart, {
       table.find(player.room:getOtherPlayers(player, false), function(p) return #p:getPile("$bifa") == 0 end)
   end,
   on_cost = function(self, event, target, player)
-    local targets = table.map(table.filter(player.room:getOtherPlayers(player, false), function(p)
+    local targets = table.filter(player.room:getOtherPlayers(player, false), function(p)
       return #p:getPile("$bifa") == 0
-    end), Util.IdMapper)
+    end)
     local tos, id = player.room:askToChooseCardsAndPlayers(player, {
       min_card_num = 1,
       max_card_num = 1,
+      min_num = 1,
+      max_num = 1,
       targets = targets,
       pattern = ".|.|.|hand",
       prompt = "#bifa-cost",
@@ -38,14 +39,13 @@ bifa:addEffect(fk.EventPhaseStart, {
   end,
   on_use = function(self, event, target, player)
     local room = player.room
-    local to = room:getPlayerById(event:getCostData(self).tos[1])
+    local to = event:getCostData(self).tos[1] ---@type ServerPlayer
     room:setPlayerMark(player, "bifa_to", to.id)
-    to:addToPile("$bifa", event:getCostData(self).cards, false, bifa.name, player.id, {})
+    to:addToPile("$bifa", event:getCostData(self).cards, false, bifa.name, player, {})
   end,
 })
 
 bifa:addEffect('visibility', {
-  name = '#bifa_visible',
   card_visible = function(self, player, card)
     if player:getPileNameOfId(card.id) == "$bifa" then
       return false
@@ -54,7 +54,6 @@ bifa:addEffect('visibility', {
 })
 
 bifa:addEffect(fk.TurnStart, {
-  name = "#bifa_trigger",
   mute = true,
   can_trigger = function(self, event, target, player)
     return target == player and #player:getPile("$bifa") > 0
@@ -68,7 +67,7 @@ bifa:addEffect(fk.TurnStart, {
     if src == nil or player:isKongcheng() then
       room:loseHp(player, 1, "bifa")
       room:moveCards({
-        from = player.id,
+        from = player,
         ids = player:getPile("$bifa"),
         toArea = Card.DiscardPile,
         moveReason = fk.ReasonPutIntoDiscardPile,
@@ -78,25 +77,25 @@ bifa:addEffect(fk.TurnStart, {
     end
     src:broadcastSkillInvoke("bifa")
     room:notifySkillInvoked(src, "bifa", "control")
-    room:doIndicate(src.id, {player.id})
+    room:doIndicate(src, {player})
     room:setPlayerMark(src, "bifa_to", 0)
     local card = Fk:getCardById(player:getPile("$bifa")[1])
     local type = card:getTypeString()
     local give = room:askToCards(player, {
       min_num = 1,
       max_num = 1,
-      pattern = ".|.|.|hand|.|"..type,
-      prompt = "#bifa-invoke:"..src.id.."::"..type..":"..card:toLogString(),
+      pattern = ".|.|.|hand|.|" .. type,
+      prompt = "#bifa-invoke:" .. src.id .. "::" ..type.. ":" .. card:toLogString(),
       skill_name = "bifa",
     })
     if #give > 0 then
-      room:moveCardTo(give, Card.PlayerHand, src, fk.ReasonGive, "bifa", nil, false, player.id)
+      room:moveCardTo(give, Card.PlayerHand, src, fk.ReasonGive, "bifa", nil, false, player)
       if not player.dead and #player:getPile("$bifa") > 0 then
-        room:moveCardTo(player:getPile("$bifa"), Card.PlayerHand, player, fk.ReasonPrey, "bifa", nil, false, player.id)
+        room:moveCardTo(player:getPile("$bifa"), Card.PlayerHand, player, fk.ReasonPrey, "bifa", nil, false, player)
       end
     else
       room:moveCards({
-        from = player.id,
+        from = player,
         ids = player:getPile("$bifa"),
         toArea = Card.DiscardPile,
         moveReason = fk.ReasonPutIntoDiscardPile,
@@ -110,4 +109,3 @@ bifa:addEffect(fk.TurnStart, {
 })
 
 return bifa
-```

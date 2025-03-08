@@ -10,11 +10,11 @@ Fk:loadTranslationTable{
 
 sui-ren:addEffect(fk.EventPhaseStart, {
   frequency = Skill.Limited,
-  can_trigger = function(skill, event, target, player, data)
+  can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(skill.name) and player:usedSkillTimes(skill.name, Player.HistoryGame) == 0
       and player.phase == Player.Start and player:hasSkill("yicong", true)
   end,
-  on_cost = function(skill, event, target, player, data)
+  on_cost = function(self, event, target, player, data)
     local to = player.room:askToChoosePlayers(player, {
       targets = table.map(player.room:getAlivePlayers(), function (p) return p end),
       min_num = 1,
@@ -27,7 +27,7 @@ sui-ren:addEffect(fk.EventPhaseStart, {
       return true
     end
   end,
-  on_use = function(skill, event, target, player, data)
+  on_use = function(self, event, target, player, data)
     local room = player.room
     room:handleAddLoseSkills(player, "-yicong", nil, true, false)
     room:changeMaxHp(player, 1)

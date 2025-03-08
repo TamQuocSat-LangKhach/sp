@@ -11,10 +11,10 @@ Fk:loadTranslationTable{
 }
 
 jilei:addEffect(fk.Damaged, {
-  can_trigger = function(skill, event, target, player, data)
+  can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(jilei.name) and data.from and not data.from.dead
   end,
-  on_use = function(skill, event, target, player, data)
+  on_use = function(self, event, target, player, data)
     local room = player.room
     local choice = room:askToChoice(player, {
       choices = {"basic", "trick", "equip"},
@@ -28,7 +28,7 @@ jilei:addEffect(fk.Damaged, {
 })
 
 jilei:addEffect('prohibit', {
-  prohibit_use = function(skill, player, card)
+  prohibit_use = function(self, player, card)
   local mark = player:getMark("@jilei-turn")
   if type(mark) == "table" and table.contains(mark, card:getTypeString() .. "_char") then
     local subcards = card:isVirtual() and card.subcards or {card.id}
@@ -37,7 +37,7 @@ jilei:addEffect('prohibit', {
     end)
   end
   end,
-  prohibit_response = function(skill, player, card)
+  prohibit_response = function(self, player, card)
   local mark = player:getMark("@jilei-turn")
   if type(mark) == "table" and table.contains(mark, card:getTypeString() .. "_char") then
     local subcards = card:isVirtual() and card.subcards or {card.id}
@@ -46,7 +46,7 @@ jilei:addEffect('prohibit', {
     end)
   end
   end,
-  prohibit_discard = function(skill, player, card)
+  prohibit_discard = function(self, player, card)
   local mark = player:getMark("@jilei-turn")
   return type(mark) == "table" and table.contains(mark, card:getTypeString() .. "_char")
   end,

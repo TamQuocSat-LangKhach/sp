@@ -16,35 +16,37 @@ juesi:addEffect('active', {
   card_num = 1,
   target_num = 1,
   prompt = "#juesi",
-  can_use = function(skill, player)
-  return not player:isKongcheng()
+  can_use = function(self, player)
+    return not player:isKongcheng()
   end,
-  card_filter = function(skill, player, to_select, selected)
-  return #selected == 0 and Fk:getCardById(to_select).trueName == "slash" and not player:prohibitDiscard(Fk:getCardById(to_select))
+  card_filter = function(self, player, to_select, selected)
+    return #selected == 0 and Fk:getCardById(to_select).trueName == "slash" and
+      not player:prohibitDiscard(Fk:getCardById(to_select))
   end,
-  target_filter = function(skill, player, to_select, selected)
-  local target = Fk:currentRoom():getPlayerById(to_select)
-  return #selected == 0 and not target:isNude() and player:inMyAttackRange(target)
+  target_filter = function(self, player, to_select, selected)
+    return #selected == 0 and not to_select:isNude() and player:inMyAttackRange(to_select)
   end,
-  on_use = function(skill, room, effect)
-  local player = room:getPlayerById(effect.from)
-  local target = room:getPlayerById(effect.tos[1])
-  room:throwCard(effect.cards, juesi.name, player, player)
-  if target.dead then return end
-  local card = room:askToDiscard(target, {
-    min_num = 1,
-    max_num = 1,
-    include_equip = true,
-    skill_name = juesi.name,
-    cancelable = false,
-    prompt = "#juesi-discard:"..player.id
-  })
-  if #card > 0 then
-    card = Fk:getCardById(card[1])
-    if card.trueName ~= "slash" and target.hp >= player.hp and not player.dead and not target.dead then
-    room:useVirtualCard("duel", nil, player, target, juesi.name)
+  on_use = function(self, room, effect)
+    local player = effect.from
+    local target = effect.tos[1]
+    room:throwCard(effect.cards, juesi.name, player, player)
+    if target.dead then return end
+    local card = room:askToDiscard(target, {
+      min_num = 1,
+      max_num = 1,
+      include_equip = true,
+      skill_name = juesi.name,
+      cancelable = false,
+      prompt = "#juesi-discard:" .. player.id
+    })
+    if #card > 0 then
+      card = Fk:getCardById(card[1])
+      if card.trueName ~= "slash" and target.hp >= player.hp and
+        not player.dead and not target.dead then
+
+        room:useVirtualCard("duel", nil, player, target, juesi.name)
+      end
     end
-  end
   end,
 })
 

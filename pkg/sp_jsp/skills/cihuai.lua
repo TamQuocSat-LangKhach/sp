@@ -12,10 +12,10 @@ Fk:loadTranslationTable{
 cihuai:addEffect('viewas', {
   anim_type = "offensive",
   pattern = "slash",
-  card_filter = function(skill, player, to_select, selected)
+  card_filter = function(self, player, to_select, selected)
   return false
   end,
-  view_as = function(skill, player, cards)
+  view_as = function(self, player, cards)
   if player:getMark("cihuai") == 0 then return end
   local c = Fk:cloneCard("slash")
   c.skillName = skill.name
@@ -26,13 +26,13 @@ cihuai:addEffect('viewas', {
 -- TriggerSkill 部分
 cihuai:addEffect(fk.EventPhaseStart, {
   anim_type = "offensive",
-  can_trigger = function(skill, event, target, player)
+  can_trigger = function(self, event, target, player)
   return target == player and player:hasSkill(cihuai.name) and player.phase == Player.Play and not player:isKongcheng()
   end,
-  on_cost = function(skill, event, target, player)
+  on_cost = function(self, event, target, player)
   return player.room:askToSkillInvoke(player, { skill_name = cihuai.name })
   end,
-  on_use = function(skill, event, target, player)
+  on_use = function(self, event, target, player)
   local cards = player.player_cards[Player.Hand]
   player:showCards(cards)
   for _, id in ipairs(cards) do
@@ -43,7 +43,7 @@ cihuai:addEffect(fk.EventPhaseStart, {
   player.room:addPlayerMark(player, "cihuai", 1)
   end,
   
-  can_refresh = function(skill, event, target, player)
+  can_refresh = function(self, event, target, player)
   if player:hasSkill(cihuai.name, true) then
     if event == fk.AfterCardsMove then
     for _, move in ipairs(target or {}) do
@@ -60,7 +60,7 @@ cihuai:addEffect(fk.EventPhaseStart, {
     end
   end
   end,
-  on_refresh = function(skill, event, target, player)
+  on_refresh = function(self, event, target, player)
   player.room:setPlayerMark(player, "cihuai", 0)
   end,
 })

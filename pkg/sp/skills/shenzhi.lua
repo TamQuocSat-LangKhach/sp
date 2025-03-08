@@ -11,11 +11,11 @@ Fk:loadTranslationTable{
 
 shenzhi:addEffect(fk.EventPhaseStart, {
   anim_type = "support",
-  can_trigger = function(skill, event, target, player)
+  can_trigger = function(self, event, target, player)
     return target == player and player:hasSkill(skill.name) and player.phase == Player.Start and
          table.find(player:getCardIds("h"), function(id) return not player:prohibitDiscard(Fk:getCardById(id)) end)
   end,
-  on_use = function(skill, event, target, player)
+  on_use = function(self, event, target, player)
     local room = player.room
     local cards = table.filter(player:getCardIds("h"), function(id) return not player:prohibitDiscard(Fk:getCardById(id)) end)
     room:throwCard(cards, shenzhi.name, player, player)

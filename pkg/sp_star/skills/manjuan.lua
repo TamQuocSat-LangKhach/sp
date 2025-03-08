@@ -13,7 +13,7 @@ Fk:loadTranslationTable{
 
 manjuan:addEffect(fk.BeforeCardsMove, {
   mute = true,
-  can_trigger = function(skill, event, target, player, data)
+  can_trigger = function(self, event, target, player, data)
     if player:hasSkill(manjuan.name) then
     for _, move in ipairs(data) do
       if move.to and move.to == player.id and move.toArea == Card.PlayerHand then
@@ -22,10 +22,10 @@ manjuan:addEffect(fk.BeforeCardsMove, {
     end
     end
   end,
-  on_cost = function(skill, event, target, player, data)
+  on_cost = function(self, event, target, player, data)
     return true
   end,
-  on_use = function(skill, event, target, player, data)
+  on_use = function(self, event, target, player, data)
     local room = player.room
     for _, move in ipairs(data) do
     if move.to and move.to == player.id and move.toArea == Card.PlayerHand and
@@ -49,7 +49,7 @@ manjuan:addEffect(fk.BeforeCardsMove, {
 
 manjuan:addEffect(fk.AfterCardsMove, {
   mute = true,
-  can_trigger = function(skill, event, target, player, data)
+  can_trigger = function(self, event, target, player, data)
     if player:hasSkill(manjuan.name) then
     for _, move in ipairs(data) do
       if move.toArea == Card.DiscardPile and
@@ -59,13 +59,13 @@ manjuan:addEffect(fk.AfterCardsMove, {
     end
     end
   end,
-  on_cost = function(skill, event, target, player, data)
+  on_cost = function(self, event, target, player, data)
     return player.room:askToSkillInvoke(player, {
     skill_name = manjuan.name,
     prompt = "#manjuan-invoke"
     })
   end,
-  on_use = function(skill, event, target, player, data)
+  on_use = function(self, event, target, player, data)
     local room = player.room
     for _, move in ipairs(data) do
     if move.toArea == Card.DiscardPile and

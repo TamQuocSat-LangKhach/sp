@@ -13,14 +13,14 @@ Fk:loadTranslationTable{
 zishu:addEffect(fk.TurnEnd, {
   mute = true,
   frequency = Skill.Compulsory,
-  can_trigger = function(skill, event, target, player)
+  can_trigger = function(self, event, target, player)
     if player:hasSkill(zishu.name) then
       return target ~= player and table.find(player.player_cards[Player.Hand], function (id)
         return Fk:getCardById(id):getMark("@@zishu-inhand") > 0
       end)
     end
   end,
-  on_use = function(skill, event, target, player)
+  on_use = function(self, event, target, player)
     local room = player.room
     if event == fk.TurnEnd then
       player:broadcastSkillInvoke(zishu.name, 2)
@@ -48,7 +48,7 @@ zishu:addEffect(fk.TurnEnd, {
 zishu:addEffect(fk.AfterCardsMove, {
   mute = true,
   frequency = Skill.Compulsory,
-  can_trigger = function(skill, event, target, player)
+  can_trigger = function(self, event, target, player)
     if player:hasSkill(zishu.name) then
       if player.phase ~= Player.NotActive then
         for _, move in ipairs(data) do
@@ -59,7 +59,7 @@ zishu:addEffect(fk.AfterCardsMove, {
       end
     end
   end,
-  on_use = function(skill, event, target, player)
+  on_use = function(self, event, target, player)
     local room = player.room
     player:broadcastSkillInvoke(zishu.name, 1)
     room:notifySkillInvoked(player, zishu.name, "drawcard")
@@ -68,10 +68,10 @@ zishu:addEffect(fk.AfterCardsMove, {
 })
 
 zishu:addEffect(fk.AfterCardsMove, {
-  can_refresh = function(skill, event, target, player)
+  can_refresh = function(self, event, target, player)
     return player:hasSkill(zishu.name, true) and player.phase == Player.NotActive
   end,
-  on_refresh = function(skill, event, target, player)
+  on_refresh = function(self, event, target, player)
     local room = player.room
     for _, move in ipairs(data) do
       if move.to == player.id and move.toArea == Player.Hand then
@@ -87,12 +87,12 @@ zishu:addEffect(fk.AfterCardsMove, {
 })
 
 zishu:addEffect(fk.AfterTurnEnd, {
-  can_refresh = function(skill, event, target, player)
+  can_refresh = function(self, event, target, player)
     return table.find(player.player_cards[Player.Hand], function (id)
       return Fk:getCardById(id):getMark("@@zishu-inhand") > 0
     end)
   end,
-  on_refresh = function(skill, event, target, player)
+  on_refresh = function(self, event, target, player)
     local room = player.room
     for _, id in ipairs(player:getCardIds(Player.Hand)) do
       room:setCardMark(Fk:getCardById(id), "@@zishu-inhand", 0)

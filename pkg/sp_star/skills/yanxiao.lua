@@ -13,16 +13,16 @@ yanxiao:addEffect('active', {
   card_num = 1,
   target_num = 1,
   prompt = "#yanxiao",
-  can_use = function(skill, player)
+  can_use = function(self, player)
   return not player:isNude()
   end,
-  card_filter = function(skill, player, to_select, selected)
+  card_filter = function(self, player, to_select, selected)
   return #selected == 0 and Fk:getCardById(to_select).suit == Card.Diamond
   end,
-  target_filter = function(skill, player, to_select, selected)
+  target_filter = function(self, player, to_select, selected)
   return #selected == 0 and not Fk:currentRoom():getPlayerById(to_select):hasDelayedTrick("yanxiao_trick")
   end,
-  on_use = function(skill, room, effect)
+  on_use = function(self, room, effect)
   local target = room:getPlayerById(effect.tos[1])
   local card = Fk:cloneCard("yanxiao_trick")
   card:addSubcards(effect.cards)
@@ -33,11 +33,11 @@ yanxiao:addEffect('active', {
 
 yanxiao:addEffect(fk.EventPhaseStart, {
   mute = true,
-  can_trigger = function(skill, event, player, data)
+  can_trigger = function(self, event, player, data)
   return player.phase == Player.Judge and player:hasDelayedTrick("yanxiao_trick")
   end,
   on_cost = Util.TrueFunc,
-  on_use = function(skill, event, player, data)
+  on_use = function(self, event, player, data)
   player.room:obtainCard(player.id, player:getCardIds(Player.Judge), true, fk.ReasonPrey)
   end,
 })

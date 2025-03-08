@@ -12,15 +12,15 @@ Fk:loadTranslationTable{
 linglong:addEffect(fk.AskForCardUse, {
   frequency = Skill.Compulsory,
   anim_type = "defensive",
-  can_trigger = function(skill, event, target, player, data)
+  can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(linglong) and not player:isFakeSkill(linglong) and
       (data.cardName == "jink" or (data.pattern and Exppattern:Parse(data.pattern):matchExp("jink|0|nosuit|none"))) and
       not player:getEquipment(Card.SubtypeArmor) and player:getMark(fk.MarkArmorNullified) == 0
   end,
-  on_cost = function(skill, event, target, player, data)
+  on_cost = function(self, event, target, player, data)
     return player.room:askToSkillInvoke(player, { skill_name = linglong.name })
   end,
-  on_use = function(skill, event, target, player, data)
+  on_use = function(self, event, target, player, data)
     local room = player.room
     local judgeData = {
       who = player,
@@ -55,15 +55,15 @@ linglong:addEffect(fk.AskForCardUse, {
 linglong:addEffect(fk.AskForCardResponse, {
   frequency = Skill.Compulsory,
   anim_type = "defensive",
-  can_trigger = function(skill, event, target, player, data)
+  can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(linglong) and not player:isFakeSkill(linglong) and
       (data.cardName == "jink" or (data.pattern and Exppattern:Parse(data.pattern):matchExp("jink|0|nosuit|none"))) and
       not player:getEquipment(Card.SubtypeArmor) and player:getMark(fk.MarkArmorNullified) == 0
   end,
-  on_cost = function(skill, event, target, player, data)
+  on_cost = function(self, event, target, player, data)
     return player.room:askToSkillInvoke(player, { skill_name = linglong.name })
   end,
-  on_use = function(skill, event, target, player, data)
+  on_use = function(self, event, target, player, data)
     local room = player.room
     local judgeData = {
       who = player,
@@ -97,7 +97,7 @@ linglong:addEffect(fk.AskForCardResponse, {
 
 linglong:addEffect("maxcards", {
   name = "#linglong_maxcards",
-  correct_func = function(skill, player)
+  correct_func = function(self, player)
     if player:hasSkill(linglong) and player:getEquipment(Card.SubtypeOffensiveRide) == nil and
       player:getEquipment(Card.SubtypeDefensiveRide) == nil then
       return 1
@@ -109,7 +109,7 @@ linglong:addEffect("maxcards", {
 linglong:addEffect("targetmod", {
   name = "#linglong_targetmod",
   frequency = Skill.Compulsory,
-  bypass_distances = function(skill, player, skill, card)
+  bypass_distances = function(self, player, skill, card)
     return player:hasSkill(linglong) and player:getEquipment(Card.SubtypeTreasure) == nil and card and card.type == Card.TypeTrick
   end,
 })

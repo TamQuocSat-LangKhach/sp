@@ -12,18 +12,18 @@ Fk:loadTranslationTable{
 }
 
 fenyong:addEffect(fk.Damaged, {
-  can_trigger = function(skill, event, target, player)
+  can_trigger = function(self, event, target, player)
     if target == player and player:hasSkill(fenyong.name) then
       return true
     end
   end,
-  on_cost = function(skill, event, target, player)
+  on_cost = function(self, event, target, player)
     return player.room:askToSkillInvoke(player, {
       skill_name = fenyong.name,
       prompt = "#fenyong-invoke",
     })
   end,
-  on_use = function(skill, event, target, player)
+  on_use = function(self, event, target, player)
     local room = player.room
     room:notifySkillInvoked(player, fenyong.name)
     player:broadcastSkillInvoke(fenyong.name, 1)
@@ -32,15 +32,15 @@ fenyong:addEffect(fk.Damaged, {
 })
 
 fenyong:addEffect(fk.DamageInflicted, {
-  can_trigger = function(skill, event, target, player)
+  can_trigger = function(self, event, target, player)
     if target == player and player:hasSkill(fenyong.name) then
       return player:getMark("@@fenyong") > 0
     end
   end,
-  on_cost = function(skill, event, target, player)
+  on_cost = function(self, event, target, player)
     return true
   end,
-  on_use = function(skill, event, target, player)
+  on_use = function(self, event, target, player)
     local room = player.room
     room:notifySkillInvoked(player, fenyong.name)
     player:broadcastSkillInvoke(fenyong.name, 2)

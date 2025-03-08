@@ -14,11 +14,11 @@ Fk:loadTranslationTable{
 
 pojun:addEffect(fk.TargetSpecified, {
   anim_type = "offensive",
-  can_trigger = function(skill, event, target, player, data)
+  can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(pojun.name) and player.phase == Player.Play and data.card.trueName == "slash" and
       not player.room:getPlayerById(data.to):isNude()
   end,
-  on_use = function(skill, event, target, player, data)
+  on_use = function(self, event, target, player, data)
     local room = player.room
     local to = room:getPlayerById(data.to)
     local cards = room:askToChooseCards(player, {
@@ -37,11 +37,11 @@ pojun:addEffect(fk.TargetSpecified, {
 pojun:addEffect(fk.TurnEnd, {
   name = "#re__pojun_delay",
   mute = true,
-  can_trigger = function(skill, event, target, player, data)
+  can_trigger = function(self, event, target, player, data)
     return #player:getPile("$re__pojun") > 0
   end,
   on_cost = Util.TrueFunc,
-  on_use = function(skill, event, target, player, data)
+  on_use = function(self, event, target, player, data)
     player.room:moveCardTo(player:getPile("$re__pojun"), Player.Hand, player, fk.ReasonPrey, "re__pojun")
   end,
 })

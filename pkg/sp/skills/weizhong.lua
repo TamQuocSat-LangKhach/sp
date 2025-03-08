@@ -10,7 +10,7 @@ Fk:loadTranslationTable{
 
 weizhong:addEffect(fk.MaxHpChanged, {
   frequency = Skill.Compulsory,
-  on_use = function(skill, event, target, player)
+  on_use = function(self, event, target, player)
     player:drawCards(1, weizhong.name)
   end,
 })

@@ -15,11 +15,11 @@ Fk:loadTranslationTable{
 
 xuehen:addEffect(fk.EventPhaseStart, {
   anim_type = "offensive",
-  can_trigger = function(skill, event, target, player)
+  can_trigger = function(self, event, target, player)
     return player:hasSkill(xuehen.name) and target.phase == Player.Finish and player:getMark("@@fenyong") > 0
   end,
   on_cost = Util.TrueFunc,
-  on_use = function(skill, event, target, player)
+  on_use = function(self, event, target, player)
     local room = player.room
     room:setPlayerMark(player, "@@fenyong", 0)
     local choices = {}

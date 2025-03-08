@@ -14,16 +14,16 @@ fenxun:addEffect('active', {
   card_num = 1,
   target_num = 1,
   prompt = "#fenxun",
-  can_use = function(skill, player)
+  can_use = function(self, player)
     return player:usedSkillTimes(fenxun.name, Player.HistoryPhase) == 0 and not player:isNude()
   end,
-  card_filter = function(skill, player, to_select, selected)
+  card_filter = function(self, player, to_select, selected)
     return #selected == 0 and not player:prohibitDiscard(Fk:getCardById(to_select))
   end,
-  target_filter = function(skill, player, to_select, selected, cards)
+  target_filter = function(self, player, to_select, selected, cards)
     return #selected == 0 and to_select ~= player.id
   end,
-  on_use = function(skill, room, effect)
+  on_use = function(self, room, effect)
     local player = room:getPlayerById(effect.from)
     room:addTableMark(player, "fenxun-turn", effect.tos[1])
     room:throwCard(effect.cards, fenxun.name, player, player)
@@ -32,7 +32,7 @@ fenxun:addEffect('active', {
 
 fenxun:addEffect('distance', {
   name = "#fenxun_distance",
-  fixed_func = function(skill, from, to)
+  fixed_func = function(self, from, to)
   if table.contains(from:getTableMark("fenxun-turn"), to.id) then
     return 1
   end

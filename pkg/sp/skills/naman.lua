@@ -11,12 +11,12 @@ Fk:loadTranslationTable{
 
 naman:addEffect(fk.CardRespondFinished, {
   anim_type = "drawcard",
-  can_trigger = function(skill, event, target, player, data)
+  can_trigger = function(self, event, target, player, data)
     if player:hasSkill(naman.name) and data.card.trueName == "slash" and data.from ~= player.id then
       return player.room:getCardArea(data.card) == Card.Processing
     end
   end,
-  on_use = function(skill, event, target, player, data)
+  on_use = function(self, event, target, player, data)
     local choice = player:askToChoice({
       choices = {"yes", "no"},
       skill_name = naman.name,

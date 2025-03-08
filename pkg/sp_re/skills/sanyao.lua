@@ -13,13 +13,13 @@ sanyao:addEffect('active', {
   anim_type = "offensive",
   card_num = 1,
   target_num = 1,
-  can_use = function(skill, player)
+  can_use = function(self, player)
     return player:usedSkillTimes(sanyao.name, Player.HistoryPhase) == 0 and not player:isNude()
   end,
-  card_filter = function(skill, player, to_select, selected)
+  card_filter = function(self, player, to_select, selected)
     return #selected == 0 and not player:prohibitDiscard(Fk:getCardById(to_select))
   end,
-  target_filter = function(skill, player, to_select, selected)
+  target_filter = function(self, player, to_select, selected)
     if #selected == 0 then
       local n = 0
       for _, p in ipairs(Fk:currentRoom().alive_players) do
@@ -30,7 +30,7 @@ sanyao:addEffect('active', {
       return Fk:currentRoom():getPlayerById(to_select).hp == n
     end
   end,
-  on_use = function(skill, room, effect)
+  on_use = function(self, room, effect)
     local player = room:getPlayerById(effect.from)
     local target = room:getPlayerById(effect.tos[1])
     room:throwCard(effect.cards, sanyao.name, player, player)

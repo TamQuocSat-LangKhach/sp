@@ -13,11 +13,11 @@ Fk:loadTranslationTable{
 
 kuangfu:addEffect(fk.Damage, {
   anim_type = "offensive",
-  can_trigger = function(skill, event, target, player, data)
+  can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(kuangfu.name) and data.card and data.card.trueName == "slash" and
          not data.chain and not data.to.dead and #data.to:getCardIds("e") > 0
   end,
-  on_use = function(skill, event, target, player, data)
+  on_use = function(self, event, target, player, data)
     local room = player.room
     local choices = {"kuangfu_discard"}
     if data.to:canMoveCardsInBoardTo(player, "e") then

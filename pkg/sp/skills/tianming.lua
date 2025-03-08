@@ -2,7 +2,7 @@ local tianming = fk.CreateSkill {
   name = "tianming"
 }
 
-Fk:loadTranslationTable{
+Fk:loadTranslationTable {
   ['tianming'] = '天命',
   ['#tianming-cost'] = '天命：你可以弃置两张牌（不足则全弃，无牌则不弃），然后摸两张牌',
   [':tianming'] = '当你成为【杀】的目标时，你可以弃置两张牌（不足则全弃，无牌则不弃），然后摸两张牌；然后若场上体力唯一最多的角色不为你，该角色也可以如此做。',
@@ -15,12 +15,13 @@ tianming:addEffect(fk.TargetConfirmed, {
     return target == player and player:hasSkill(tianming.name) and data.card.trueName == "slash"
   end,
   on_cost = function(self, event, target, player, data)
-    local ids = table.filter(player:getCardIds("he"), function(id) return not player:prohibitDiscard(Fk:getCardById(id)) end)
-    if #ids < 3 then
+    local ids = table.filter(player:getCardIds("he"),
+      function(id) return not player:prohibitDiscard(Fk:getCardById(id)) end)
+    if #ids <= 2 then
       if player.room:askToSkillInvoke(player, {
-        skill_name = tianming.name,
-        prompt = "#tianming-cost"
-      }) then
+            skill_name = tianming.name,
+            prompt = "#tianming-cost"
+          }) then
         event:setCostData(self, ids)
         return true
       end
@@ -52,7 +53,7 @@ tianming:addEffect(fk.TargetConfirmed, {
     for _, p in ipairs(room.alive_players) do
       if x < p.hp then
         x = p.hp
-        to = {p}
+        to = { p }
       elseif x == p.hp then
         table.insert(to, p)
       end
@@ -68,9 +69,9 @@ tianming:addEffect(fk.TargetConfirmed, {
     end
     if x == 0 then
       if room:askToSkillInvoke(to, {
-        skill_name = tianming.name,
-        prompt = "#tianming-cost"
-      }) then
+            skill_name = tianming.name,
+            prompt = "#tianming-cost"
+          }) then
         to:drawCards(2, tianming.name)
       end
     else

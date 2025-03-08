@@ -2,7 +2,7 @@ local xueji = fk.CreateSkill {
   name = "xueji"
 }
 
-Fk:loadTranslationTable{
+Fk:loadTranslationTable {
   ['xueji'] = '血祭',
   ['#xueji'] = '血祭：弃置一张红色牌，对至多%arg名角色各造成1点伤害并各摸一张牌',
   [':xueji'] = '出牌阶段限一次，你可弃置一张红色牌，并对你攻击范围内的至多X名其他角色各造成1点伤害（X为你损失的体力值），然后这些角色各摸一张牌。',
@@ -14,36 +14,36 @@ xueji:addEffect('active', {
   anim_type = "offensive",
   card_num = 1,
   min_target_num = 1,
-  max_target_num = function (player)
+  max_target_num = function(self, player)
     return player:getLostHp()
   end,
-  prompt = function (player)
+  prompt = function(self, player)
     return "#xueji:::" .. player:getLostHp()
   end,
   can_use = function(self, player)
     return player:isWounded() and player:usedSkillTimes(xueji.name, Player.HistoryPhase) == 0
   end,
   card_filter = function(self, player, to_select, selected)
-    return #selected == 0 and Fk:getCardById(to_select).color == Card.Red and not player:prohibitDiscard(Fk:getCardById(to_select))
+    return #selected == 0 and Fk:getCardById(to_select).color == Card.Red and
+    not player:prohibitDiscard(Fk:getCardById(to_select))
   end,
   target_filter = function(self, player, to_select, selected, selected_cards)
     if #selected < player:getLostHp() and #selected_cards > 0 then
       if Fk:currentRoom():getCardArea(selected_cards[1]) ~= Player.Equip then
-        return player:inMyAttackRange(Fk:currentRoom():getPlayerById(to_select))
+        return player:inMyAttackRange(to_select)
       else
-        return player:distanceTo(Fk:currentRoom():getPlayerById(to_select)) == 1
+        return player:distanceTo(to_select) == 1
       end
     end
   end,
   on_use = function(self, room, effect)
-    local player = room:getPlayerById(effect.from)
+    local player = effect.from
     room:throwCard(effect.cards, xueji.name, player, player)
     local tos = effect.tos
-    room:sortPlayersByAction(tos)
-    for _, pid in ipairs(tos) do
-      local p = room:getPlayerById(pid)
+    room:sortByAction(tos)
+    for _, p in ipairs(tos) do
       if not p.dead then
-        room:damage{
+        room:damage {
           from = player,
           to = p,
           damage = 1,
@@ -51,8 +51,7 @@ xueji:addEffect('active', {
         }
       end
     end
-    for _, pid in ipairs(tos) do
-      local p = room:getPlayerById(pid)
+    for _, p in ipairs(tos) do
       if not p.dead then
         p:drawCards(1, xueji.name)
       end

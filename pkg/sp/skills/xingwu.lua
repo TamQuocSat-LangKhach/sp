@@ -2,7 +2,7 @@ local xingwu = fk.CreateSkill {
   name = "xingwu"
 }
 
-Fk:loadTranslationTable{
+Fk:loadTranslationTable {
   ['xingwu'] = '星舞',
   ['#xingwu-cost'] = '星舞：你可以将一张与你本回合使用的牌颜色均不同的手牌置为“星舞”牌',
   ['#xingwu-choose'] = '星舞：对一名男性角色造成2点伤害并弃置其装备区所有牌',
@@ -12,9 +12,9 @@ Fk:loadTranslationTable{
 }
 
 xingwu:addEffect(fk.EventPhaseStart, {
-  global = false,
   can_trigger = function(self, event, target, player)
-    return target == player and player:hasSkill(xingwu) and player.phase == Player.Discard and not player:isKongcheng()
+    return target == player and player:hasSkill(xingwu.name) and player.phase == Player.Discard and
+        not player:isKongcheng()
   end,
   on_cost = function(self, event, target, player)
     local colors = player:getMark("xingwu-turn")
@@ -68,8 +68,8 @@ xingwu:addEffect(fk.EventPhaseStart, {
           cancelable = false,
           targets = targets
         })
-        local victim = room:getPlayerById(to[1])
-        room:damage{
+        local victim = to[1]
+        room:damage {
           from = player,
           to = victim,
           damage = 2,
@@ -82,11 +82,10 @@ xingwu:addEffect(fk.EventPhaseStart, {
 })
 
 xingwu:addEffect(fk.CardUsing, {
-  global = false,
   can_refresh = function(self, event, target, player)
-    return player:hasSkill(xingwu, true) and target == player and player.phase ~= Player.NotActive
+    return player:hasSkill(xingwu.name, true) and target == player and player.phase ~= Player.NotActive
   end,
-  on_refresh = function(self, event, target, player)
+  on_refresh = function(self, event, target, player, data)
     local colors = player:getMark("xingwu-turn")
     if type(colors) ~= "table" then
       colors = {}

@@ -1,6 +1,6 @@
-```lua
 local jianshu = fk.CreateSkill {
-  name = "jianshu"
+  name = "jianshu",
+  frequency = Skill.Limited,
 }
 
 Fk:loadTranslationTable{
@@ -14,27 +14,26 @@ Fk:loadTranslationTable{
 
 jianshu:addEffect('active', {
   anim_type = "control",
-  frequency = Skill.Limited,
   card_num = 1,
   target_num = 1,
   prompt = "#jianshu",
-  can_use = function(skill, player)
+  can_use = function(self, player)
     return player:usedSkillTimes(jianshu.name, Player.HistoryGame) == 0 and not player:isKongcheng()
   end,
-  card_filter = function(skill, player, to_select, selected)
+  card_filter = function(self, player, to_select, selected)
     return #selected == 0 and Fk:getCardById(to_select).color == Card.Black
   end,
-  target_filter = function(skill, player, to_select, selected)
-    return #selected == 0 and to_select ~= player.id
+  target_filter = function(self, player, to_select, selected)
+    return #selected == 0 and to_select ~= player
   end,
-  on_use = function(skill, room, effect)
-    local player = room:getPlayerById(effect.from)
-    local target = room:getPlayerById(effect.tos[1])
-    room:obtainCard(target.id, Fk:getCardById(effect.cards[1]), false, fk.ReasonGive)
+  on_use = function(self, room, effect)
+    local player = effect.from
+    local target = effect.tos[1]
+    room:obtainCard(target, Fk:getCardById(effect.cards[1]), false, fk.ReasonGive)
     local targets = {}
     for _, p in ipairs(room:getOtherPlayers(target)) do
       if p:inMyAttackRange(target) and target:canPindian(p) and p:canPindian(target) then
-        table.insert(targets, p.id)
+        table.insert(targets, p)
       end
     end
     if #targets == 0 then return end
@@ -46,11 +45,11 @@ jianshu:addEffect('active', {
       skill_name = jianshu.name,
       cancelable = false
     })
-    to = room:getPlayerById(to[1])
-    local pindian = target:pindian({to}, jianshu.name)
-    if pindian.results[to.id].winner then
+    to = to[1]
+    local pindian = target:pindian({ to }, jianshu.name)
+    if pindian.results[to].winner then
       local winner, loser
-      if pindian.results[to.id].winner == target then
+      if pindian.results[to].winner == target then
         winner = target
         loser = to
       else
@@ -73,4 +72,3 @@ jianshu:addEffect('active', {
 })
 
 return jianshu
-```

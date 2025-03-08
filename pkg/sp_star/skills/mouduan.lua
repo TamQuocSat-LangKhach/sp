@@ -9,7 +9,7 @@ Fk:loadTranslationTable{
 }
 
 mouduan:addEffect(fk.AfterCardsMove, {
-  can_trigger = function(skill, event, target, player, data)
+  can_trigger = function(self, event, target, player, data)
   if player:hasSkill(mouduan) then
     if player:getSwitchSkillState(mouduan.name, false) == fk.SwitchYang then
     for _, move in ipairs(data) do
@@ -20,10 +20,10 @@ mouduan:addEffect(fk.AfterCardsMove, {
     end
   end
   end,
-  on_cost = function(skill, event, target, player, data)
+  on_cost = function(self, event, target, player, data)
   return true
   end,
-  on_use = function(skill, event, target, player, data)
+  on_use = function(self, event, target, player, data)
   local room = player.room
   if player:getSwitchSkillState(mouduan.name, true) == fk.SwitchYang then
     room:handleAddLoseSkills(player, "-jiang|-qianxun|yingzi|keji", nil, false, true)
@@ -32,12 +32,12 @@ mouduan:addEffect(fk.AfterCardsMove, {
 })
 
 mouduan:addEffect(fk.TurnStart, {
-  can_trigger = function(skill, event, target, player, data)
+  can_trigger = function(self, event, target, player, data)
   if player:hasSkill(mouduan) then
     return player:getSwitchSkillState(mouduan.name, false) ~= fk.SwitchYang
   end
   end,
-  on_cost = function(skill, event, target, player, data)
+  on_cost = function(self, event, target, player, data)
   local card = player.room:askToDiscard(player, {
     min_num = 1,
     max_num = 1,
@@ -52,7 +52,7 @@ mouduan:addEffect(fk.TurnStart, {
     return true
   end
   end,
-  on_use = function(skill, event, target, player, data)
+  on_use = function(self, event, target, player, data)
   local room = player.room
   room:handleAddLoseSkills(player, "jiang|qianxun|-yingzi|-keji", nil, false, true)
   room:throwCard(event:getCostData(skill), mouduan.name, player, player)
@@ -60,30 +60,30 @@ mouduan:addEffect(fk.TurnStart, {
 })
 
 mouduan:addEffect(fk.GameStart, {
-  can_refresh = function(skill, event, target, player, data)
+  can_refresh = function(self, event, target, player, data)
   return player:hasSkill(mouduan)
   end,
-  on_refresh = function(skill, event, target, player, data)
+  on_refresh = function(self, event, target, player, data)
   local room = player.room
   room:handleAddLoseSkills(player, "jiang|qianxun", nil, false, true)
   end,
 })
 
 mouduan:addEffect(fk.EventAcquireSkill, {
-  can_refresh = function(skill, event, target, player, data)
+  can_refresh = function(self, event, target, player, data)
   return target == player and data == mouduan
   end,
-  on_refresh = function(skill, event, target, player, data)
+  on_refresh = function(self, event, target, player, data)
   local room = player.room
   room:handleAddLoseSkills(player, "jiang|qianxun", nil, false, true)
   end,
 })
 
 mouduan:addEffect(fk.EventLoseSkill, {
-  can_refresh = function(skill, event, target, player, data)
+  can_refresh = function(self, event, target, player, data)
   return target == player and data == mouduan
   end,
-  on_refresh = function(skill, event, target, player, data)
+  on_refresh = function(self, event, target, player, data)
   local room = player.room
   room:handleAddLoseSkills(player, "-jiang|-qianxun|-yingzi|-keji", nil, false, true)
   end,

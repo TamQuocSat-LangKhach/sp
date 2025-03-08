@@ -10,10 +10,10 @@ Fk:loadTranslationTable{
 jyie:addEffect(fk.CardUsing, {
   anim_type = "offensive",
   frequency = Skill.Compulsory,
-  can_trigger = function(skill, event, target, player, data)
+  can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(jyie.name) and data.card.trueName == "slash" and data.card.color == Card.Red
   end,
-  on_use = function(skill, event, target, player, data)
+  on_use = function(self, event, target, player, data)
     data.additionalDamage = (data.additionalDamage or 0) + 1
   end,
 })

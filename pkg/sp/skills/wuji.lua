@@ -1,9 +1,9 @@
-```lua
 local wuji = fk.CreateSkill {
-  name = "wuji"
+  name = "wuji",
+  frequency = Skill.Wake,
 }
 
-Fk:loadTranslationTable{
+Fk:loadTranslationTable {
   ['wuji'] = '武继',
   [':wuji'] = '觉醒技，结束阶段开始时，若本回合你已造成3点或更多伤害，你须加1点体力上限并回复1点体力，然后失去技能〖虎啸〗。',
   ['$wuji1'] = '我感受到了，父亲的力量。',
@@ -12,23 +12,23 @@ Fk:loadTranslationTable{
 
 wuji:addEffect(fk.EventPhaseStart, {
   anim_type = "special",
-  frequency = Skill.Wake,
-  can_trigger = function(skill, event, target, player)
+  can_trigger = function(self, event, target, player)
     return target == player and player:hasSkill(wuji.name) and
-      player.phase == Player.Finish and
-      player:usedSkillTimes(wuji.name, Player.HistoryGame) == 0
+        player.phase == Player.Finish and
+        player:usedSkillTimes(wuji.name, Player.HistoryGame) == 0
   end,
-  can_wake = function(skill, event, target, player)
+  can_wake = function(self, event, target, player)
     local n = 0
     player.room.logic:getActualDamageEvents(1, function(e)
-      local damage = e.data[1]
+      local damage = e.data
       if damage.from == player then
         n = n + damage.damage
       end
+      return false
     end)
     return n > 2
   end,
-  on_use = function(skill, event, target, player)
+  on_use = function(self, event, target, player)
     local room = player.room
     room:changeMaxHp(player, 1)
     if player:isWounded() and not player.dead then
@@ -44,4 +44,3 @@ wuji:addEffect(fk.EventPhaseStart, {
 })
 
 return wuji
-```

@@ -12,13 +12,13 @@ Fk:loadTranslationTable{
 }
 
 zhuji:addEffect(fk.DamageCaused, {
-  can_trigger = function(skill, event, target, player, data)
+  can_trigger = function(self, event, target, player, data)
     return player:hasSkill(zhuji) and data.damageType == fk.ThunderDamage and data.from and not data.from.dead
   end,
-  on_cost = function(skill, event, target, player, data)
+  on_cost = function(self, event, target, player, data)
     return player.room:askToSkillInvoke(player, {skill_name = zhuji.name, prompt = "#zhuji-invoke:"..data.from.id .. ":" .. data.to.id})
   end,
-  on_use = function(skill, event, target, player, data)
+  on_use = function(self, event, target, player, data)
     local room = player.room
     local to = data.from
     local judge = {
@@ -36,12 +36,12 @@ zhuji:addEffect(fk.DamageCaused, {
 zhuji:addEffect(fk.FinishJudge, {
   global = true,
   mute = true,
-  can_trigger = function(skill, event, target, player, data)
+  can_trigger = function(self, event, target, player, data)
     return target == player and not player.dead and data.card.color == Card.Red and data.reason == zhuji.name
     and player.room:getCardArea(data.card.id) == Card.Processing
   end,
   on_cost = Util.TrueFunc,
-  on_use = function(skill, event, target, player, data)
+  on_use = function(self, event, target, player, data)
     player.room:obtainCard(player.id, data.card)
   end,
 })

@@ -10,7 +10,7 @@ Fk:loadTranslationTable{
 
 zhuiji:addEffect('distance', {
   frequency = Skill.Compulsory,
-  fixed_func = function(skill, from, to)
+  fixed_func = function(self, from, to)
   if from:hasSkill(zhuiji.name) and from.hp > to.hp then
     return 1
   end

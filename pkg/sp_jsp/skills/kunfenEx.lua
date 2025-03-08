@@ -12,10 +12,10 @@ Fk:loadTranslationTable{
 
 kunfenEx:addEffect(fk.EventPhaseStart, {
   anim_type = "drawcard",
-  can_trigger = function(skill, event, target, player)
+  can_trigger = function(self, event, target, player)
     return target == player and player:hasSkill(skill.name) and player.phase == Player.Finish
   end,
-  on_use = function(skill, event, target, player)
+  on_use = function(self, event, target, player)
     player.room:loseHp(player, 1, skill.name)
     if player:isAlive() then
       player.room:drawCards(player, 2, {skill_name = skill.name})

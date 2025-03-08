@@ -11,38 +11,36 @@ Fk:loadTranslationTable{
 }
 
 yongsi:addEffect(fk.DrawNCards, {
-  can_trigger = function(skill, event, target, player)
-    if target == player and player:hasSkill(yongsi) then
-      return true
-    end
+  can_trigger = function(self, event, target, player)
+    return target == player and player:hasSkill(yongsi.name)
   end,
-  on_use = function(skill, event, target, player, data)
+  on_use = function(self, event, target, player, data)
+    local room = player.room
     local kingdoms = {}
-    for _, p in ipairs(Fk:currentRoom().alive_players) do
+    for _, p in ipairs(room.alive_players) do
       table.insertIfNeed(kingdoms, p.kingdom)
     end
-    if event == fk.DrawNCards then
-      data.n = data.n + #kingdoms
-    end
+    data.n = data.n + #kingdoms
   end,
 })
 
 yongsi:addEffect(fk.EventPhaseStart, {
-  can_trigger = function(skill, event, target, player)
-    return player.phase == Player.Discard and player:hasSkill(yongsi)
+  can_trigger = function(self, event, target, player)
+    return player.phase == Player.Discard and player:hasSkill(yongsi.name)
   end,
-  on_use = function(skill, event, target, player, data)
+  on_use = function(self, event, target, player, data)
+    local room = player.room
     local kingdoms = {}
-    for _, p in ipairs(Fk:currentRoom().alive_players) do
+    for _, p in ipairs(room.alive_players) do
       table.insertIfNeed(kingdoms, p.kingdom)
     end
-    player.room:askToDiscard(player, {
+    room:askToDiscard(player, {
       min_num = #kingdoms,
       max_num = #kingdoms,
       include_equip = true,
       skill_name = yongsi.name,
       cancelable = false,
-      prompt = "#yongsi-discard:::"..#kingdoms
+      prompt = "#yongsi-discard:::" .. #kingdoms
     })
   end,
 })

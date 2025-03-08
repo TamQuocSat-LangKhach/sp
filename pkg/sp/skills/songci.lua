@@ -19,35 +19,34 @@ songci:addEffect('active', {
   can_use = Util.TrueFunc,
   card_filter = Util.FalseFunc,
   target_tip = function (self, player, to_select, selected, selected_cards, card, selectable, extra_data)
-    local target = Fk:currentRoom():getPlayerById(to_select)
-    if table.contains(player:getTableMark(songci.name), to_select) then
-    return nil
-    elseif target:getHandcardNum() < target.hp then
-    return { {content = "draw" , type = "normal"} }
-    elseif target:getHandcardNum() > target.hp then
-    return { {content = "discard", type = "warning"} }
+    if table.contains(player:getTableMark(songci.name), to_select.id) then
+      return nil
+    elseif to_select:getHandcardNum() < to_select.hp then
+      return { {content = "draw" , type = "normal"} }
+    elseif to_select:getHandcardNum() > to_select.hp then
+      return { {content = "discard", type = "warning"} }
     end
   end,
   target_filter = function(self, player, to_select, selected)
-    local target = Fk:currentRoom():getPlayerById(to_select)
-    return #selected == 0 and not table.contains(player:getTableMark(songci.name), to_select) and target:getHandcardNum() ~= target.hp
+    return #selected == 0 and not table.contains(player:getTableMark(songci.name), to_select.id)
+      and to_select:getHandcardNum() ~= to_select.hp
   end,
   on_use = function(self, room, effect)
-    local player = room:getPlayerById(effect.from)
-    local target = room:getPlayerById(effect.tos[1])
+    local player = effect.from
+    local target = effect.tos[1]
     room:addTableMark(player, songci.name, target.id)
     if target:getHandcardNum() < target.hp then
-    player:broadcastSkillInvoke(songci.name, 1)
-    target:drawCards(2, songci.name)
+      player:broadcastSkillInvoke(songci.name, 1)
+      target:drawCards(2, songci.name)
     else
-    player:broadcastSkillInvoke(songci.name, 2)
-    room:askToDiscard(target, {
-      min_num = 2,
-      max_num = 2,
-      include_equip = true,
-      skill_name = songci.name,
-      cancelable = false,
-    })
+      player:broadcastSkillInvoke(songci.name, 2)
+      room:askToDiscard(target, {
+        min_num = 2,
+        max_num = 2,
+        include_equip = true,
+        skill_name = songci.name,
+        cancelable = false,
+      })
     end
   end,
 })

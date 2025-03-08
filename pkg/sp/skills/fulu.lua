@@ -15,11 +15,11 @@ fulu:addEffect('viewas', {
   anim_type = "offensive",
   pattern = "slash",
   prompt = "#fulu",
-  card_filter = function(skill, player, to_select, selected)
+  card_filter = function(self, player, to_select, selected)
     if #selected == 1 then return false end
     return Fk:getCardById(to_select).name == "slash"
   end,
-  view_as = function(skill, player, cards)
+  view_as = function(self, player, cards)
     if #cards ~= 1 then
       return nil
     end

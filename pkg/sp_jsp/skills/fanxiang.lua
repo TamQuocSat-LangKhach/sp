@@ -11,17 +11,17 @@ Fk:loadTranslationTable{
 
 fanxiang:addEffect(fk.EventPhaseStart, {
   global = false,
-  can_trigger = function(skill, event, target, player, data)
+  can_trigger = function(self, event, target, player, data)
   return target == player and player:hasSkill(skill.name) and
     player.phase == Player.Start and
     player:usedSkillTimes(skill.name, Player.HistoryGame) == 0
   end,
-  can_wake = function(skill, event, target, player, data)
+  can_wake = function(self, event, target, player, data)
   return table.find(player.room.alive_players, function(p) 
     return p:isWounded() and table.contains(player:getTableMark("liangzhu_target"), p.id)
   end)
   end,
-  on_use = function(skill, event, target, player, data)
+  on_use = function(self, event, target, player, data)
   local room = player.room
   room:changeMaxHp(player, 1)
   if not player.dead and player:isWounded() then

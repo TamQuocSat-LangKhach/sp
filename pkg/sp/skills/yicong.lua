@@ -1,4 +1,3 @@
-```lua
 local yicong = fk.CreateSkill {
   name = "yicong"
 }
@@ -11,32 +10,32 @@ Fk:loadTranslationTable{
 }
 
 yicong:addEffect('distance', {
-  correct_func = function(skill, from, to)
+  correct_func = function(self, from, to)
     if from:hasSkill(yicong.name) and from.hp > 2 then
-    return -1
+      return -1
     end
     if to:hasSkill(yicong.name) and to.hp < 3 then
-    return 1
+      return 1
     end
     return 0
   end,
 })
 
 yicong:addEffect(fk.HpChanged, {
-  can_refresh = function(skill, event, target, player, data)
-    return target == player and player:hasSkill(yicong.name) and not player:isFakeSkill(yicong.name)
+  can_refresh = function(self, event, target, player, data)
+    return target == player and player:hasSkill(yicong.name) and not
+      player:isFakeSkill(yicong.name)
   end,
-  on_refresh = function(skill, event, target, player, data)
+  on_refresh = function(self, event, target, player, data)
     local room = player.room
     if player.hp > 2 and data.num > 0 and player.hp - data.num < 3 then
-    room:notifySkillInvoked(player, yicong.name, "offensive")
-    player:broadcastSkillInvoke(yicong.name, 1)
+      room:notifySkillInvoked(player, yicong.name, "offensive")
+      player:broadcastSkillInvoke(yicong.name, 1)
     elseif player.hp < 3 and data.num < 0 and player.hp - data.num > 2 then
-    room:notifySkillInvoked(player, yicong.name, "defensive")
-    player:broadcastSkillInvoke(yicong.name, 2)
+      room:notifySkillInvoked(player, yicong.name, "defensive")
+      player:broadcastSkillInvoke(yicong.name, 2)
     end
   end,
 })
 
 return yicong
-```

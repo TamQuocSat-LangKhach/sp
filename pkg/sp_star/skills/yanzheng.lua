@@ -15,10 +15,10 @@ yanzheng:addEffect('viewas', {
   anim_type = "defensive",
   pattern = "nullification",
   prompt = "#yanzheng",
-  card_filter = function(skill, player, to_select, selected)
+  card_filter = function(self, player, to_select, selected)
     return #selected == 0 and Fk:currentRoom():getCardArea(to_select) == Player.Equip
   end,
-  view_as = function(skill, player, cards)
+  view_as = function(self, player, cards)
     if #cards ~= 1 then return end
     local c = Fk:cloneCard("nullification")
     c.skillName = yanzheng.name

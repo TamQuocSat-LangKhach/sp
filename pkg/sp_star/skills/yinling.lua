@@ -15,16 +15,16 @@ yinling:addEffect('active', {
   target_num = 1,
   derived_piles = "ganning_jin",
   prompt = "#yinling",
-  can_use = function(skill, player)
+  can_use = function(self, player)
     return not player:isNude() and #player:getPile("ganning_jin") < 4
   end,
-  card_filter = function(skill, player, to_select, selected)
+  card_filter = function(self, player, to_select, selected)
     return #selected == 0 and Fk:getCardById(to_select).color == Card.Black and not player:prohibitDiscard(to_select)
   end,
-  target_filter = function(skill, player, to_select, selected)
+  target_filter = function(self, player, to_select, selected)
     return #selected == 0 and to_select ~= player.id and not Fk:currentRoom():getPlayerById(to_select):isNude()
   end,
-  on_use = function(skill, room, effect)
+  on_use = function(self, room, effect)
     local player = room:getPlayerById(effect.from)
     local target = room:getPlayerById(effect.tos[1])
     room:throwCard(effect.cards, yinling.name, player, player)

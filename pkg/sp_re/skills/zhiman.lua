@@ -11,13 +11,13 @@ Fk:loadTranslationTable{
 }
 
 zhiman:addEffect(fk.DamageCaused, {
-  can_trigger = function(skill, event, target, player, data)
+  can_trigger = function(self, event, target, player, data)
   return target == player and player:hasSkill(skill.name) and data.to ~= player
   end,
-  on_cost = function(skill, event, target, player, data)
+  on_cost = function(self, event, target, player, data)
   return player.room:askToSkillInvoke(player, { skill_name = skill.name, prompt = "#zhiman-invoke::" .. data.to.id })
   end,
-  on_use = function(skill, event, target, player, data)
+  on_use = function(self, event, target, player, data)
   local room = player.room
   if #data.to:getCardIds{Player.Equip, Player.Judge} > 0 then
     local card = room:askToChooseCard(player, { target = data.to, flag = "ej", skill_name = skill.name })

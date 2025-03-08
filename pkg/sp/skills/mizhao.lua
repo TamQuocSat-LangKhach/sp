@@ -2,7 +2,7 @@ local mizhao = fk.CreateSkill {
   name = "mizhao"
 }
 
-Fk:loadTranslationTable{
+Fk:loadTranslationTable {
   ['mizhao'] = '密诏',
   ['#mizhao'] = '密诏：将所有手牌交给一名角色，令其与另一名角色拼点',
   ['#mizhao-choose'] = '密诏：选择与 %dest 拼点的角色，赢者视为对没赢者使用【杀】',
@@ -21,12 +21,12 @@ mizhao:addEffect('active', {
   end,
   card_filter = Util.FalseFunc,
   target_filter = function(self, player, to_select, selected)
-    return #selected == 0 and to_select.id ~= player.id
+    return #selected == 0 and to_select.id ~= player
   end,
   on_use = function(self, room, effect)
-    local player = room:getPlayerById(effect.from)
-    local target = room:getPlayerById(effect.tos[1])
-    room:obtainCard(target.id, player:getCardIds(Player.Hand), false, fk.ReasonGive, player.id)
+    local player = effect.from
+    local target = effect.tos[1]
+    room:obtainCard(target, player:getCardIds(Player.Hand), false, fk.ReasonGive, player)
     if player.dead or target.dead or target:isKongcheng() then return end
     local targets = table.filter(room:getOtherPlayers(player), function(p)
       return target:canPindian(p) and p ~= target
@@ -40,11 +40,11 @@ mizhao:addEffect('active', {
       skill_name = mizhao.name,
       cancelable = false
     })
-    local to = room:getPlayerById(tos[1])
-    local pindian = target:pindian({to}, mizhao.name)
-    if pindian.results[to.id].winner then
+    local to = tos[1]
+    local pindian = target:pindian({ to }, mizhao.name)
+    if pindian.results[to].winner then
       local winner, loser
-      if pindian.results[to.id].winner == target then
+      if pindian.results[to].winner == target then
         winner = target
         loser = to
       else
@@ -52,7 +52,7 @@ mizhao:addEffect('active', {
         loser = target
       end
       if loser.dead then return end
-      room:useVirtualCard("slash", nil, winner, {loser}, mizhao.name)
+      room:useVirtualCard("slash", nil, winner, { loser }, mizhao.name)
     end
   end
 })

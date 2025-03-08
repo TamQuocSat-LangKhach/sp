@@ -1,9 +1,8 @@
-```lua
 local mozhi = fk.CreateSkill {
   name = "mozhi"
 }
 
-Fk:loadTranslationTable{
+Fk:loadTranslationTable {
   ['mozhi'] = '默识',
   ['mozhi_view_as'] = '默识',
   ['#mozhi-invoke'] = '默识：你可以将一张手牌当【%arg】使用',
@@ -21,13 +20,13 @@ mozhi:addEffect(fk.EventPhaseStart, {
       if type(names) ~= "table" then
         names = {}
         local play_ids = {}
-        room.logic:getEventsOfScope(GameEvent.Phase, 1, function (e)
-          if e.data[2] == Player.Play then
-            table.insert(play_ids, {e.id, e.end_id})
+        room.logic:getEventsOfScope(GameEvent.Phase, 1, function(e)
+          if e.data.phase == Player.Play then
+            table.insert(play_ids, { e.id, e.end_id })
           end
           return false
         end, Player.HistoryTurn)
-        room.logic:getEventsOfScope(GameEvent.UseCard, 1, function (e)
+        room.logic:getEventsOfScope(GameEvent.UseCard, 1, function(e)
           local in_play = false
           for _, ids in ipairs(play_ids) do
             if #ids == 2 and e.id > ids[1] and e.id < ids[2] then
@@ -36,8 +35,8 @@ mozhi:addEffect(fk.EventPhaseStart, {
             end
           end
           if in_play then
-            local use = e.data[1]
-            if use.from == player.id and (use.card.type == Card.TypeBasic or use.card:isCommonTrick()) then
+            local use = e.data
+            if use.from == player and (use.card.type == Card.TypeBasic or use.card:isCommonTrick()) then
               table.insert(names, use.card.name)
             end
           end
@@ -62,7 +61,7 @@ mozhi:addEffect(fk.EventPhaseStart, {
     room:setPlayerMark(player, "mozhi_to_use", name)
     local success, dat = room:askToUseActiveSkill(player, {
       skill_name = "mozhi_view_as",
-      prompt = "#mozhi-invoke:::"..name,
+      prompt = "#mozhi-invoke:::" .. name,
       cancelable = true,
     })
     if success then
@@ -76,9 +75,9 @@ mozhi:addEffect(fk.EventPhaseStart, {
     card.skillName = mozhi.name
     local cost_data = event:getCostData(self)
     card:addSubcards(cost_data.cards)
-    room:useCard{
-      from = player.id,
-      tos = table.map(cost_data.targets, function(id) return {id} end),
+    room:useCard {
+      from = player,
+      tos = cost_data.targets,
       card = card,
     }
     if player.dead then return end
@@ -90,16 +89,17 @@ mozhi:addEffect(fk.EventPhaseStart, {
       room:setPlayerMark(player, "mozhi_to_use", name)
       local success, dat = room:askToUseActiveSkill(player, {
         skill_name = "mozhi_view_as",
-        prompt = "#mozhi-invoke:::"..name,
+        prompt = "#mozhi-invoke:::" .. name,
         cancelable = true,
       })
       if success then
+        ---@cast dat -nil
         card = Fk:cloneCard(player:getMark("mozhi_to_use"))
         card.skillName = mozhi.name
         card:addSubcards(dat.cards)
-        room:useCard{
-          from = player.id,
-          tos = table.map(dat.targets, function(id) return {id} end),
+        room:useCard {
+          from = player,
+          tos = dat.targets,
           card = card,
         }
       end
@@ -108,4 +108,3 @@ mozhi:addEffect(fk.EventPhaseStart, {
 })
 
 return mozhi
-```

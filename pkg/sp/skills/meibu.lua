@@ -12,17 +12,17 @@ Fk:loadTranslationTable{
 }
 
 meibu:addEffect(fk.EventPhaseStart, {
-  can_trigger = function(skill, event, target, player)
+  can_trigger = function(self, event, target, player)
     return player:hasSkill(meibu.name) and target.phase == Player.Play and target ~= player and
       not target:inMyAttackRange(player) and not target.dead
   end,
-  on_cost = function(skill, event, target, player)
+  on_cost = function(self, event, target, player)
     return player.room:askToSkillInvoke(player, {
       skill_name = meibu.name,
       prompt = "#meibu-invoke::"..target.id
     })
   end,
-  on_use = function(skill, event, target, player)
+  on_use = function(self, event, target, player)
     player.room:setPlayerMark(target, "meibu-turn", 1)
   end
 })
@@ -36,11 +36,11 @@ meibu:addEffect('atkrange', {
 
 meibu:addEffect('filter', {
   name = "#meibu_filter",
-  card_filter = function(skill, player, to_select)
+  card_filter = function(self, player, to_select)
     return player:getMark("meibu-turn") > 0 and to_select.type == Card.TypeTrick and
       table.contains(player.player_cards[Player.Hand], to_select.id)
   end,
-  view_as = function(skill, player, to_select)
+  view_as = function(self, player, to_select)
     local card = Fk:cloneCard("slash", to_select.suit, to_select.number)
     card.skillName = meibu.name
     return card

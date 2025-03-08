@@ -10,13 +10,13 @@ Fk:loadTranslationTable{
 
 duanbing:addEffect(fk.AfterCardTargetDeclared, {
   anim_type = "offensive",
-  can_trigger = function(skill, event, target, player, data)
+  can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(skill.name) and data.card.trueName == "slash" and
       table.find(player.room:getUseExtraTargets(data), function(id)
         return player:distanceTo(player.room:getPlayerById(id)) == 1
       end)
   end,
-  on_cost = function(skill, event, target, player, data)
+  on_cost = function(self, event, target, player, data)
     local room = player.room
     local targets = table.filter(room:getUseExtraTargets(data), function(id)
       return player:distanceTo(room:getPlayerById(id)) == 1
@@ -34,7 +34,7 @@ duanbing:addEffect(fk.AfterCardTargetDeclared, {
       return true
     end
   end,
-  on_use = function(skill, event, target, player, data)
+  on_use = function(self, event, target, player, data)
     table.insert(data.tos, {event:getCostData(skill)})
   end,
 })
