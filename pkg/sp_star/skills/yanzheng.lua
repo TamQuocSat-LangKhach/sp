@@ -1,0 +1,37 @@
+```lua
+local yanzheng = fk.CreateSkill {
+  name = "yanzheng"
+}
+
+Fk:loadTranslationTable{
+  ['yanzheng'] = '严整',
+  ['#yanzheng'] = '严整：你可以将你装备区内的牌当【无懈可击】使用',
+  [':yanzheng'] = '若你的手牌数大于你的体力值，你可以将你装备区内的牌当【无懈可击】使用。',
+  ['$yanzheng1'] = '任你横行霸道，我自岿然不动。',
+  ['$yanzheng2'] = '行伍严整，百战不殆！'
+}
+
+yanzheng:addEffect('viewas', {
+  anim_type = "defensive",
+  pattern = "nullification",
+  prompt = "#yanzheng",
+  card_filter = function(skill, player, to_select, selected)
+    return #selected == 0 and Fk:currentRoom():getCardArea(to_select) == Player.Equip
+  end,
+  view_as = function(skill, player, cards)
+    if #cards ~= 1 then return end
+    local c = Fk:cloneCard("nullification")
+    c.skillName = yanzheng.name
+    c:addSubcard(cards[1])
+    return c
+  end,
+  enabled_at_play = function (skill, player)
+    return false
+  end,
+  enabled_at_response = function (skill, player)
+    return player:getHandcardNum() > player.hp and #player.player_cards[Player.Equip] > 0
+  end,
+})
+
+return yanzheng
+```

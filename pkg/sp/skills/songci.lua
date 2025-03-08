@@ -1,0 +1,55 @@
+local songci = fk.CreateSkill {
+  name = "songci"
+}
+
+Fk:loadTranslationTable{
+  ['songci'] = '颂词',
+  ['#songci'] = '颂词：令一名手牌数小于体力值的角色摸两张牌，或令一名手牌数大于体力值的角色弃两张牌',
+  [':songci'] = '出牌阶段，你可以选择一项：令一名手牌数小于其体力值的角色摸两张牌；或令一名手牌数大于其体力值的角色弃置两张牌。此技能对每名角色只能用一次。',
+  ['$songci1'] = '将军德才兼备，大汉之栋梁也！',
+  ['$songci2'] = '汝窃国奸贼，人人得而诛之！',
+}
+
+songci:addEffect('active', {
+  anim_type = "control",
+  mute = true,
+  card_num = 0,
+  target_num = 1,
+  prompt = "#songci",
+  can_use = Util.TrueFunc,
+  card_filter = Util.FalseFunc,
+  target_tip = function (self, player, to_select, selected, selected_cards, card, selectable, extra_data)
+    local target = Fk:currentRoom():getPlayerById(to_select)
+    if table.contains(player:getTableMark(songci.name), to_select) then
+    return nil
+    elseif target:getHandcardNum() < target.hp then
+    return { {content = "draw" , type = "normal"} }
+    elseif target:getHandcardNum() > target.hp then
+    return { {content = "discard", type = "warning"} }
+    end
+  end,
+  target_filter = function(self, player, to_select, selected)
+    local target = Fk:currentRoom():getPlayerById(to_select)
+    return #selected == 0 and not table.contains(player:getTableMark(songci.name), to_select) and target:getHandcardNum() ~= target.hp
+  end,
+  on_use = function(self, room, effect)
+    local player = room:getPlayerById(effect.from)
+    local target = room:getPlayerById(effect.tos[1])
+    room:addTableMark(player, songci.name, target.id)
+    if target:getHandcardNum() < target.hp then
+    player:broadcastSkillInvoke(songci.name, 1)
+    target:drawCards(2, songci.name)
+    else
+    player:broadcastSkillInvoke(songci.name, 2)
+    room:askToDiscard(target, {
+      min_num = 2,
+      max_num = 2,
+      include_equip = true,
+      skill_name = songci.name,
+      cancelable = false,
+    })
+    end
+  end,
+})
+
+return songci
