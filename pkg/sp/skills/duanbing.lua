@@ -1,41 +1,44 @@
 local duanbing = fk.CreateSkill {
-  name = "duanbing"
+  name = "sp__duanbing"
 }
 
 Fk:loadTranslationTable{
-  ['duanbing'] = '短兵',
-  ['#duanbing-choose'] = '短兵：你可以额外选择一名距离为1的其他角色为目标',
-  [':duanbing'] = '你使用【杀】时可以额外选择一名距离为1的其他角色为目标。',
+  ['sp__duanbing'] = '短兵',
+  ['#sp__duanbing-choose'] = '短兵：你可以额外选择一名距离为1的其他角色为目标',
+  [':sp__duanbing'] = '你使用【杀】时可以额外选择一名距离为1的其他角色为目标。',
+
+  ["$sp__duanbing1"] = "众将官，短刀出鞘。",
+  ["$sp__duanbing2"] = "短兵轻甲也可取汝性命！",
 }
 
 duanbing:addEffect(fk.AfterCardTargetDeclared, {
   anim_type = "offensive",
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(skill.name) and data.card.trueName == "slash" and
-      table.find(player.room:getUseExtraTargets(data), function(id)
-        return player:distanceTo(player.room:getPlayerById(id)) == 1
+    return target == player and player:hasSkill(duanbing.name) and data.card.trueName == "slash" and
+      table.find(data:getExtraTargets(), function(_p)
+        return player:distanceTo(_p) == 1
       end)
   end,
   on_cost = function(self, event, target, player, data)
     local room = player.room
-    local targets = table.filter(room:getUseExtraTargets(data), function(id)
-      return player:distanceTo(room:getPlayerById(id)) == 1
+    local targets = table.filter(data:getExtraTargets(), function(_p)
+      return player:distanceTo(_p) == 1
     end)
     local tos = room:askToChoosePlayers(player, {
       targets = targets,
       min_num = 1,
       max_num = 1,
-      prompt = "#duanbing-choose",
-      skill_name = skill.name,
+      prompt = "#sp__duanbing-choose",
+      skill_name = duanbing.name,
       cancelable = true,
     })
     if #tos > 0 then
-      event:setCostData(skill, tos[1]:objectName())
+      event:setCostData(self, {tos = tos})
       return true
     end
   end,
   on_use = function(self, event, target, player, data)
-    table.insert(data.tos, {event:getCostData(skill)})
+    data:addTarget(event:getCostData(self).tos[1])
   end,
 })
 

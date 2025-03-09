@@ -205,12 +205,11 @@ Fk:loadTranslationTable{
   ["~sp__xiahoushi"] = "燕语叮嘱，愿君安康。",
 }
 
-General(extension, "yuejin", "wei", 4):addSkills { "xiaoguo" }
+General(extension, "yuejin", "wei", 4):addSkills { "sp__xiaoguo" }
 Fk:loadTranslationTable{
   ["yuejin"] = "乐进",
   ["#yuejin"] = "奋强突固",
   ["illustrator:yuejin"] = "巴萨小马",
-
   ["~yuejin"] = "箭疮发作，吾命休矣。",
 }
 
@@ -746,75 +745,11 @@ Fk:loadTranslationTable{
   ["~zumao"] = "孙将军，已经，安全了吧……",
 }
 
-local dingfeng = General(extension, "dingfeng", "wu", 4)
-local duanbing = fk.CreateTriggerSkill{
-  name = "duanbing",
-  anim_type = "offensive",
-  events = {fk.AfterCardTargetDeclared},
-  can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self) and data.card.trueName == "slash" and
-      table.find(player.room:getUseExtraTargets(data), function(id)
-        return player:distanceTo(player.room:getPlayerById(id)) == 1
-      end)
-  end,
-  on_cost = function(self, event, target, player, data)
-    local room = player.room
-    local targets = table.filter(room:getUseExtraTargets(data), function(id)
-      return player:distanceTo(room:getPlayerById(id)) == 1
-    end)
-    local tos = room:askForChoosePlayers(player, targets, 1, 1, "#duanbing-choose", self.name, true)
-    if #tos > 0 then
-      self.cost_data = tos[1]
-      return true
-    end
-  end,
-  on_use = function(self, event, target, player, data)
-    table.insert(data.tos, {self.cost_data})
-  end,
-}
-dingfeng:addSkill(duanbing)
-local fenxun = fk.CreateActiveSkill{
-  name = "fenxun",
-  anim_type = "offensive",
-  card_num = 1,
-  target_num = 1,
-  prompt = "#fenxun",
-  can_use = function(self, player)
-    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0 and not player:isNude()
-  end,
-  card_filter = function(self, to_select, selected)
-    return #selected == 0 and not Self:prohibitDiscard(Fk:getCardById(to_select))
-  end,
-  target_filter = function(self, to_select, selected, cards)
-    return #selected == 0 and to_select ~= Self.id
-  end,
-  on_use = function(self, room, effect)
-    local player = room:getPlayerById(effect.from)
-    room:addTableMark(player, "fenxun-turn", effect.tos[1])
-    room:throwCard(effect.cards, self.name, player, player)
-  end,
-}
-local fenxun_distance = fk.CreateDistanceSkill{
-  name = "#fenxun_distance",
-  fixed_func = function(self, from, to)
-    if table.contains(from:getTableMark("fenxun-turn"), to.id) then
-      return 1
-    end
-  end,
-}
-fenxun:addRelatedSkill(fenxun_distance)
-dingfeng:addSkill(fenxun)
+General:new(extension, "dingfeng", "wu", 4):addSkills{"sp__duanbing", "sp__fenxun"}
 Fk:loadTranslationTable{
   ["dingfeng"] = "丁奉",
   ["#dingfeng"] = "清侧重臣",
   ["illustrator:dingfeng"] = "G.G.G.",
-  ["duanbing"] = "短兵",
-  [":duanbing"] = "你使用【杀】时可以额外选择一名距离为1的其他角色为目标。",
-  ["fenxun"] = "奋迅",
-  [":fenxun"] = "出牌阶段限一次，你可以弃置一张牌并选择一名其他角色，令你与其的距离视为1，直到回合结束。",
-  ["#duanbing-choose"] = "短兵：你可以额外选择一名距离为1的其他角色为目标",
-  ["#fenxun"] = "奋迅：弃一张牌，你与一名角色的距离视为1直到回合结束",
-
   ["~dingfeng"] = "这风，太冷了。",
 }
 
@@ -1310,87 +1245,11 @@ Fk:loadTranslationTable{
   ["~maliang"] = "我的使命完成了吗……",
 }
 
-local ganfuren = General(extension, "ganfuren", "shu", 3, 3, General.Female)
-local shushen = fk.CreateTriggerSkill{
-  name = "shushen",
-  anim_type = "support",
-  events = {fk.HpRecover},
-  on_trigger = function(self, event, target, player, data)
-    self.cancel_cost = false
-    for i = 1, data.num do
-      if self.cancel_cost or not player:hasSkill(self) then break end
-      self:doCost(event, target, player, data)
-    end
-  end,
-  on_cost = function(self, event, target, player, data)
-    local room = player.room
-    local to = room:askForChoosePlayers(player, table.map(room:getOtherPlayers(player), Util.IdMapper), 1, 1, "#shushen-choose",
-      self.name, true)
-    if #to > 0 then
-      self.cost_data = to[1]
-      return true
-    end
-    self.cancel_cost = true
-  end,
-  on_use = function(self, event, target, player, data)
-    local room = player.room
-    local to = room:getPlayerById(self.cost_data)
-    local choices = {"draw2"}
-    if to:isWounded() then
-      table.insert(choices, "recover")
-    end
-    local choice = room:askForChoice(to, choices, self.name)
-    if choice == "draw2" then
-      to:drawCards(2, self.name)
-    else
-      room:recover({
-        who = to,
-        num = 1,
-        recoverBy = player,
-        skillName = self.name
-      })
-    end
-  end,
-}
-local shenzhi = fk.CreateTriggerSkill{
-  name = "shenzhi",
-  anim_type = "support",
-  events = {fk.EventPhaseStart},
-  can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self) and player.phase == Player.Start and
-    table.find(player:getCardIds("h"), function(id) return not player:prohibitDiscard(Fk:getCardById(id)) end)
-  end,
-  on_use = function(self, event, target, player, data)
-    local room = player.room
-    local cards = table.filter(player:getCardIds("h"), function(id) return not player:prohibitDiscard(Fk:getCardById(id)) end)
-    room:throwCard(cards, self.name, player, player)
-    if player:isWounded() and not player.dead and #cards >= player.hp then
-      room:recover({
-        who = player,
-        num = 1,
-        recoverBy = player,
-        skillName = self.name
-      })
-    end
-  end,
-}
-ganfuren:addSkill(shushen)
-ganfuren:addSkill(shenzhi)
+General:new(extension, "ganfuren", "shu", 3, 3, General.Female):addSkills{"sp__shushen", "sp__shenzhi"}
 Fk:loadTranslationTable{
   ["ganfuren"] = "甘夫人",
   ["#ganfuren"] = "昭烈皇后",
   ["illustrator:ganfuren"] = "琛·美弟奇",
-
-  ["shushen"] = "淑慎",
-  [":shushen"] = "当你回复1点体力时，你可以令一名其他角色回复1点体力或摸两张牌。",
-  ["shenzhi"] = "神智",
-  [":shenzhi"] = "准备阶段开始时，你可以弃置所有手牌，若你以此法弃置的手牌数不小于X，你回复1点体力(X为你当前的体力值)。",
-  ["#shushen-choose"] = "淑慎：你可以令一名其他角色回复1点体力或摸两张牌",
-
-  ["$shushen1"] = "妾身无恙，相公请安心征战。",
-  ["$shushen2"] = "船到桥头自然直。",
-  ["$shenzhi1"] = "子龙将军，一切都托付给你了。",
-  ["$shenzhi2"] = "阿斗，相信妈妈，没事的。",
   ["~ganfuren"] = "请替我照顾好阿斗。",
 }
 

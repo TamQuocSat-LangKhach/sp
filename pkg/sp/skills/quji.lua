@@ -10,48 +10,43 @@ Fk:loadTranslationTable{
   ['$quji2'] = '愿为将士，略尽绵薄。',
 }
 
-local min_card_num = function (player)
-  return player:getLostHp()
-end
-
-local prompt = function (player)
-  return "#quji:::"..player:getLostHp()
-end
-
 quji:addEffect('active', {
   anim_type = "support",
-  min_card_num = min_card_num,
+  min_card_num = function(self, player)
+    return player:getLostHp()
+  end,
   min_target_num = 1,
-  prompt = prompt,
+  prompt = function(self, player)
+  return "#quji:::"..player:getLostHp()
+end,
   can_use = function(self, player)
-    return player:isWounded() and player:usedSkillTimes(skill.name, Player.HistoryPhase) == 0
+    return player:isWounded() and player:usedSkillTimes(quji.name, Player.HistoryPhase) == 0
   end,
   card_filter = function(self, player, to_select, selected)
-    return #selected < min_card_num(player)
+    return #selected < player:getLostHp()
   end,
   target_filter = function(self, player, to_select, selected, cards)
-    return #selected < min_card_num(player) and Fk:currentRoom():getPlayerById(to_select):isWounded()
-    and #cards == min_card_num(player)
+    return #selected < player:getLostHp() and to_select:isWounded()
+    and #cards == player:getLostHp()
   end,
   on_use = function(self, room, effect)
-    local player = room:getPlayerById(effect.from)
+    local player = effect.from
     local loseHp = table.find(effect.cards, function(id) return Fk:getCardById(id).color == Card.Black end)
-    room:throwCard(effect.cards, skill.name, player, player)
+    room:throwCard(effect.cards, quji.name, player, player)
     local tos = effect.tos
-    room:sortPlayersByAction(tos)
-    for _, pid in ipairs(tos) do
-    local to = room:getPlayerById(pid)
-    if not to.dead and to:isWounded() then
-      room:recover({
-      who = to,
-      num = 1,
-      recoverBy = player,
-      skillName = skill.name
-      })
-    end
+    room:sortByAction(tos)
+    for _, to in ipairs(tos) do
+      if not to.dead and to:isWounded() then
+        room:recover({
+        who = to,
+        num = 1,
+        recoverBy = player,
+        skillName = quji.name
+        })
+      end
     end
     if loseHp and not player.dead then
-    room:loseHp(player, 1, skill.name)
+    room:loseHp(player, 1, quji.name)
     end
   end,
 })

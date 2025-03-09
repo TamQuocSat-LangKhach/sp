@@ -3,17 +3,17 @@ local shenzhi = fk.CreateSkill {
 }
 
 Fk:loadTranslationTable{
-  ['shenzhi'] = '神智',
-  [':shenzhi'] = '准备阶段开始时，你可以弃置所有手牌，若你以此法弃置的手牌数不小于X，你回复1点体力(X为你当前的体力值)。',
-  ['$shenzhi1'] = '子龙将军，一切都托付给你了。',
-  ['$shenzhi2'] = '阿斗，相信妈妈，没事的。',
+  ['sp__shenzhi'] = '神智',
+  [':sp__shenzhi'] = '准备阶段开始时，你可以弃置所有手牌，若你以此法弃置的手牌数不小于X，你回复1点体力(X为你当前的体力值)。',
+  ['$sp__shenzhi1'] = '子龙将军，一切都托付给你了。',
+  ['$sp__shenzhi2'] = '阿斗，相信妈妈，没事的。',
 }
 
 shenzhi:addEffect(fk.EventPhaseStart, {
   anim_type = "support",
   can_trigger = function(self, event, target, player)
-    return target == player and player:hasSkill(skill.name) and player.phase == Player.Start and
-         table.find(player:getCardIds("h"), function(id) return not player:prohibitDiscard(Fk:getCardById(id)) end)
+    return target == player and player:hasSkill(shenzhi.name) and player.phase == Player.Start and
+      table.find(player:getCardIds("h"), function(id) return not player:prohibitDiscard(Fk:getCardById(id)) end)
   end,
   on_use = function(self, event, target, player)
     local room = player.room

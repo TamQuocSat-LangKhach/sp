@@ -1,43 +1,37 @@
-```lua
 local shushen = fk.CreateSkill {
-  name = "shushen"
+  name = "sp__shushen"
 }
 
 Fk:loadTranslationTable{
-  ['shushen'] = '淑慎',
-  ['#shushen-choose'] = '淑慎：你可以令一名其他角色回复1点体力或摸两张牌',
-  [':shushen'] = '当你回复1点体力时，你可以令一名其他角色回复1点体力或摸两张牌。',
-  ['$shushen1'] = '妾身无恙，相公请安心征战。',
-  ['$shushen2'] = '船到桥头自然直。',
+  ['sp__shushen'] = '淑慎',
+  ['#sp__shushen-choose'] = '淑慎：你可以令一名其他角色回复1点体力或摸两张牌',
+  [':sp__shushen'] = '当你回复1点体力时，你可以令一名其他角色回复1点体力或摸两张牌。',
+  ['$sp__shushen1'] = '妾身无恙，相公请安心征战。',
+  ['$sp__shushen2'] = '船到桥头自然直。',
 }
 
 shushen:addEffect(fk.HpRecover, {
-  on_trigger = function(self, event, target, player, data)
-    self.cancel_cost = false
-    for i = 1, data.num do
-      if self.cancel_cost or not player:hasSkill(shushen) then break end
-      self:doCost(event, target, player, data)
-    end
+  trigger_times = function (self, event, target, player, data)
+    return data.num
   end,
   on_cost = function(self, event, target, player, data)
     local room = player.room
     local to = room:askToChoosePlayers(player, {
-      targets = table.map(room:getOtherPlayers(player), Util.IdMapper),
+      targets = room:getOtherPlayers(player),
       min_num = 1,
       max_num = 1,
-      prompt = "#shushen-choose",
+      prompt = "#sp__shushen-choose",
       skill_name = shushen.name,
       cancelable = true
     })
     if #to > 0 then
-      event:setCostData(self, to[1])
+      event:setCostData(self, {tos = to})
       return true
     end
-    self.cancel_cost = true
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    local to = room:getPlayerById(event:getCostData(self))
+    local to = event:getCostData(self).tos[1]
     local choices = {"draw2"}
     if to:isWounded() then
       table.insert(choices, "recover")
@@ -60,4 +54,3 @@ shushen:addEffect(fk.HpRecover, {
 })
 
 return shushen
-```
