@@ -15,10 +15,10 @@ Fk:loadTranslationTable{
 
 junwei:addEffect(fk.EventPhaseStart, {
   anim_type = "control",
-  can_trigger = function(self, event, target, player)
+  can_trigger = function(self, event, target, player, data)
   return target == player and player.phase == Player.Finish and #player:getPile("ganning_jin") > 2
   end,
-  on_cost = function(self, event, target, player)
+  on_cost = function(self, event, target, player, data)
   local cards = player.room:askToCards(player, {
     min_num = 3,
     max_num = 3,
@@ -31,7 +31,7 @@ junwei:addEffect(fk.EventPhaseStart, {
     return true
   end
   end,
-  on_use = function(self, event, target, player)
+  on_use = function(self, event, target, player, data)
   local room = player.room
   room:moveCardTo(event:getCostData(self), Card.DiscardPile, nil, fk.ReasonPutIntoDiscardPile, junwei.name, nil, true, player.id)
   local targets = table.map(room:getAlivePlayers(), Util.IdMapper)
@@ -81,11 +81,11 @@ junwei:addEffect(fk.EventPhaseStart, {
 junwei:addEffect(fk.TurnEnd, {
   name = "#junwei_delay",
   mute = true,
-  can_trigger = function(self, event, target, player)
+  can_trigger = function(self, event, target, player, data)
   return target == player and #player:getPile("junwei") > 0
   end,
   on_cost = Util.TrueFunc,
-  on_use = function(self, event, target, player)
+  on_use = function(self, event, target, player, data)
   local room = player.room
   for i = #player:getPile("junwei"), 1, -1 do
     if player.dead then return end

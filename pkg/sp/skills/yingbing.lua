@@ -1,13 +1,13 @@
 local yingbing = fk.CreateSkill {
-  name = "yingbing"
+  name = "yingbing",
 }
 
 Fk:loadTranslationTable{
-  ['yingbing'] = '影兵',
-  ['zhoufu'] = '咒缚',
-  [':yingbing'] = '受到“咒缚”技能影响的角色进行判定时，你可以摸两张牌。',
-  ['$yingbing1'] = '朱雀玄武，誓为我征。',
-  ['$yingbing2'] = '所呼立至，所召立前。',
+  ["yingbing"] = "影兵",
+  [":yingbing"] = "受到〖咒缚〗影响的角色进行判定时，你可以摸两张牌。",
+
+  ["$yingbing1"] = "朱雀玄武，誓为我征。",
+  ["$yingbing2"] = "所呼立至，所召立前。",
 }
 
 yingbing:addEffect(fk.AskForRetrial, {

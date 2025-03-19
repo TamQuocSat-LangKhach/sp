@@ -33,11 +33,11 @@ yanxiao:addEffect('active', {
 
 yanxiao:addEffect(fk.EventPhaseStart, {
   mute = true,
-  can_trigger = function(self, event, player, data)
+  can_trigger = function(self, event, target, player, data)
   return player.phase == Player.Judge and player:hasDelayedTrick("yanxiao_trick")
   end,
   on_cost = Util.TrueFunc,
-  on_use = function(self, event, player, data)
+  on_use = function(self, event, target, player, data)
   player.room:obtainCard(player.id, player:getCardIds(Player.Judge), true, fk.ReasonPrey)
   end,
 })

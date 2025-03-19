@@ -12,10 +12,10 @@ Fk:loadTranslationTable{
 }
 
 kuiwei:addEffect(fk.EventPhaseStart, {
-  can_trigger = function(self, event, target, player)
+  can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(skill.name) and player.phase == Player.Finish
   end,
-  on_use = function(self, event, target, player)
+  on_use = function(self, event, target, player, data)
     local room = player.room
     local n = #table.filter(room.alive_players, function (p)
       return #p:getEquipments(Card.SubtypeWeapon) > 0
@@ -30,11 +30,11 @@ kuiwei:addEffect(fk.EventPhaseStart, {
 
 kuiwei:addEffect(fk.EventPhaseStart, {
   name = "#kuiwei_delay",
-  can_trigger = function(self, event, target, player)
+  can_trigger = function(self, event, target, player, data)
     return target == player and player.phase == Player.Draw and player:getMark("kuiwei") > 0
   end,
   on_cost = Util.TrueFunc,
-  on_use = function(self, event, target, player)
+  on_use = function(self, event, target, player, data)
     local room = player.room
     room:setPlayerMark(player, "kuiwei", 0)
     local n = #table.filter(room.alive_players, function (p)

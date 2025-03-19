@@ -1,12 +1,12 @@
-local yuanhu_ac = fk.CreateSkill {
-  name = "#yuanhu_active"
+local yuanhu_active = fk.CreateSkill {
+  name = "yuanhu_active"
 }
 
 Fk:loadTranslationTable {
-  ['#yuanhu_active'] = '援护',
+  ["yuanhu_active"] = "援护",
 }
 
-yuanhu_ac:addEffect('active', {
+yuanhu_active:addEffect("active", {
   card_num = 1,
   target_num = 1,
   card_filter = function(self, player, to_select, selected)
@@ -14,8 +14,8 @@ yuanhu_ac:addEffect('active', {
   end,
   target_filter = function(self, player, to_select, selected, selected_cards)
     return #selected == 0 and #selected_cards == 1 and
-        to_select:hasEmptyEquipSlot(Fk:getCardById(selected_cards[1]).sub_type)
+      to_select:hasEmptyEquipSlot(Fk:getCardById(selected_cards[1]).sub_type)
   end,
 })
 
-return yuanhu_ac
+return yuanhu_active

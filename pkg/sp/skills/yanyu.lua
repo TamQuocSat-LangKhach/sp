@@ -1,117 +1,114 @@
 local yanyu = fk.CreateSkill {
-  name = "sp__yanyu"
+  name = "sp__yanyu",
 }
 
 Fk:loadTranslationTable {
-  ['sp__yanyu'] = '燕语',
-  ['#yanyu-cost'] = '燕语：你可以弃置一张牌，然后此出牌阶段限三次，可令任意角色获得相同类别进入弃牌堆的牌',
-  ['#yanyu_delay'] = '燕语',
-  ['@yanyu-phase'] = '燕语',
-  ['#yanyu-choose'] = '燕语：令一名角色获得弃置的牌',
-  [':sp__yanyu'] = '任意一名角色的出牌阶段开始时，你可以弃置一张牌，若如此做，则本回合的出牌阶段，当有与你弃置牌类别相同的其他牌进入弃牌堆时，你可令任意一名角色获得此牌。每回合以此法获得的牌不能超过三张。',
-  ['$sp__yanyu1'] = '燕燕于飞，颉之颃之。',
-  ['$sp__yanyu2'] = '终温且惠，淑慎其身。',
+  ["sp__yanyu"] = "燕语",
+  [":sp__yanyu"] = "一名角色的出牌阶段开始时，你可以弃置一张牌，若如此做，当本阶段有与你弃置牌类别相同的其他牌进入弃牌堆时，"..
+  "你可以令任意一名角色获得此牌。每回合以此法获得的牌不能超过三张。",
+
+  ["#sp__yanyu-ask"] = "燕语：你可以弃置一张牌，然后此出牌阶段限三次，可令任意角色获得相同类别进入弃牌堆的牌",
+  ["@sp__yanyu-phase"] = "燕语",
+  ["#sp__yanyu-give"] = "燕语：你可以令一名角色获得弃置的牌",
+
+  ["$sp__yanyu1"] = "燕燕于飞，颉之颃之。",
+  ["$sp__yanyu2"] = "终温且惠，淑慎其身。",
 }
 
 local U = require "packages/utility/utility"
 
 yanyu:addEffect(fk.EventPhaseStart, {
   anim_type = "support",
-  can_trigger = function(self, event, target, player)
+  can_trigger = function(self, event, target, player, data)
     return player:hasSkill(yanyu.name) and target.phase == Player.Play and not player:isNude()
   end,
-  on_cost = function(self, event, target, player)
-    local card = player.room:askToDiscard(player, {
+  on_cost = function(self, event, target, player, data)
+    local room = player.room
+    local card = room:askToDiscard(player, {
       min_num = 1,
       max_num = 1,
       include_equip = true,
-      pattern = ".",
-      prompt = "#yanyu-cost",
+      prompt = "#sp__yanyu-ask",
       skill_name = yanyu.name,
-      skip = true
+      skip = true,
     })
     if #card > 0 then
-      event:setCostData(self, card)
+      event:setCostData(self, {cards = card})
       return true
     end
   end,
-  on_use = function(self, event, target, player)
+  on_use = function(self, event, target, player, data)
     local room = player.room
-    local card_type = Fk:getCardById(event:getCostData(self)[1]):getTypeString()
-    room:throwCard(event:getCostData(self), yanyu.name, player, player)
-    local x = 3 - player:usedSkillTimes("#yanyu_delay", Player.HistoryTurn)
+    local id = event:getCostData(self).cards[1]
+    local type = Fk:getCardById(id):getTypeString()
+    room:throwCard(id, yanyu.name, player, player)
+    if player.dead then return end
+    local x = 3 - player:usedEffectTimes("#yanyu_2_trig", Player.HistoryTurn)
     if not player.dead and x > 0 then
-      room:setPlayerMark(player, "@yanyu-phase", { card_type, x })
+      room:setPlayerMark(player, "@sp__yanyu-phase", { type, x })
     end
   end,
 })
 
 yanyu:addEffect(fk.AfterCardsMove, {
   anim_type = "support",
-  can_trigger = function(self, event, target, player)
-    if player.dead or player:usedSkillTimes(yanyu.name, Player.HistoryTurn) > 2 then return false end
-    local mark = player:getMark("@yanyu-phase")
-    if type(mark) == "table" and #mark == 2 then
-      local type_name = mark[1]
+  can_trigger = function(self, event, target, player, data)
+    if player:getMark("@sp__yanyu-phase") ~= 0 and not player.dead then
+      local type = player:getMark("@sp__yanyu-phase")[1]
       local ids = {}
-      local id = -1
-      local room = player.room
-      for _, move in ipairs(event.data) do
+      for _, move in ipairs(data) do
         if move.toArea == Card.DiscardPile then
           for _, info in ipairs(move.moveInfo) do
-            id = info.cardId
-            if Fk:getCardById(id):getTypeString() == type_name and room:getCardArea(id) == Card.DiscardPile then
-              table.insertIfNeed(ids, id)
+            if Fk:getCardById(info.cardId):getTypeString() == type and
+              table.contains(player.room.discard_pile, info.cardId) then
+              table.insertIfNeed(ids, info.cardId)
             end
           end
         end
       end
-      ids = U.moveCardsHoldingAreaCheck(room, ids)
+      ids = U.moveCardsHoldingAreaCheck(player.room, ids)
       if #ids > 0 then
-        event:setCostData(self, ids)
+        event:setCostData(self, {cards = ids})
         return true
       end
     end
   end,
-  on_trigger = function(self, event, target, player)
+  on_cost = function(self, event, target, player, data)
     local room = player.room
-    local ids = table.simpleClone(event:getCostData(self))
-    while true do
-      self.cancel_cost = false
-      self:doCost(event, nil, player, ids)
-      if self.cancel_cost then
-        self.cancel_cost = false
-        break
-      end
-      if player.dead or player:usedSkillTimes(yanyu.name, Player.HistoryTurn) > 2 then break end
-      ids = U.moveCardsHoldingAreaCheck(room, ids)
-      if #ids == 0 then break end
-    end
-  end,
-  on_cost = function(self, event, target, player)
-    local room = player.room
-    room:setPlayerMark(player, "yanyu_cards", event:getCostData(self))
-    local _, ret = room:askToUseActiveSkill(player, {
-      skill_name = "yanyu_active",
-      prompt = "#yanyu-choose",
+    local cards = event:getCostData(self).cards
+    local result = room:askToYiji(player, {
+      cards = cards,
+      targets = room.alive_players,
+      skill_name = yanyu.name,
+      min_num = 0,
+      max_num = player:getMark("@sp__yanyu-phase")[2],
+      prompt = "#sp__yanyu-give",
       cancelable = true,
-      no_indicate = true
+      expand_pile = cards,
+      skip = true,
     })
-    room:setPlayerMark(player, "yanyu_cards", 0)
-    if ret then
-      event:setCostData(self, { ret.targets[1], ret.cards[1] })
+    local tos = {}
+    for id, ids in pairs(result) do
+      if #ids > 0 then
+        table.insert(tos, room:getPlayerById(id))
+      end
+    end
+    if #tos > 0 then
+      room:sortByAction(tos)
+      event:setCostData(self, {tos = tos, extra_data = result})
       return true
     end
-    self.cancel_cost = true
   end,
-  on_use = function(self, event, target, player)
-    player:broadcastSkillInvoke("sp__yanyu")
-    local mark = player:getMark("@yanyu-phase")
-    if type(mark) == "table" or #mark == 2 then
-      local x = 3 - player:usedSkillTimes(yanyu.name, Player.HistoryTurn)
-      player.room:setPlayerMark(player, "@yanyu-phase", x > 0 and { mark[1], x } or 0)
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local mark = player:getMark("@sp__yanyu-phase")
+    mark[2] = mark[2] - #event:getCostData(self).tos
+    if mark[2] == 0 then
+      room:setPlayerMark(player, "@sp__yanyu-phase", 0)
+    else
+      room:setPlayerMark(player, "@sp__yanyu-phase", mark)
     end
-    player.room:obtainCard(event:getCostData(self)[1], event:getCostData(self)[2], true, fk.ReasonGive)
+    room:doYiji(event:getCostData(self).extra_data, player, yanyu.name)
   end,
 })
 

@@ -1,17 +1,17 @@
-local hulao__jingjia = fk.CreateSkill {
-  name = "hulao__jingjia"
+local jingjia = fk.CreateSkill {
+  name = "hulao__jingjia",
 }
 
 Fk:loadTranslationTable {
-  ['hulao__jingjia'] = '精甲',
-  [':hulao__jingjia'] = '游戏开始时，你将本局游戏中加入的装备置入你的装备区。',
+  ["hulao__jingjia"] = "精甲",
+  [":hulao__jingjia"] = "游戏开始时，你将本局游戏中加入的装备置入你的装备区。",
 }
 
 local U = require "packages/utility/utility"
 
-hulao__jingjia:addEffect(fk.GameStart, {
-  can_trigger = function(self, event, target, player)
-    return player:hasSkill(hulao__jingjia.name)
+jingjia:addEffect(fk.GameStart, {
+  can_trigger = function(self, event, target, player, data)
+    return player:hasSkill(jingjia.name)
   end,
   on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
@@ -23,9 +23,9 @@ hulao__jingjia:addEffect(fk.GameStart, {
       return room:getCardArea(id) == Card.Void
     end)
     if #cards > 0 then
-      room:moveCardIntoEquip(player, cards, hulao__jingjia.name, false, player)
+      room:moveCardIntoEquip(player, cards, jingjia.name, false, player)
     end
   end,
 })
 
-return hulao__jingjia
+return jingjia

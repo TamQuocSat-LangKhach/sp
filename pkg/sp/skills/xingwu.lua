@@ -1,99 +1,93 @@
 local xingwu = fk.CreateSkill {
-  name = "xingwu"
+  name = "xingwu",
 }
 
 Fk:loadTranslationTable {
-  ['xingwu'] = '星舞',
-  ['#xingwu-cost'] = '星舞：你可以将一张与你本回合使用的牌颜色均不同的手牌置为“星舞”牌',
-  ['#xingwu-choose'] = '星舞：对一名男性角色造成2点伤害并弃置其装备区所有牌',
-  [':xingwu'] = '弃牌阶段开始时，你可以将一张与你本回合使用的牌颜色均不同的手牌置于武将牌上。若此时你武将牌上的牌达到三张，则弃置这些牌，然后对一名男性角色造成2点伤害并弃置其装备区中的所有牌。',
-  ['$xingwu1'] = '哼，不要小瞧女孩子哦！',
-  ['$xingwu2'] = '姐妹齐心，其利断金。',
+  ["xingwu"] = "星舞",
+  [":xingwu"] = "弃牌阶段开始时，你可以将一张与你本回合使用的牌颜色均不同的手牌置于武将牌上，然后若你武将牌上的牌达到三张，则弃置这些牌，"..
+  "对一名男性角色造成2点伤害并弃置其装备区中的所有牌。",
+
+  ["#xingwu-ask"] = "星舞：你可以将一张手牌置为“星舞”牌",
+  ["#xingwu-choose"] = "星舞：对一名男性角色造成2点伤害并弃置其装备区所有牌",
+
+  ["$xingwu1"] = "哼，不要小瞧女孩子哦！",
+  ["$xingwu2"] = "姐妹齐心，其利断金。",
 }
 
 xingwu:addEffect(fk.EventPhaseStart, {
-  can_trigger = function(self, event, target, player)
-    return target == player and player:hasSkill(xingwu.name) and player.phase == Player.Discard and
-        not player:isKongcheng()
-  end,
-  on_cost = function(self, event, target, player)
-    local colors = player:getMark("xingwu-turn")
-    if type(colors) ~= "table" then
-      colors = {}
+  anim_type = "offensive",
+  derived_piles = "xingwu",
+  can_trigger = function(self, event, target, player, data)
+    if target == player and player:hasSkill(xingwu.name) and player.phase == Player.Discard and
+      not player:isKongcheng() then
+      local colors = {}
+      player.room.logic:getEventsOfScope(GameEvent.UseCard, 1, function (e)
+        local use = e.data
+        if use.from == player then
+          table.insertIfNeed(colors, use.card.color)
+        end
+      end, Player.HistoryTurn)
+      table.removeOne(colors, Card.NoColor)
+      if #colors < 2 then
+        event:setCostData(self, {extra_data = colors})
+        return true
+      end
     end
+  end,
+  on_cost = function(self, event, target, player, data)
+    local room = player.room
+    local colors = event:getCostData(self).extra_data
     local pattern = "."
-    if #colors == 2 then
-      return
-    elseif #colors == 1 then
+    if #colors == 1 then
       if colors[1] == Card.Black then
         pattern = ".|.|heart,diamond"
       else
         pattern = ".|.|spade,club"
       end
     end
-    local card = player.room:askToCards(player, {
+    local card = room:askToCards(player, {
+      skill_name = xingwu.name,
       min_num = 1,
       max_num = 1,
       include_equip = false,
-      skill_name = xingwu.name,
-      cancelable = true,
       pattern = pattern,
-      prompt = "#xingwu-cost"
+      prompt = "#xingwu-ask",
+      cancelable = true,
     })
     if #card > 0 then
-      event:setCostData(self, card)
+      event:setCostData(self, {cards = card})
       return true
     end
   end,
-  on_use = function(self, event, target, player)
+  on_use = function(self, event, target, player, data)
     local room = player.room
-    player:addToPile(xingwu.name, event:getCostData(self), true, xingwu.name)
-    if #player:getPile(xingwu.name) >= 3 then
-      room:moveCards({
-        from = player.id,
-        ids = player:getPile(xingwu.name),
-        toArea = Card.DiscardPile,
-        moveReason = fk.ReasonPutIntoDiscardPile,
-        skillName = xingwu.name,
-      })
-      local targets = table.filter(room:getOtherPlayers(player), function(p)
+    player:addToPile(xingwu.name, event:getCostData(self).cards, true, xingwu.name)
+    if player.dead then return end
+    if #player:getPile(xingwu.name) > 2 then
+      room:moveCardTo(player:getPile(xingwu.name), Card.DiscardPile, nil, fk.ReasonPutIntoDiscardPile, xingwu.name, nil, true)
+      if player.dead then return end
+      local targets = table.filter(room:getOtherPlayers(player, false), function(p)
         return p:isMale()
       end)
-      if #targets > 0 then
-        local to = room:askToChoosePlayers(player, {
-          min_num = 1,
-          max_num = 1,
-          prompt = "#xingwu-choose",
-          skill_name = xingwu.name,
-          cancelable = false,
-          targets = targets
-        })
-        local victim = to[1]
-        room:damage {
-          from = player,
-          to = victim,
-          damage = 2,
-          skillName = xingwu.name,
-        }
-        victim:throwAllCards("e")
+      if #targets == 0 then return end
+      local to = room:askToChoosePlayers(player, {
+        skill_name = xingwu.name,
+        min_num = 1,
+        max_num = 1,
+        targets = targets,
+        prompt = "#xingwu-choose",
+        cancelable = false,
+      })[1]
+      room:damage {
+        from = player,
+        to = to,
+        damage = 2,
+        skillName = xingwu.name,
+      }
+      if not to.dead then
+        to:throwAllCards("e", xingwu.name)
       end
     end
-  end,
-})
-
-xingwu:addEffect(fk.CardUsing, {
-  can_refresh = function(self, event, target, player)
-    return player:hasSkill(xingwu.name, true) and target == player and player.phase ~= Player.NotActive
-  end,
-  on_refresh = function(self, event, target, player, data)
-    local colors = player:getMark("xingwu-turn")
-    if type(colors) ~= "table" then
-      colors = {}
-    end
-    if data.card.color ~= Card.NoColor then
-      table.insertIfNeed(colors, data.card.color)
-    end
-    player.room:setPlayerMark(player, "xingwu-turn", colors)
   end,
 })
 

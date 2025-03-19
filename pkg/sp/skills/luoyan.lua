@@ -1,19 +1,24 @@
 local luoyan = fk.CreateSkill {
   name = "luoyan",
-  frequency = Skill.Compulsory,
+  tags = { Skill.Compulsory },
 }
 
 Fk:loadTranslationTable{
-  ['luoyan'] = '落雁',
-  [':luoyan'] = '锁定技，若你的武将牌上有牌，你视为拥有技能〖天香〗和〖流离〗。',
+  ["luoyan"] = "落雁",
+  [":luoyan"] = "锁定技，若你的武将牌上有牌，你视为拥有技能〖天香〗和〖流离〗。",
 }
 
 luoyan:addEffect(fk.AfterCardsMove, {
   can_refresh = function(self, event, target, player, data)
     if player:hasSkill(luoyan.name, true) and player.phase == Player.Discard then
       for _, move in ipairs(data) do
-        if move.skillName == "xingwu" then
+        if move.specialName == "xingwu" then
           return true
+        end
+        for _, info in ipairs(move.moveInfo) do
+          if info.fromSpecialName == "xingwu" then
+            return true
+          end
         end
       end
     end

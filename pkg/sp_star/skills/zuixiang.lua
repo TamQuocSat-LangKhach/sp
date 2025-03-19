@@ -15,19 +15,19 @@ Fk:loadTranslationTable{
 zuixiang:addEffect(fk.EventPhaseStart, {
   anim_type = "drawcard",
   frequency = Skill.Limited,
-  can_trigger = function(self, event, target, player)
+  can_trigger = function(self, event, target, player, data)
     if target == player and player.phase == Player.Start then
     return (player:hasSkill(zuixiang.name) and player:usedSkillTimes(zuixiang.name, Player.HistoryGame) == 0) or #player:getPile(zuixiang.name) > 0
     end
   end,
-  on_cost = function(self, event, target, player)
+  on_cost = function(self, event, target, player, data)
     if #player:getPile(zuixiang.name) == 0 then
     return player.room:askToSkillInvoke(player, { skill_name = zuixiang.name, prompt = "#zuixiang-invoke" })
     else
     return true
     end
   end,
-  on_use = function(self, event, target, player)
+  on_use = function(self, event, target, player, data)
     local room = player.room
     local cards = room:getNCards(3)
     player:addToPile(zuixiang.name, cards, true, zuixiang.name)
