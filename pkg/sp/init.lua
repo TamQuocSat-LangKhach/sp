@@ -19,6 +19,17 @@ Fk:loadTranslationTable{
   ["~yangxiu"] = "我固自以死之晚也……",
 }
 
+local diaochan = General(extension, "sp__diaochan", "qun", 3, 3, General.Female)
+diaochan:addSkills { "lijian", "biyue" }
+diaochan.hidden = true
+Fk:loadTranslationTable{
+  ["sp__diaochan"] = "貂蝉",
+  ["#sp__diaochan"] = "绝世的舞姬",
+  ["illustrator:sp__diaochan"] = "巴萨小马",
+
+  ["~sp__diaochan"] = "父亲大人，对不起……",
+}
+
 General(extension, "gongsunzan", "qun", 4):addSkills { "yicong" }
 Fk:loadTranslationTable{
   ["gongsunzan"] = "公孙瓒",
@@ -39,6 +50,17 @@ Fk:loadTranslationTable{
   ["~yuanshu"] = "可恶！就差……一步了……",
 }
 
+local sunshangxiang = General(extension, "sp__sunshangxiang", "shu", 3, 3, General.Female)
+sunshangxiang:addSkills { "jieyin", "xiaoji" }
+sunshangxiang.hidden = true
+Fk:loadTranslationTable{
+  ["sp__sunshangxiang"] = "孙尚香",
+  ["#sp__sunshangxiang"] = "梦醉良缘",
+  ["illustrator:sp__sunshangxiang"] = "木美人",
+
+  ["~sp__sunshangxiang"] = "不，还不可以死……",
+}
+
 General(extension, "sp__pangde", "wei", 4):addSkills { "mashu", "juesi" }
 Fk:loadTranslationTable{
   ["sp__pangde"] = "庞德",
@@ -46,6 +68,16 @@ Fk:loadTranslationTable{
   ["illustrator:sp__pangde"] = "天空之城",
 
   ["~sp__pangde"] = "受魏王厚恩，唯以死报之。",
+}
+
+local guanyu = General(extension, "sp__guanyu", "wei", 4)
+guanyu:addSkills { "wusheng", "sp__danji" }
+guanyu:addRelatedSkill("mashu")
+guanyu.hidden = true
+Fk:loadTranslationTable{
+  ["sp__guanyu"] = "关羽",
+  ["#sp__guanyu"] = "汉寿亭侯",
+  ["illustrator:sp__guanyu"] = "LiuHeng",
 }
 
 local lvbu = General(extension, "hulao1__godlvbu", "god", 8)
@@ -121,6 +153,15 @@ Fk:loadTranslationTable{
   ["~guanyinping"] = "父亲，你来救我了吗……",
 }
 
+local zhenji = General(extension, "sp__zhenji", "wei", 3, 3, General.Female)
+zhenji:addSkills { "qingguo", "luoshen" }
+zhenji.hidden = true
+Fk:loadTranslationTable{
+  ["sp__zhenji"] = "甄姬",
+  ["#sp__zhenji"] = "薄幸的美人",
+  ["illustrator:sp__zhenji"] = "白姥姥",
+}
+
 General(extension, "liuxie", "qun", 3):addSkills { "tianming", "mizhao" }
 Fk:loadTranslationTable{
   ["liuxie"] = "刘协",
@@ -192,6 +233,16 @@ Fk:loadTranslationTable{
   ["$liuli_daqiaoxiaoqiao1"] = "呵呵，交给你啦~",
   ["$liuli_daqiaoxiaoqiao2"] = "不懂得怜香惜玉么~",
   ["~daqiaoxiaoqiao"] = "伯符，公瑾，请一定要守护住我们的江东啊！",
+}
+
+local godlvbu = General(extension, "sp__godlvbu", "god", 5)
+godlvbu:addSkills { "kuangbao", "wumou", "wuqian", "shenfen" }
+godlvbu:addRelatedSkill("wushuang")
+godlvbu.hidden = true
+Fk:loadTranslationTable{
+  ["sp__godlvbu"] = "神吕布",
+  ["#sp__godlvbu"] = "修罗之道",
+  ["illustrator:sp__godlvbu"] = "干橘子",
 }
 
 General(extension, "sp__xiahoushi", "shu", 3, 3, General.Female):addSkills { "sp__yanyu", "xiaode" }
@@ -321,7 +372,7 @@ General:new(extension, "nos__maliang", "shu", 3):addSkills{ "xiemu", "naman" }
 Fk:loadTranslationTable{
   ["nos__maliang"] = "马良",
   ["#nos__maliang"] = "白眉智士",
-  ["illustrator:nos__maliang"] = "LiuHeng",
+  ["illustrator:nos__maliang"] = "NOVART",
 
   ["~nos__maliang"] = "皇叔为何不听我之言？",
 }
@@ -334,6 +385,13 @@ Fk:loadTranslationTable{
   ["illustrator:maliang"] = "LiuHeng",
 
   ["~maliang"] = "我的使命完成了吗……",
+}
+
+General:new(extension, "sp__zhangliang", "qun", 4):addSkills{ "sp__jijun", "sp__fangtong" }
+Fk:loadTranslationTable{
+  ["sp__zhangliang"] = "张梁",
+  ["#sp__zhangliang"] = "黄昏的斗蛾",
+  ["illustrator:sp__zhangliang"] = "LiuHeng",
 }
 
 General:new(extension, "ganfuren", "shu", 3, 3, General.Female):addSkills{ "sp__shushen", "sp__shenzhi" }

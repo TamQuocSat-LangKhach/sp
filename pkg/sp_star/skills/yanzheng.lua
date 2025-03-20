@@ -1,22 +1,24 @@
-```lua
+
 local yanzheng = fk.CreateSkill {
-  name = "yanzheng"
+  name = "yanzheng",
 }
 
 Fk:loadTranslationTable{
-  ['yanzheng'] = '严整',
-  ['#yanzheng'] = '严整：你可以将你装备区内的牌当【无懈可击】使用',
-  [':yanzheng'] = '若你的手牌数大于你的体力值，你可以将你装备区内的牌当【无懈可击】使用。',
-  ['$yanzheng1'] = '任你横行霸道，我自岿然不动。',
-  ['$yanzheng2'] = '行伍严整，百战不殆！'
+  ["yanzheng"] = "严整",
+  [":yanzheng"] = "若你的手牌数大于你的体力值，你可以将你装备区内的牌当【无懈可击】使用。",
+
+  ["#yanzheng"] = "严整：你可以将装备区内的牌当【无懈可击】使用",
+
+  ["$yanzheng1"] = "任你横行霸道，我自岿然不动。",
+  ["$yanzheng2"] = "行伍严整，百战不殆！"
 }
 
-yanzheng:addEffect('viewas', {
+yanzheng:addEffect("viewas", {
   anim_type = "defensive",
   pattern = "nullification",
   prompt = "#yanzheng",
   card_filter = function(self, player, to_select, selected)
-    return #selected == 0 and Fk:currentRoom():getCardArea(to_select) == Player.Equip
+    return #selected == 0 and table.contains(player:getCardIds("e"), to_select)
   end,
   view_as = function(self, player, cards)
     if #cards ~= 1 then return end
@@ -25,13 +27,9 @@ yanzheng:addEffect('viewas', {
     c:addSubcard(cards[1])
     return c
   end,
-  enabled_at_play = function (skill, player)
-    return false
-  end,
   enabled_at_response = function (skill, player)
-    return player:getHandcardNum() > player.hp and #player.player_cards[Player.Equip] > 0
+    return player:getHandcardNum() > player.hp and #player:getCardIds("e") > 0
   end,
 })
 
 return yanzheng
-```

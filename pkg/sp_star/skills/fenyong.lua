@@ -1,21 +1,19 @@
 local fenyong = fk.CreateSkill {
-  name = "fenyong"
+  name = "fenyong",
 }
 
 Fk:loadTranslationTable{
-  ['fenyong'] = '愤勇',
-  ['@@fenyong'] = '体力牌竖置',
-  ['#fenyong-invoke'] = '愤勇：你可以竖置你的体力牌！',
-  [':fenyong'] = '每当你受到一次伤害后，你可以竖置你的体力牌；当你的体力牌为竖置状态时，防止你受到的所有伤害。',
-  ['$fenyong1'] = '独目苍狼，虽伤亦勇！',
-  ['$fenyong2'] = '愤勇当先，鬼神难伤！',
+  ["fenyong"] = "愤勇",
+  [":fenyong"] = "每当你受到一次伤害后，你可以竖置你的体力牌；当你的体力牌为竖置状态时，防止你受到的所有伤害。",
+
+  ["@@fenyong"] = "体力牌竖置",
+  ["#fenyong-invoke"] = "愤勇：你可以竖置你的体力牌！",
 }
 
 fenyong:addEffect(fk.Damaged, {
+  anim_type = "masochism",
   can_trigger = function(self, event, target, player, data)
-    if target == player and player:hasSkill(fenyong.name) then
-      return true
-    end
+    return target == player and player:hasSkill(fenyong.name)
   end,
   on_cost = function(self, event, target, player, data)
     return player.room:askToSkillInvoke(player, {
@@ -24,27 +22,19 @@ fenyong:addEffect(fk.Damaged, {
     })
   end,
   on_use = function(self, event, target, player, data)
-    local room = player.room
-    room:notifySkillInvoked(player, fenyong.name)
-    player:broadcastSkillInvoke(fenyong.name, 1)
-    room:setPlayerMark(player, "@@fenyong", 1)
+    player.room:setPlayerMark(player, "@@fenyong", 1)
   end,
 })
 
 fenyong:addEffect(fk.DamageInflicted, {
+  anim_type = "defensive",
   can_trigger = function(self, event, target, player, data)
-    if target == player and player:hasSkill(fenyong.name) then
-      return player:getMark("@@fenyong") > 0
-    end
+    return target == player and player:hasSkill(fenyong.name) and
+      player:getMark("@@fenyong") > 0
   end,
-  on_cost = function(self, event, target, player, data)
-    return true
-  end,
+  on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
-    local room = player.room
-    room:notifySkillInvoked(player, fenyong.name)
-    player:broadcastSkillInvoke(fenyong.name, 2)
-    return true
+    data:preventDamage()
   end,
 })
 
