@@ -20,9 +20,9 @@ fenxin:addEffect(fk.BeforeGameOverJudge, {
       data.killer == player and
       player.role ~= "lord" and target.role ~= "lord"
   end,
-  on_cost = function(skill, event, target, player, data)
+  on_cost = function(self, event, target, player, data)
     return player.room:askToSkillInvoke(player, {
-      skill_name = skill.name,
+      skill_name = fenxin.name,
       prompt = "#fenxin-invoke::"..target.id
     })
   end,
