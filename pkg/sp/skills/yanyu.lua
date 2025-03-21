@@ -15,8 +15,6 @@ Fk:loadTranslationTable {
   ["$sp__yanyu2"] = "终温且惠，淑慎其身。",
 }
 
-local U = require "packages/utility/utility"
-
 yanyu:addEffect(fk.EventPhaseStart, {
   anim_type = "support",
   can_trigger = function(self, event, target, player, data)
@@ -66,7 +64,7 @@ yanyu:addEffect(fk.AfterCardsMove, {
           end
         end
       end
-      ids = U.moveCardsHoldingAreaCheck(player.room, ids)
+      ids = player.room.logic:moveCardsHoldingAreaCheck(ids)
       if #ids > 0 then
         event:setCostData(self, {cards = ids})
         return true
