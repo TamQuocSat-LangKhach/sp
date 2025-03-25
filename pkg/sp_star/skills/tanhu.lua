@@ -46,7 +46,7 @@ tanhu:addEffect(fk.CardUsing, {
   can_trigger = function(self, event, target, player, data)
     return target == player and data.card:isCommonTrick() and #data.tos > 0 and
       table.find(data.tos, function(p)
-        return table.contains(player:getMark("tanhu-turn"), p.id)
+        return table.contains(player:getTableMark("tanhu-turn"), p.id)
       end)
     end,
   on_use = function(self, event, target, player, data)
