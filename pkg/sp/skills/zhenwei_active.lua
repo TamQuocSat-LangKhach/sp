@@ -3,7 +3,7 @@ local zhenwei_active = fk.CreateSkill {
 }
 
 Fk:loadTranslationTable{
-  ["sp__zhenwei_active"] = "镇卫",
+  ["zhenwei_active"] = "镇卫",
 }
 
 zhenwei_active:addEffect("active", {
