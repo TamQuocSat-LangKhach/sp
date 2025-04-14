@@ -47,7 +47,7 @@ bifa:addEffect(fk.EventPhaseStart, {
   on_use = function(self, event, target, player, data)
     local room = player.room
     local to = event:getCostData(self).tos[1] ---@type ServerPlayer
-    room:setPlayerMark(target, "bifa_src", player.id)
+    room:setPlayerMark(to, "bifa_src", player.id)
     to:addToPile("$bifa", event:getCostData(self).cards, false, bifa.name)
   end,
 })
@@ -66,10 +66,7 @@ bifa:addEffect(fk.TurnStart, {
   can_trigger = function(self, event, target, player, data)
     return #target:getPile("$bifa") > 0 and target:getMark("bifa_src") == player.id
   end,
-  on_cost = function (self, event, target, player, data)
-    event:setCostData(self, {tos = {target}})
-    return true
-  end,
+  on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
     local room = player.room
     room:setPlayerMark(target, "bifa_src", 0)
@@ -80,22 +77,22 @@ bifa:addEffect(fk.TurnStart, {
       end
       return
     end
-    local card = Fk:getCardById(player:getPile("$bifa")[1])
+    local card = Fk:getCardById(target:getPile("$bifa")[1])
     local type = card:getTypeString()
-    local give = room:askToCards(player, {
+    local give = room:askToCards(target, {
       min_num = 1,
       max_num = 1,
       pattern = ".|.|.|hand|.|" .. type,
-      prompt = "#bifa-invoke:"..player.id.."::"..type..":"..card:toLogString(),
+      prompt = "#bifa-ask:"..player.id.."::"..type..":"..card:toLogString(),
       skill_name = bifa.name,
     })
     if #give > 0 then
-      room:moveCardTo(give, Card.PlayerHand, player, fk.ReasonGive, bifa.name, nil, false, player)
+      room:moveCardTo(give, Card.PlayerHand, player, fk.ReasonGive, bifa.name, nil, false, target)
       if not target.dead and #target:getPile("$bifa") > 0 then
-        room:moveCardTo(target:getPile("$bifa"), Card.PlayerHand, player, fk.ReasonPrey, bifa.name, nil, false)
+        room:moveCardTo(target:getPile("$bifa"), Card.PlayerHand, target, fk.ReasonPrey, bifa.name, nil, false, target)
       end
     else
-      room:moveCardTo(target:getPile("$bifa"), Card.DiscardPile, nil, fk.ReasonPutIntoDiscardPile, bifa.name, nil, true)
+      room:moveCardTo(target:getPile("$bifa"), Card.DiscardPile, nil, fk.ReasonPutIntoDiscardPile, bifa.name, nil, true, target)
       if not target.dead then
         room:loseHp(target, 1, bifa.name)
       end
