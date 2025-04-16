@@ -9,6 +9,9 @@ Fk:loadTranslationTable{
 
   ["#re__qianxi-choose"] = "潜袭：令一名角色本回合不能使用或打出%arg手牌",
   ["@re__qianxi-turn"] = "潜袭",
+
+  ["$re__qianxi1"] = "暗影深处，袭敌斩首！",
+  ["$re__qianxi2"] = "擒贼先擒王，打蛇打七寸！",
 }
 
 qianxi:addEffect(fk.EventPhaseStart, {

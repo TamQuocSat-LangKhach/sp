@@ -16,7 +16,7 @@ mingzhe:addEffect(fk.AfterCardsMove, {
     local n = 0
     if player:hasSkill(mingzhe.name) and player.room.current ~= player then
       for _, move in ipairs(data) do
-        if move.from == player and table.contains({fk.ReasonUse, fk.ReasonResonpse, fk.ReasonDiscard}, move.moveReason) then
+        if move.from == player and table.contains({fk.ReasonUse, fk.ReasonResponse, fk.ReasonDiscard}, move.moveReason) then
           for _, info in ipairs(move.moveInfo) do
             if (info.fromArea == Card.PlayerHand or info.fromArea == Card.PlayerEquip) and
               Fk:getCardById(info.cardId).color == Card.Red then

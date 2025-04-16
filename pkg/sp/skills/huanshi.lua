@@ -42,7 +42,7 @@ huanshi:addEffect(fk.AskForRetrial, {
     })
     local card = Fk:getCardById(id)
     if not player:prohibitResponse(card) then
-      room:ChangeJudge{
+      room:changeJudge{
         card = card,
         player = player,
         data = data,
